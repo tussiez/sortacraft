@@ -172,7 +172,7 @@ function main(dat){
 }
 function render(){
 
-//  requestAnimationFrame(render);//call another render while rendering
+// requestAnimationFrame(render);//call another render while rendering
 
   renderer.render(scene,camera);
 
@@ -190,7 +190,7 @@ function render(){
 
   manageVoxelLoading();//manage voxel world (if creating)
 
-  //loadUnloadChunks();
+  lazyLoadChunks();//init lazy loadin g
   requestAnimationFrame(render);//stall??
 
 }
@@ -255,7 +255,7 @@ function AABBCollision(point,box){
          (point.z >= box.minZ && point.z <= box.maxZ);
 }
 
-var renderDist = 128;//chunks*16
+var renderDist = 32;//chunks*16
 
 function roundVec(v){
   var roundedX = Number((v.x).toFixed(1));
@@ -264,7 +264,17 @@ function roundVec(v){
   var vec = new THREE.Vector3(roundedX,roundedY,roundedZ);
   return vec;
 }
-
+function lazyLoadChunks(){
+  for(var x = camera.position.x-renderDist;x<camera.position.x+renderDist;x+=16){
+    for(var z =camera.position.z-renderDist;z<camera.position.z+renderDist;z+=16){
+      var chunk = Chunks[x+",0,"+z];
+      if(chunk==undefined&&done==true){
+        console.log('In req. of chunk');
+        createChunk(x,0,z);
+      }
+    }
+  }
+}
 function loadUnloadChunks(){
   //check if chunks in range
   var chunkNearPlayer = 0;
