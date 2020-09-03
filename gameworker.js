@@ -257,7 +257,7 @@ function AABBCollision(point,box){
          (point.z >= box.minZ && point.z <= box.maxZ);
 }
 
-var renderDist = 32;//chunks*16
+var renderDist = 128;//chunks*16
 
 function roundVec(v){
   var roundedX = Number((v.x).toFixed(1));
@@ -707,7 +707,7 @@ function manageVoxelLoading(){
     if(lazyVoxelData.lazyArrayTotal===NaN){
       lazyVoxelData.lazyArrayTotal = 0;
     }
-    for(var i = 0;i<60;i++){//load speed
+    for(var i = 0;i<240;i++){//load speed
       if(lazyVoxelData.current<lazyVoxelData.lazyArrayTotal){
       lazyVoxelData.lazyLoad();
     }
@@ -739,7 +739,7 @@ tileTextureHeight
 });//local voxel world(cannot share classes)
 */
 lazyVoxelData.needsClear = true;//need a clear
-chunkWorker.postMessage(['create',16,tileSize,tileTextureWidth,tileTextureHeight,12345,x,y,z,heightMult,currentBiome,64]);
+chunkWorker.postMessage(['create',16,tileSize,tileTextureWidth,tileTextureHeight,12345,x,y,z,heightMult,currentBiome,2]);
 done=false;
 var startCount = 0;
 chunkWorker.onmessage = function(e){

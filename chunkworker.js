@@ -77,22 +77,28 @@ self.onmessage = function(e){//onmessage
 
 	    var level	= lvl;
 
-	    height	+= (simplex.noise(x2/level, z2/level)/2 + 0.5) * 0.125
+	    height	+= (perlin.noise(x2/level, z2/level,0)/2 + 0.5) * 0.125
 
 	    level	*= 3
 
-	    height	+= (simplex.noise(x2/level, z2/level)/2 + 0.5) * 0.25
+	    height	+= (perlin.noise(x2/level, z2/level,0)/2 + 0.5) * 0.25
 
 	    level	*= 2
 
-	    height	+= (simplex.noise(x2/level, z2/level)/2 + 0.5) * 0.5
+	    height	+= (perlin.noise(x2/level, z2/level,0)/2 + 0.5) * 0.5
 
 	    level	*= 1
 
-	    height	+= (simplex.noise(x2/level, z2/level)/2 + 0.5) * 1
+	    height	+= (perlin.noise(x2/level, z2/level,0)/2 + 0.5) * 1
 
 	    height	/= 1+0.5+0.25+0.125
       return height*cellSize
+    }
+    function mineHeight(x,z){
+      var x2 = x+x1;
+      var z2 = z+z2;
+      var elevation = perlin.noise(x2,z2,0);
+
     }
 
 
@@ -102,32 +108,22 @@ self.onmessage = function(e){//onmessage
 
     var blockInCave = [];
 
-    for(var y = 0; y< 64; y++){
+  //  for(var y = 0; y< 64; y++){
 
       for(var z = 0; z< cellSize; z++){
 
         for(var x = 0; x< cellSize; x++){
-        var hm = (Math.floor(perlin.noise((x+x1)/flatness,(z+z1)/flatness,0)*heightMult)*cellSize)+30;
-        var density = Math.round((perlin.noise((x+x1)/flatness,(y+y1)/flatness,(z+z1)/flatness)*heightMult)*cellSize);//stripped the floor because of weird gaps
-          var type = 0;//stone
+      //  var hm = perlin.noise((x+x1)/flatness,(z+z1)/flatness,0);
+      var hm = getHeight(x,z,flatness)
+      //  var density = Math.round((perlin.noise((x+x1)/flatness,(y+y1)/flatness,(z+z1)/flatness))*cellSize);//stripped the floor because of weird gaps
+          var type = 1;//stone
+
+        //  if(hm) {//not air
+          localWorld.setVoxel(x,hm,z,type);
+          postMessage(['voxel',x,hm,z,type]);
 
 
-
-          if(density<=32&&density>0){
-            type=1;
-          }
-          if(density>=10&&density>0){
-            type=2;
-          }
-          var doCaves = false;
-          if(biome==='caves'){doCaves=true};
-          if(type!=0&&(y)<(hm)&&density>0) {//not air
-          localWorld.setVoxel(x,density,z,type);
-          if(type==2){
-          postMessage(['voxel',x,density,z,type]);
-        }
-
-        }
+      //  }
 
 
           progress += 1;
@@ -137,9 +133,10 @@ self.onmessage = function(e){//onmessage
 
       }
 
-    }
+  //  }
 
     //done with stone, work on grass/sand
+    /*
     var treeMap = {};
     function checkNeighboringTrees(x,z){
     var neighbors = [
@@ -183,8 +180,7 @@ self.onmessage = function(e){//onmessage
           //var voxelNegZ = localWorld.getVoxel(x,y,z-1);
 
           //tree "heat" map
-          var doTree = perlin.noise((x+x1)/24,y/24,(z+z1)/24);
-
+          var doTree = perlin.noise((x+x1)*10,y,(z+z1)*10);
           var type = 1;
 
           var changed = false;
@@ -212,19 +208,14 @@ self.onmessage = function(e){//onmessage
           if(checkingVoxel===0 && y<=12 &&blockInCave[x+","+y+","+z]===undefined){//no filling caves with water
 
             changed = true;
-/*
-           type=4;
-            //set sand under
-          localWorld.setVoxel(x,y-1,z,3);
-            postMessage(['voxel',x,y-1,z,3]);
-            *///water off
+
           }
           if(checkingVoxel==1 && blockInCave[x+","+y+","+z]==true){
             changed=true;
             type=0;//clear out for cave
           }
 
-          if(doTree>2){
+          if(doTree>.5){
             if(checkingVoxel===0&&voxelNegY===2){
               if(checkNeighboringTrees(x,z)==false){
               if(x<=12&&x>=4&&z<=12&&z>=4){
@@ -345,7 +336,7 @@ self.onmessage = function(e){//onmessage
       }
 
     }
-
+*/
     //geometry
     postMessage(['complete']);//done
 
