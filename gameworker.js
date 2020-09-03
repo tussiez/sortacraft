@@ -268,6 +268,7 @@ function lazyLoadChunks(){
   for(var x = camera.position.x-renderDist;x<camera.position.x+renderDist;x+=16){
     for(var z =camera.position.z-renderDist;z<camera.position.z+renderDist;z+=16){
       var chunk = Chunks[x+",0,"+z];
+      console.log(chunk);
       if(chunk==undefined&&done==true){
         console.log('In req. of chunk');
         createChunk(x,0,z);
