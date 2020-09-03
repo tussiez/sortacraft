@@ -50,6 +50,7 @@ lazyVoxelData = {
   finishedPosting: false,
   lazyArray:[],//array of data
   lazyArrayTotal:undefined,
+  geometryData:undefined,
   getVoxelData: function(inCurrent){//return voxel data @ pos
     let current =inCurrent;//scope
     let theObject;
@@ -91,7 +92,7 @@ finish:function(){
   this.current = 0;
   var posVec = this.getVoxelData(0).intersect;
   this.lazyArray = [];//reset arry
-  loadChunk(posVec.x,posVec.y,posVec.z,lazyVoxelWorld);//load in chunk
+  loadChunk(posVec.x,posVec.y,posVec.z,lazyVoxelWorld,this.geometryData);//load in chunk
   Chunks[posVec.x+","+posVec.y+","+posVec.z]=lazyVoxelWorld;//chunk lib
   chunkIndex.push(posVec.x+","+posVec.y+","+posVec.z);//chunk index
   done=true;//for new chunks
@@ -693,6 +694,7 @@ function manageVoxelLoading(){
     lazyVoxelData.finishedPosting = false;//not finished
     lazyVoxelData.needsClear=false;//no clear again
     lazyVoxelData.current = 0;//set back to 0
+    lazyVoxelData.geometryData = undefined;//geodata
     lazyVoxelData.lazyArrayTotal = 0;//reset
     lazyVoxelWorld = new VoxelWorld({
       cellSize,
@@ -752,6 +754,7 @@ chunkWorker.onmessage = function(e){
   }
   if(e.data[0]==='complete'){
     lazyVoxelData.finishedPosting = true;
+    lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];
     lazyVoxelData.lazyArrayTotal = startCount;//set max
   //  loadChunk(x,y,z,localVoxelWorld);//load in chunk e.data[1] = geo
   //  Chunks[x+","+y+','+z] = localVoxelWorld;//get from pos
@@ -767,10 +770,13 @@ chunkWorker.onmessage = function(e){
 }
 }
 
-function loadChunk(x,y,z,world1){
+function loadChunk(x,y,z,world1,dat){
 //load in chunk
 //set pos,norm,uv,ind
-let {positions,normals,uvs,indices} = world1.generateGeometryDataForCell(0,0,0);
+var positions = dat[0];
+var normals = dat[1];
+var uvs = dat[2];
+var indices =dat[3]
 var geometry = new THREE.BufferGeometry();//new buffgeos
 
 geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));

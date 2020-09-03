@@ -95,36 +95,31 @@ self.onmessage = function(e){//onmessage
       return height*cellSize
     }
     function mineHeight(x,z){
-      var x2 = x+x1;
-      var z2 = z+z2;
-      var elevation = perlin.noise(x2,z2,0);
-
+      var x2a = x+x1;
+      var z2a = z+z1;
+      var ele = perlin.noise(x2a,z2a,0);
+      var rough = perlin.noise(x2a/32,z2a/32,0);
+      var det = perlin.noise(x2a*16,z2a*16,0);
+      return Math.round(((ele + (rough*det)*4)*cellSize)+12);
     }
 
 
     var progress = 0;
 
     var total = (cellSize*cellSize*64)*2;//dupe
-
-    var blockInCave = [];
+    var levels = {};
 
   //  for(var y = 0; y< 64; y++){
 
       for(var z = 0; z< cellSize; z++){
 
         for(var x = 0; x< cellSize; x++){
-      //  var hm = perlin.noise((x+x1)/flatness,(z+z1)/flatness,0);
-      var hm = getHeight(x,z,flatness)
-      //  var density = Math.round((perlin.noise((x+x1)/flatness,(y+y1)/flatness,(z+z1)/flatness))*cellSize);//stripped the floor because of weird gaps
-          var type = 1;//stone
+          var hm = mineHeight(x,z);
+          var type = 2;
 
-        //  if(hm) {//not air
           localWorld.setVoxel(x,hm,z,type);
           postMessage(['voxel',x,hm,z,type]);
-
-
-      //  }
-
+          levels[x+","+z]=hm;
 
           progress += 1;
 
@@ -134,7 +129,30 @@ self.onmessage = function(e){//onmessage
       }
 
   //  }
+  for(var x = 0;x<cellSize;x++){
+    for(var z = 0;z<cellSize;z++){
+      for(var y = 0;y<64;y++){
 
+        var below = localWorld.getVoxel(x,y-1,z);
+        var type = localWorld.getVoxel(x,y,z);
+        var hm = levels[x+","+z]
+        var changed = false;
+        if(y<hm&&type!=2){
+          setV(x,y,z,1);
+        }
+        var above = localWorld.getVoxel(x,y+1,z);
+        if(above==2){
+          setV(x,y-1,z,6);
+          setV(x,y-2,z,6);
+          setV(x,y-3,z,6);
+        }
+      }
+    }
+  }
+function setV(x,y,z,type){
+  localWorld.setVoxel(x,y,z,type);
+  postMessage(['voxel',x,y,z,type]);
+}
     //done with stone, work on grass/sand
     /*
     var treeMap = {};
@@ -338,7 +356,8 @@ self.onmessage = function(e){//onmessage
     }
 */
     //geometry
-    postMessage(['complete']);//done
+    var {positions,normals,uvs,indices}= localWorld.generateGeometryDataForCell(0,0,0);
+    postMessage(['complete',positions,normals,uvs,indices]);//done
 
   }
 
