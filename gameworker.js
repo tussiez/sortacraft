@@ -81,14 +81,16 @@ lazyVoxelData = {
     if(this.current<this.lazyArrayTotal){
     this.current+=1;
   }
-  if(this.current == this.lazyArrayTotal&&this.lazyArrayTotal>0){
+  if(this.current == this.lazyArrayTotal&&this.lazyArrayTotal>0&&this.done==false){
       this.finish();
   }
   }
 },
 finish:function(){
   this.done = true;
+  this.current = 0;
   var posVec = this.getVoxelData(0).intersect;
+  this.lazyArray = [];//reset arry
   loadChunk(posVec.x,posVec.y,posVec.z,lazyVoxelWorld);//load in chunk
   Chunks[posVec.x+","+posVec.y+","+posVec.z]=lazyVoxelWorld;//chunk lib
   chunkIndex.push(posVec.x+","+posVec.y+","+posVec.z);//chunk index
@@ -265,11 +267,14 @@ function roundVec(v){
   return vec;
 }
 function lazyLoadChunks(){
-  for(var x = camera.position.x-renderDist;x<camera.position.x+renderDist;x+=16){
-    for(var z =camera.position.z-renderDist;z<camera.position.z+renderDist;z+=16){
-      var chunk = Chunks[x+",0,"+z];
-      console.log(chunk);
-      if(chunk==undefined&&done==true){
+  var clampMin = newChunkClamp({x:camera.position.x - renderDist,z:camera.position.z - renderDist});
+  var clampMax = newChunkClamp({x:camera.position.x + renderDist,z:camera.position.z + renderDist});
+  for(var x = clampMin.x;x<clampMax.x;x+=16){
+    for(var z =clampMin.z;z<clampMax.z;z+=16){
+      var clampPos = {x:x,z:z}
+      var chunk = Chunks[clampPos.x+",0,"+clampPos.z];
+      if(chunk==undefined&&lazyVoxelData.done==true){
+        lazyVoxelData.done = false;
         console.log('In req. of chunk');
         createChunk(x,0,z);
       }
@@ -702,7 +707,7 @@ function manageVoxelLoading(){
     if(lazyVoxelData.lazyArrayTotal===NaN){
       lazyVoxelData.lazyArrayTotal = 0;
     }
-    for(var i = 0;i<30;i++){
+    for(var i = 0;i<60;i++){//load speed
       if(lazyVoxelData.current<lazyVoxelData.lazyArrayTotal){
       lazyVoxelData.lazyLoad();
     }
