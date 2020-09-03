@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Sorta-craft</title>
+    <style>
+      @font-face{
+        font-family:minecraft;
+        src:url(https://minecraftfont.tussiez.repl.co/Minecraft.ttf);
+      }
+      body{
+        font-family:minecraft;
+        height:100%;
+        width:100%;
+        overflow:hidden;
+        image-rendering:pixelated;
+        background-image:url(dirt.png);
+        background-size:64px 64px;
+        background-repeat:repeat;
+        text-shadow:2px 2px gray;
+      }
+      input[type="number"]{
+        font-family:minecraft;
+        background-color:black;
+        color:white;
+        border:1px solid white;
+        height:26px;
+        font-size:16px;
+      }
+      .play{
+        position:absolute;
+        left:calc(50% - 39px);
+      }
+      a,button{
+        height:20px;
+        width:60px;
+        background-color:gray;
+        padding:8px;
+        border:1px solid white;
+        text-align:center;
+        color:white;
+        text-decoration:none;
+        font-family:Minecraft;
+      }
+      button{
+        width:120px;
+        height:35px;
+        cursor:pointer;
+      }
+
+      a:hover,button:hover{
+        border:2px solid white;
+        margin-left:-1px;
+        margin-top:-1px;
+        text-decoration:underline;
+        background-color:#649cf5;
+      }
+      ::placeholder {
+        color:lightgray;
+      }
+      html{height:100%;width:100%;overflow:hidden;}
+      #settings {
+        height:300px;
+        width:30%;
+        border:1px solid black;
+        background-color:lightgray;
+        position:absolute;
+        top:calc(50% - 15%);
+        left:calc(50% - 15%);
+        display:none;
+        font-size:12px;
+      }
+      h1{text-align:center;}
+
+    </style>
+  </head>
+  <body>
+    <h1 style="color:white;">Sorta-craft</h1>
+    <hr>
+    <a href="javascript:checkSeed()" class="play">Play</a><br>
+    <a href="javascript:window.location.href='newgame.html'">Faster Demo</a>
+    <a href="javascript:window.location.href='http://website.hicam.net:88'">Multiplayer</a>
+    <br>
+    <a href="javascript:open('settings')" style="position:absolute;left:calc(50% - 69px);margin-top:20px;width:120px;height:50px;">World Settings</a><br>
+
+    <div id="settings">
+      <div id="settingsinner" style="margin:8px;padding:8px;">
+      <A href="javascript:" onclick="checkAlias('anti')" title="Reduce jagged edges." id="anti">Smooth Image: Off</a><br><br><br>
+      <a href="javascript:" onclick="checkFPS('fps')" title="Show FPS." id="fps">Show FPS: Off</a><br><br><br>
+      <a href="javascript:" onclick="checkFog()" id="fog" title="Turn fog on or off.">Fog: On</a><br><br><br>
+      <a href="javascript:" onclick="changeSeed()" id="seed2" title="Always randomize world seed.">Randomize Seed: On</a><br><br>
+      <form autocomplete="off" id="form">
+    <input type="number" id="seed" placeholder="Seed.."><Br><button onclick="saveSeed()">Save Seed</button>
+    </form>
+    <form autocomplete="off" id="worldsizeform">
+      World Size: <input type="range" min="1" max="8" value="1"id="worldsize" onchange="updateWorldSize()" style="width:75px;"> <span id="worldsizeplaceholder">2x2</span><br>
+      <button onclick="setWorldSize()">Save</button>
+    </form>
+      </div>
+      </div>
+    <script type="text/javascript"src="home.js">
+    </script>
+  </body>
+</html>
