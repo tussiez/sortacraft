@@ -96,6 +96,7 @@ lazyVoxelData = {
   }
 },
 finish:function(){
+  if(this.geometryData!=undefined){
   this.done = true;
   this.current = 0;
   var posVec = this.getVoxelData(0).intersect;
@@ -104,6 +105,10 @@ finish:function(){
   Chunks[posVec.x+","+posVec.y+","+posVec.z]=lazyVoxelWorld;//chunk lib
   chunkIndex.push(posVec.x+","+posVec.y+","+posVec.z);//chunk index
   done=true;//for new chunks
+}else{
+  //not redy
+  setTimeout(function(){this.finish()},100);//100 ms wait
+}
 }
   },//lazy work
   getFPS = {
@@ -120,7 +125,7 @@ finish:function(){
     }
   },//fps
 uvNumComponents = 2;
-worldTextureLoader.setOptions({imageOrientation:'flipY'})
+worldTextureLoader.setOptions({imageOrientation:'flipY'});//flips when using bitmaps
 worldTextureBitmap = worldTextureLoader.load('textures.png',function(bmap){
 worldTextureBitmap = new THREE.CanvasTexture(bmap,undefined,undefined,undefined,THREE.NearestFilter,THREE.NearestFilter);//build texture from xhr req
 //worldTextureBitmap = bmap;
@@ -133,6 +138,11 @@ worldTextureBitmap = new THREE.CanvasTexture(bmap,undefined,undefined,undefined,
   shadows.setupMaterial(material)
 
 }),
+geometryDataWorker.onmessage = function(e){
+  if(e.data[0]=='geometrydata'){
+    lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];//pos,norm,uv,ind
+  }
+}
 onmessage = function(e) {
 
   const fn = handlers[e.data.type];
@@ -763,7 +773,7 @@ chunkWorker.onmessage = function(e){
   }
   if(e.data[0]==='complete'){
     lazyVoxelData.finishedPosting = true;
-    lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];
+  //  lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];
     lazyVoxelData.lazyArrayTotal = startCount;//set max
  if(PlayerChunk === 'hold'){PlayerChunk =undefined}//reset
     chunkWorker.terminate();//close worker, there's only so many CPU threads available
