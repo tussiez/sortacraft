@@ -86,6 +86,7 @@ lazyVoxelData = {
     if(voxelInfo!=undefined){
     lazyVoxelWorld.setVoxel(voxelInfo.x,voxelInfo.y,voxelInfo.z,voxelInfo.type);//set
     intersectWorld.setVoxel(voxelInfo.intersect.x+voxelInfo.x,voxelInfo.intersect.y+voxelInfo.y,voxelInfo.intersect.z+voxelInfo.z,voxelInfo.type);//intersect
+    geometryDataWorker.postMessage(['voxel',voxelInfo.intersect.x+voxelInfo.x,voxelInfo.intersect.y+voxelInfo.y,voxelInfo.intersect.z+voxelInfo.z,voxelInfo.type])
     if(this.current<this.lazyArrayTotal){
     this.current+=1;
   }
