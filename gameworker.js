@@ -24,6 +24,7 @@ geometryDataWorker = new Worker('geometrydataworker.js'),
 chunkIndex=[],
 done = false,
 light,
+arrGen,
 shadows,
 material,
 loader,
@@ -225,6 +226,7 @@ onmessage = function(e) {
 }
 
 };
+arrGen = lazyArray.arr();//get swirl arr
 function downloadGame(){
   postMessage(['chunks',Chunks]);//post chunks
 }
@@ -360,7 +362,6 @@ function playerMovement(){//move plyr
       camera.fov = 60;
       camera.updateProjectionMatrix();
     }
-    camera.position.y-=.1
   }else{
     if(camera.fov!=70){
       camera.fov=70;
@@ -369,11 +370,11 @@ function playerMovement(){//move plyr
   }
   if(checkIntersections()===true){
     bumping=true;
-  //  goBack(moved);
+    goBack(moved);
     renderer.render(scene,camera)
   }else{
     bumping=false;
-  //   camera.position.y-=.1;
+     camera.position.y-=.1;
       if(checkIntersections()===true){
         bumping=true;
         camera.position.y+=.1;
@@ -437,19 +438,15 @@ function lazyLoadChunks(){
 //  var clampMax = newChunkClamp({x:camera.position.x + renderDist,z:camera.position.z + renderDist});
 //  for(var x = clampMin.x;x<clampMax.x;x+=16){
 //    for(var z =clampMin.z;z<clampMax.z;z+=16){
-var clampCam=  newChunkClamp({x:camera.position.x,z:camera.position.z});
-lazyArray.x = clampCam.x;
-lazyArray.y = clampCam.z
-var arrGen = lazyArray.arr();
 for(var i =0;i<arrGen.length;i++){
-  var x= arrGen[i].x*16;
-  var z = arrGen[i].y*16;//swirl!!
-      var clampPos = {x:x,z:z}
-      console.log(clampPos);
+  var x= (arrGen[i].x*16)+camera.position.x;
+  var z = (arrGen[i].y*16)+camera.position.z;//swirl!!
+
+      var clampPos = newChunkClamp({x:x,z:z});
       var chunk = Chunks[clampPos.x+",0,"+clampPos.z];
       if(chunk==undefined&&lazyVoxelData.done==true){
         lazyVoxelData.done = false;
-        createChunk(x,0,z);
+        createChunk(clampPos.x,0,clampPos.z);
       }
 //    }
 //  }
