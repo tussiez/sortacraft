@@ -148,8 +148,7 @@ self.onmessage = function(e){//onmessage
         }
 
       }
-
-  //  }
+  /*
   for(var x = 0;x<cellSize;x++){
     for(var z = 0;z<cellSize;z++){
       for(var y = 0;y<64;y++){
@@ -267,10 +266,11 @@ self.onmessage = function(e){//onmessage
         }
         treeMap[x+","+z]=true;
         }
-        */
+        
       }
     }
   }
+  */
 function setV(x,y,z,type){
   localWorld.setVoxel(x,y,z,type);
   postMessage(['voxel',x,y,z,type]);
