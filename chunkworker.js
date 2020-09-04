@@ -97,7 +97,7 @@ self.onmessage = function(e){//onmessage
     function mineHeight(x,z){
       var x2a = x+x1;
       var z2a = z+z1;
-      var ele = perlin.noise(x2a,z2a,0);
+      var ele = perlin.noise(x2a/64,z2a/64,0);//stripe artifact
       var rough = perlin.noise(x2a/32,z2a/32,0);
       var det = perlin.noise(x2a*16,z2a*16,0);
       return Math.round(((ele + (rough*det)*4)*cellSize)+12);
