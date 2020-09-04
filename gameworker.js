@@ -110,6 +110,7 @@ realFinish:function(){
   done=true;//for new chunks
 },
   },//lazy work
+  vec = THREE.Vector2,//faster
   getFPS = {
     lastFrame:0,
     fps:0,
@@ -123,6 +124,44 @@ realFinish:function(){
       }
     }
   },//fps
+  lazyArray ={
+    x:0,
+    y:0,
+    arr:function()
+    { return [//"swirl" for chunk loading, painfully typed
+      new vec(this.x,this.y),
+      new vec(this.x,this.y+1),
+      new vec(this.x+1,this.y+1),
+      new vec(this.x+1,this.y),
+      new vec(this.x+1,this.y-1),
+      new vec(this.x,this.y-1),
+      new vec(this.x-1,this.y-1),
+      new vec(this.x-1,this.y),
+      new vec(this.x-1,this.y+1),
+      new vec(this.x-1,this.y+2),
+      new vec(this.x,this.y+2),
+      new vec(this.x+1,this.y+2),
+      new vec(this.x+2,this.y+2),
+      new vec(this.x+2,this.y+1),
+      new vec(this.x+2,this.y),
+      new vec(this.x+2,this.y-1),
+      new vec(this.x+2,this.y-2),
+      new vec(this.x+1,this.y-2),
+      new vec(this.x,this.y-2),
+      new vec(this.x-1,this.y-2),
+      new vec(this.x-2,this.y-2),
+      new vec(this.x-2,this.y-1),
+      new vec(this.x-2,this.y),
+      new vec(this.x-2,this.y+1),
+      new vec(this.x-2,this.y+2),
+      new vec(this.x-2,this.y+3),
+      new vec(this.x-1,this.y+3),
+      new vec(this.x,this.y+3),
+      new vec(this.x+1,this.y+3),
+      new vec(this.x+2,this.y+3),
+      new vec(this.x+3,this.y+3)]
+  },
+},
 uvNumComponents = 2;
 worldTextureLoader.setOptions({imageOrientation:'flipY'});//flips when using bitmaps
 worldTextureBitmap = worldTextureLoader.load('textures.png',function(bmap){
@@ -394,18 +433,27 @@ function roundVec(v){
   return vec;
 }
 function lazyLoadChunks(){
-  var clampMin = newChunkClamp({x:camera.position.x - renderDist,z:camera.position.z - renderDist});
-  var clampMax = newChunkClamp({x:camera.position.x + renderDist,z:camera.position.z + renderDist});
-  for(var x = clampMin.x;x<clampMax.x;x+=16){
-    for(var z =clampMin.z;z<clampMax.z;z+=16){
+//  var clampMin = newChunkClamp({x:camera.position.x - renderDist,z:camera.position.z - renderDist});
+//  var clampMax = newChunkClamp({x:camera.position.x + renderDist,z:camera.position.z + renderDist});
+//  for(var x = clampMin.x;x<clampMax.x;x+=16){
+//    for(var z =clampMin.z;z<clampMax.z;z+=16){
+var clampCam=  newChunkClamp({x:camera.position.x,z:camera.position.z});
+lazyArray.x = clampCam.x;
+lazyArray.y = clampCam.z
+var arrGen = lazyArray.arr();
+for(var i =0;i<arrGen.length;i++){
+  var x= arrGen[i].x*16;
+  var z = arrGen[i].y*16;//swirl!!
       var clampPos = {x:x,z:z}
+      console.log(clampPos);
       var chunk = Chunks[clampPos.x+",0,"+clampPos.z];
       if(chunk==undefined&&lazyVoxelData.done==true){
         lazyVoxelData.done = false;
         createChunk(x,0,z);
       }
-    }
-  }
+//    }
+//  }
+}
 }
 function signVec(vec,checkSign){//return sign
 	if(checkSign===undefined){
