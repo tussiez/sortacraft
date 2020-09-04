@@ -7,7 +7,8 @@ const handlers = {
   mousemove,
   resize,
   keydown,
-  keyup
+  keyup,
+  downloadGame,
 }
 //variables
 var camera,
@@ -141,6 +142,9 @@ onmessage = function(e) {
 }
 
 };
+function downloadGame(){
+  postMessage(['chunks',Chunks]);//post chunks
+}
 function checkIntersections(){
   //checking for hits
   var player = {
@@ -151,13 +155,13 @@ function checkIntersections(){
   //player info
   //check if any voxels there
   let start = new THREE.Vector3(player.x,player.y,player.z);
-  let end = new THREE.Vector3(player.x,camera.position.y,player.z);
-//  let start2 = new THREE.Vector3(player.x,camera.position.y,player.z);
-//  let end2 = new THREE.Vector3(player.x,camera.position.y,player.z);
+  let end = new THREE.Vector3(player.x,player.y,player.z);
+ let start2 = new THREE.Vector3(player.x,camera.position.y,player.z);
+  let end2 = new THREE.Vector3(player.x,camera.position.y,player.z);
   const intersection =intersectWorld.intersectRay(start, end);
-  //const intersection2 = intersectWorld.intersectRay(start2,end2);
+  const intersection2 = intersectWorld.intersectRay(start2,end2);
 
-  if (intersection) {
+  if (intersection||intersection2) {
       //hit
       return true;
   }else{
@@ -302,10 +306,10 @@ function goBack(arr){
       controls.moveForward(.07);
     }
     if(arr[i]==='right'){
-      controls.moveRight(.07);//swap
-    }
-    if(arr[i]==='right'){
       controls.moveRight(-.07);//swap
+    }
+    if(arr[i]==='left'){
+      controls.moveRight(.07);//swap
     }
     if(arr[i]==='up'){
 

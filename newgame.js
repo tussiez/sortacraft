@@ -1,6 +1,8 @@
 var gameWorker = new Worker('gameworker.js',{type:"module"});//enable modules
 //setup dom
-
+window["downloadWorld"] = function(){
+  gameWorker.postMessage({type:'downloadGame'});
+}
 function prepCanvas(){
   let canvas = document.createElement('canvas');
   canvas.height = window.innerHeight;
@@ -13,6 +15,21 @@ gameWorker.onmessage = function(e){
   if(e.data[0]=='fps'){
     document.getElementById('fpsEle').innerText = 'FPS: '+e.data[1];
   }
+  if(e.data[0]=='chunks'){
+    download('my_world.dat',JSON.stringify(e.data[1]))
+  }
+}
+function download(filename, text) {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
 }
 //event handlers
 window.addEventListener('resize',function(e){
