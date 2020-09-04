@@ -110,13 +110,136 @@ self.onmessage = function(e){//onmessage
     var levels = {};
 
   //  for(var y = 0; y< 64; y++){
+  var treeMap = {};
+  function checkNeighboringTrees(x,z){
+  var neighbors = [
+    tree(x,z),
+    tree(x-1,z),
+    tree(x+1,z),
+    tree(x,z-1),
+    tree(x,z+1),
+    tree(x-1,z-1),
+    tree(x+1,z+1),
+  ];
+  var isNeighbor = false;
+  for(let i in neighbors){
+    if(neighbors[i]==true){
+      isNeighbor = true;
+    }
+  }
+  return isNeighbor;
+  }
+  function tree(x,z){
+    return treeMap[(x+","+z)]
+  }
 
       for(var z = 0; z< cellSize; z++){
 
         for(var x = 0; x< cellSize; x++){
           var hm = mineHeight(x,z);
           var type = 2;
+          var doTree = perlin.noise((x+x1)*10,y,(z+z1)*10);
+          if(doTree>0&&checkNeighboringTrees(x+x1,z+z1)==false){
+            //can put a tree
+            console.log('Tree Ree')
+            if(x<=12&&x>=4&&z<=12&&z>=4){
+              //should be a tree
 
+          changed=true;
+
+          type=5;
+          //tree growing:
+          var tr;
+          for(tr = 0;tr<Math.floor(Math.random()*3)+5;tr++){
+
+            localWorld.setVoxel(x,y+tr,type);//set in local voxelworld
+
+            postMessage(["voxel",x,y+tr,z,type]);//set in output(final)
+          }
+          function setV2(x,y,z){postMessage(["voxel",x,y,z,7]);localWorld.setVoxel(x,y,z,7)};//set voxel
+            //seed and grow tree trunk
+            //tr = end height
+            tr = tr+y;
+
+            //TOP
+            setV2(x,tr,z);
+            setV2(x,tr+1,z);
+
+
+            //FRONT
+            setV2(x-1,tr-2,z);//set leaves
+            setV2(x-1,tr-1,z);
+            setV2(x-1,tr,z);
+            //FRONT
+            setV2(x-2,tr-2,z);
+            setV2(x-2,tr-1,z);
+            //setV(x-2,tr,z); trim?
+
+
+            //BACK
+            setV2(x+1,tr-2,z);
+            setV2(x+1,tr-1,z);
+            setV2(x+1,tr,z);
+            //BACK
+            setV2(x+2,tr-2,z);
+            setV2(x+2,tr-1,z);
+           // setV(x+2,tr,z);trim???
+
+
+            //LEFT
+            setV2(x,tr-2,z-1);
+            setV2(x,tr-1,z-1);
+            setV2(x,tr,z-1);
+            //LEFT
+            setV2(x,tr-2,z-2);
+            setV2(x,tr-1,z-2);
+           // setV(x,tr,z-2);trim
+
+
+            //RIGHT
+            setV2(x,tr-2,z+1);
+            setV2(x,tr-1,z+1);
+            setV2(x,tr,z+1);
+            //RIGHT
+            setV2(x,tr-2,z+2);
+            setV2(x,tr-1,z+2);
+            //setV(x,tr,z+2); trim?
+
+            //FILL(L+R)
+            setV2(x-1,tr-2,z+1);
+            setV2(x+1,tr-2,z+1);
+            setV2(x-1,tr-1,z+1);
+            setV2(x+1,tr-1,z+1);
+            setV2(x-1,tr,z+1);
+            setV2(x+1,tr,z+1);
+
+            //FILL (F&B)
+            setV2(x-1,tr-2,z-1);
+            setV2(x+1,tr-2,z-1);
+            setV2(x-1,tr-1,z-1);
+            setV2(x+1,tr-1,z-1);
+            setV2(x-1,tr,z-1);
+            setV2(x+1,tr,z-1);
+
+            //FILL CORNERS (1)
+            setV2(x-2,tr-2,z+2);
+            setV2(x-2,tr-2,z-2);
+            setV2(x-1,tr-2,z+2);
+            setV2(x-1,tr-2,z-2);
+            setV2(x-2,tr-2,z+1);
+            setV2(x-2,tr-2,z-1);
+            //FILL CORNERS (2)
+            setV2(x+2,tr-2,z+2);//one side
+            setV2(x+2,tr-2,z-2);//other
+            setV2(x+1,tr-2,z+2);//one
+            setV2(x+1,tr-2,z-2);//other
+            setV2(x+2,tr-2,z+1);//one
+            setV2(x+2,tr-2,z-1);//other
+
+
+          }
+          treeMap[x+","+z]=true;
+          }
           localWorld.setVoxel(x,hm,z,type);
           postMessage(['voxel',x,hm,z,type]);
           levels[x+","+z]=hm;

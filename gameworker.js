@@ -96,20 +96,19 @@ lazyVoxelData = {
   }
 },
 finish:function(){
-  if(this.geometryData!=undefined){
-  this.done = true;
-  this.current = 0;
+  const posVec = this.getVoxelData(0).intersect,x=posVec.x,y=posVec.y,z=posVec.z;
+  geometryDataWorker.postMessage(['geometrydata',posVec.x,posVec.y,posVec.z,'regular',posVec]);//reg
+},
+realFinish:function(){
   var posVec = this.getVoxelData(0).intersect;
   this.lazyArray = [];//reset arry
+  this.done = true;
+  this.current = 0;
   loadChunk(posVec.x,posVec.y,posVec.z,lazyVoxelWorld,this.geometryData);//load in chunk
   Chunks[posVec.x+","+posVec.y+","+posVec.z]=lazyVoxelWorld;//chunk lib
   chunkIndex.push(posVec.x+","+posVec.y+","+posVec.z);//chunk index
   done=true;//for new chunks
-}else{
-  //not redy
-  setTimeout(function(){this.finish()},100);//100 ms wait
-}
-}
+},
   },//lazy work
   getFPS = {
     lastFrame:0,
@@ -140,8 +139,41 @@ worldTextureBitmap = new THREE.CanvasTexture(bmap,undefined,undefined,undefined,
 }),
 geometryDataWorker.onmessage = function(e){
   if(e.data[0]=='geometrydata'){
+    if(e.data[5]=='regular'){
     lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];//pos,norm,uv,ind
+    lazyVoxelData.realFinish();//real finish
+    var x = e.data[6].x,y = e.data[6].y,z=e.data[6].z;
+    var neighbors = [
+      new THREE.Vector3(x-16,y,z),
+      new THREE.Vector3(x+16,y,z),
+      new THREE.Vector3(x,y,z-16),
+      new THREE.Vector3(x,y,z+16),
+    ];//get left/right/fwd/bwd chunks to update geodata, if possbile
+    for(let i =0;i<neighbors.length;i++){
+      //let for local scope
+      if(Chunks[stringVec(neighbors[i])]!=undefined){
+        var pos = neighbors[i];
+    //  geometryDataWorker.postMessage(['geometrydata',pos.x,pos.y,pos.z,'repeat',pos]);//pass "repeat" and pass pos for later
+    }//exists
+  };//post more !!! for fixing faces
+  }else{
+    //update geometry based on chunk
+    var chunk = ChunksMesh[e.data[6].x+','+e.data[6].y+","+e.data[6].z];
+    var geometry = chunk.geometry;
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(e.data[1]), 3));
+
+    geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(e.data[2]), 3));
+
+    geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(e.data[3]), 2));
+
+    geometry.setIndex(e.data[4]);//update geometry
+    //geometry.computeBoundingSphere();
+
   }
+  }
+}
+function stringVec(vec){
+  return (vec.x+","+vec.y+","+vec.z)
 }
 onmessage = function(e) {
 
@@ -289,6 +321,7 @@ function playerMovement(){//move plyr
       camera.fov = 60;
       camera.updateProjectionMatrix();
     }
+    camera.position.y-=.1
   }else{
     if(camera.fov!=70){
       camera.fov=70;
@@ -297,11 +330,11 @@ function playerMovement(){//move plyr
   }
   if(checkIntersections()===true){
     bumping=true;
-    goBack(moved);
+  //  goBack(moved);
     renderer.render(scene,camera)
   }else{
     bumping=false;
-     camera.position.y-=.1;
+  //   camera.position.y-=.1;
       if(checkIntersections()===true){
         bumping=true;
         camera.position.y+=.1;
@@ -369,7 +402,6 @@ function lazyLoadChunks(){
       var chunk = Chunks[clampPos.x+",0,"+clampPos.z];
       if(chunk==undefined&&lazyVoxelData.done==true){
         lazyVoxelData.done = false;
-        console.log('In req. of chunk');
         createChunk(x,0,z);
       }
     }
