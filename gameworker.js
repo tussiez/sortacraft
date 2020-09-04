@@ -46,6 +46,7 @@ lazyVoxelWorld,
 jumping=false,
 bumping=false,
 moved = [],
+chunkWorker,
 lazyVoxelData = {
   current:0,//kindof like i
   needsClear:true,//needs to clear
@@ -175,7 +176,7 @@ function main(dat){
   renderer = new THREE.WebGLRenderer({canvas:dat.canvas});
   renderer.shadowMap.enabled=true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  //renderer.shadowMap.autoUpdate=false;
+  renderer.shadowMap.autoUpdate=false;
   renderer.shadowMap.needsUpdate=true;
   renderer.setSize(dat.width,dat.height,false);//req.false
   controls = new PointerLockControls(camera);
@@ -187,7 +188,7 @@ function main(dat){
     maxFar:camera.far,
     cascades:4,
     mode:'practical',
-    shadowMapSize:1024,
+    shadowMapSize:512,
     lightDirection:new THREE.Vector3(-1,-1,1).normalize(),
     parent:scene,
     camera:camera,
@@ -242,26 +243,28 @@ function updateDaytime(){
 function playerMovement(){//move plyr
   moved =[];
   if(keys['w']){
-    controls.moveForward(.04);
+    controls.moveForward(.07);
     moved.push('forward');
 
   }
   if(keys['a']){
-    controls.moveRight(-.04);
+    controls.moveRight(-.07);
     moved.push('left');
 
   }
-  if(keys[' ']){
-    camera.position.y+=0.05;
+  if(keys[' ']&&jumping==false){
+    jumping==true;
+    camera.position.y+=0.1;
     moved.push('up');
+    jumping=false;
   }
   if(keys['s']){
-    controls.moveForward(-.04);
+    controls.moveForward(-.07);
     moved.push('backward');
 
   }
   if(keys['d']){
-    controls.moveRight(.04);
+    controls.moveRight(.07);
     moved.push('right')
 
   }
@@ -282,11 +285,10 @@ function playerMovement(){//move plyr
     renderer.render(scene,camera)
   }else{
     bumping=false;
-     camera.position.y-=.05;
+     camera.position.y-=.1;
       if(checkIntersections()===true){
-        console.log('Again!!')
         bumping=true;
-        camera.position.y+=.05;
+        camera.position.y+=.1;
       }
     renderer.render(scene,camera);
   }
@@ -294,16 +296,16 @@ function playerMovement(){//move plyr
 function goBack(arr){
   for(var i =0;i<arr.length;i++){
     if(arr[i]==='forward'){
-      controls.moveForward(-.04)
+      controls.moveForward(-.07)
     }
     if(arr[i]==='backward'){
-      controls.moveForward(.04);
+      controls.moveForward(.07);
     }
     if(arr[i]==='right'){
-      controls.moveRight(.04);//swap
+      controls.moveRight(.07);//swap
     }
     if(arr[i]==='right'){
-      controls.moveRight(-.04);//swap
+      controls.moveRight(-.07);//swap
     }
     if(arr[i]==='up'){
 
@@ -356,70 +358,6 @@ function lazyLoadChunks(){
       }
     }
   }
-}
-function loadUnloadChunks(){
-  //check if chunks in range
-  var chunkNearPlayer = 0;
-  var roundCameraPos = roundVec(new THREE.Vector3().clone(camera.position));
-  for(var i = 0;i<chunkIndex.length;i++){
-    var chunk = ChunksMesh[chunkIndex[i]];
-    var strpos = chunkIndex[i].split(',');
-    var pos = convInt(strpos[0],strpos[1],strpos[2]);//convert to int
-    var maxPos = new THREE.Vector3(pos.x+16,pos.y,pos.z+16);
-    var boxPoint  = {
-      minX:pos.x,
-      maxX:maxPos.x,
-      minZ:pos.z,
-      maxZ:maxPos.z
-    }
-    var playerRender ={
-      minX:camera.position.x-renderDist,
-      maxX:camera.position.x+renderDist,
-      minZ:camera.position.z-renderDist,
-      maxZ:camera.position.z+renderDist,
-    }
-
-    if(AABBCollision(pos,playerRender)===false){
-      //not in range of camera, remove
-      scene.remove(chunk);//wipe from render
-    //  chunk.geometry.dispose();//clear from rem
-    //  chunk.material.dispose();//clear from mem
-      //chunk = undefined;//remove
-      //chunkIndex.slice(i,1);//remove
-      //Chunks[pos.x+","+pos.y+","+pos.z]=undefined;//remove
-    //  ChunksMesh[pos.x+","+pos.y+","+pos.z]=undefined
-    }else{
-      chunkNearPlayer+=1;
-      if(scene.getObjectByName(chunkIndex[i])===undefined){
-        //add this chunk back
-        scene.add(chunk);
-      }
-
-    }
-  }
-
-    if(done===true&&PlayerChunk===undefined){//undefined === need new chunk
-    //no chunks near player, create new on
-    PlayerChunk='hold';//wait till chunk done
-		var signCameraVec1 = signVec(camera.position,true);//get sign
-		if(signCameraVec1==true){//positive all
-    var clampedPos = newChunkClamp(floorVec(camera.position));
-    createChunk(clampedPos.x,0,clampedPos.z,false);//load in a new chunk here
-    console.log('New Chunk');
-  }else{
-		var clampedPos = newChunkClamp(floorVec(camera.position));
-		var signCameraVec =signVec(camera.position);//show sign
-		if(signCameraVec.x < 0){
-			clampedPos.x-=16;//reduce
-		}
-		if(signCameraVec.z < 0){
-			clampedPos.z-=16;
-		}
-		createChunk(clampedPos.x,0,clampedPos.z);
-		console.log('NegNew chunk')
-	}
-}
-
 }
 function signVec(vec,checkSign){//return sign
 	if(checkSign===undefined){
@@ -790,8 +728,6 @@ function manageVoxelLoading(){
     }
     }
 
-    console.log(Math.floor((lazyVoxelData.current*100)/lazyVoxelData.lazyArrayTotal)+'% Done');
-
   }
 }
 
@@ -805,16 +741,8 @@ intersectWorld = new VoxelWorld({
 
 function createChunk(x,y,z){
   if(material){
-var chunkWorker = new Worker('chunkworker.js');
+chunkWorker = new Worker('chunkworker.js');
 var currentBiome = 'caves';
-/*
-var localVoxelWorld = new VoxelWorld({
-cellSize,
-tileSize,
-tileTextureWidth,
-tileTextureHeight
-});//local voxel world(cannot share classes)
-*/
 lazyVoxelData.needsClear = true;//need a clear
 chunkWorker.postMessage(['create',16,tileSize,tileTextureWidth,tileTextureHeight,12345,x,y,z,heightMult,currentBiome,2]);
 done=false;
@@ -831,10 +759,6 @@ chunkWorker.onmessage = function(e){
     lazyVoxelData.finishedPosting = true;
     lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];
     lazyVoxelData.lazyArrayTotal = startCount;//set max
-  //  loadChunk(x,y,z,localVoxelWorld);//load in chunk e.data[1] = geo
-  //  Chunks[x+","+y+','+z] = localVoxelWorld;//get from pos
-  //  chunkIndex.push(x+","+y+","+z);
-  //  done=true;
  if(PlayerChunk === 'hold'){PlayerChunk =undefined}//reset
     chunkWorker.terminate();//close worker, there's only so many CPU threads available
   }
