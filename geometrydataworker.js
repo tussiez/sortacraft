@@ -3,7 +3,7 @@ const voxelWorld = new VoxelWorld({
   tileSize:16,
   tileTextureWidth:128,
   tileTextureHeight:48
-})
+});//prep voxelwordl
 onmessage = function(e){
   if(e.data[0]=='voxel'){
     voxelWorld.setVoxel(e.data[1],e.data[2],e.data[3],e.data[4]);//set voxel
