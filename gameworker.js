@@ -231,8 +231,8 @@ function main(dat){
   controls = new PointerLockControls(camera);
   camera.position.z = 3;
   camera.position.y = 64;
-  var ambient = new THREE.AmbientLight(0xffffff,0.3);
-//  scene.add(ambient);//ambient light
+  var ambient = new THREE.AmbientLight(0xffffff,0.4);
+  scene.add(ambient);//ambient light
   shadows = new CSM({
     maxFar:camera.far,
     cascades:4,
@@ -399,16 +399,12 @@ function lazyLoadChunks(){
   var clampMax = newChunkClamp({x:camera.position.x + renderDist,z:camera.position.z + renderDist});
   for(var x = clampMin.x;x<clampMax.x;x+=16){
     for(var z =clampMin.z;z<clampMax.z;z+=16){
-//for(var i =0;i<arrGen.length;i++){
-  //var x= (arrGen[i].x*16)+camera.position.x;
-  //var z = (arrGen[i].y*16)+camera.position.z;//swirl!!
 
       var clampPos = newChunkClamp({x:x,z:z});
       var chunk = Chunks[clampPos.x+",0,"+clampPos.z];
       if(chunk==undefined&&lazyVoxelData.done==true){
         lazyVoxelData.done = false;
         createChunk(x,0,z);
-    //  }
     }
   }
 }
@@ -805,13 +801,9 @@ chunkWorker.onmessage = function(e){
   if(e.data[0]==='voxel'){
     lazyVoxelData.lazyArray.push({type:e.data[4],intersect:[x,y,z],position:[e.data[1],e.data[2],e.data[3]]});
     startCount+=1;
-//    localVoxelWorld.setVoxel(e.data[1],e.data[2],e.data[3],e.data[4]);
-    //set in localvoxelworld
-  //  intersectWorld.setVoxel(e.data[1]+x,e.data[2]+y,e.data[3]+z,e.data[4]);
   }
   if(e.data[0]==='complete'){
     lazyVoxelData.finishedPosting = true;
-  //  lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];
     lazyVoxelData.lazyArrayTotal = startCount;//set max
  if(PlayerChunk === 'hold'){PlayerChunk =undefined}//reset
     chunkWorker.terminate();//close worker, there's only so many CPU threads available
