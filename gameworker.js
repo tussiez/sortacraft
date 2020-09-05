@@ -424,7 +424,7 @@ function AABBCollision(point,box){
          (point.z >= box.minZ && point.z <= box.maxZ);
 }
 
-var renderDist = 32;//chunks*16
+var renderDist = 64;//chunks*16
 
 function roundVec(v){
   var roundedX = Number((v.x).toFixed(1));
