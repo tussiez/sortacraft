@@ -24,7 +24,6 @@ geometryDataWorker = new Worker('geometrydataworker.js'),
 chunkIndex=[],
 done = false,
 light,
-arrGen,
 shadows,
 material,
 loader,
@@ -125,44 +124,6 @@ realFinish:function(){
       }
     }
   },//fps
-  lazyArray ={
-    x:0,
-    y:0,
-    arr:function()
-    { return [//"swirl" for chunk loading, painfully typed
-      new vec(this.x,this.y),
-      new vec(this.x,this.y+1),
-      new vec(this.x+1,this.y+1),
-      new vec(this.x+1,this.y),
-      new vec(this.x+1,this.y-1),
-      new vec(this.x,this.y-1),
-      new vec(this.x-1,this.y-1),
-      new vec(this.x-1,this.y),
-      new vec(this.x-1,this.y+1),
-      new vec(this.x-1,this.y+2),
-      new vec(this.x,this.y+2),
-      new vec(this.x+1,this.y+2),
-      new vec(this.x+2,this.y+2),
-      new vec(this.x+2,this.y+1),
-      new vec(this.x+2,this.y),
-      new vec(this.x+2,this.y-1),
-      new vec(this.x+2,this.y-2),
-      new vec(this.x+1,this.y-2),
-      new vec(this.x,this.y-2),
-      new vec(this.x-1,this.y-2),
-      new vec(this.x-2,this.y-2),
-      new vec(this.x-2,this.y-1),
-      new vec(this.x-2,this.y),
-      new vec(this.x-2,this.y+1),
-      new vec(this.x-2,this.y+2),
-      new vec(this.x-2,this.y+3),
-      new vec(this.x-1,this.y+3),
-      new vec(this.x,this.y+3),
-      new vec(this.x+1,this.y+3),
-      new vec(this.x+2,this.y+3),
-      new vec(this.x+3,this.y+3)]
-  },
-},
 uvNumComponents = 2;
 worldTextureLoader.setOptions({imageOrientation:'flipY'});//flips when using bitmaps
 worldTextureBitmap = worldTextureLoader.load('textures.png',function(bmap){
@@ -226,7 +187,6 @@ onmessage = function(e) {
 }
 
 };
-arrGen = lazyArray.arr();//get swirl arr
 function downloadGame(){
   postMessage(['chunks',Chunks]);//post chunks
 }
@@ -425,7 +385,7 @@ function AABBCollision(point,box){
          (point.z >= box.minZ && point.z <= box.maxZ);
 }
 
-var renderDist = 64;//chunks*16
+var renderDist = 32;//chunks*16
 
 function roundVec(v){
   var roundedX = Number((v.x).toFixed(1));
