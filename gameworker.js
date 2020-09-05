@@ -271,13 +271,14 @@ function main(dat){
   controls = new PointerLockControls(camera);
   camera.position.z = 3;
   camera.position.y = 64;
-  var ambient = new THREE.AmbientLight(0xffffff,0.4);
-  scene.add(ambient);//ambient light
+  var ambient = new THREE.AmbientLight(0xffffff,0.3);
+//  scene.add(ambient);//ambient light
   shadows = new CSM({
     maxFar:camera.far,
     cascades:4,
     mode:'practical',
-    shadowMapSize:512,
+    shadowMapSize:128,//low res shadows
+    shadowBias:-0.000005,
     lightDirection:new THREE.Vector3(-1,-1,1).normalize(),
     parent:scene,
     camera:camera,
