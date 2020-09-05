@@ -434,22 +434,22 @@ function roundVec(v){
   return vec;
 }
 function lazyLoadChunks(){
-//  var clampMin = newChunkClamp({x:camera.position.x - renderDist,z:camera.position.z - renderDist});
-//  var clampMax = newChunkClamp({x:camera.position.x + renderDist,z:camera.position.z + renderDist});
-//  for(var x = clampMin.x;x<clampMax.x;x+=16){
-//    for(var z =clampMin.z;z<clampMax.z;z+=16){
-for(var i =0;i<arrGen.length;i++){
-  var x= (arrGen[i].x*16)+camera.position.x;
-  var z = (arrGen[i].y*16)+camera.position.z;//swirl!!
+  var clampMin = newChunkClamp({x:camera.position.x - renderDist,z:camera.position.z - renderDist});
+  var clampMax = newChunkClamp({x:camera.position.x + renderDist,z:camera.position.z + renderDist});
+  for(var x = clampMin.x;x<clampMax.x;x+=16){
+    for(var z =clampMin.z;z<clampMax.z;z+=16){
+//for(var i =0;i<arrGen.length;i++){
+  //var x= (arrGen[i].x*16)+camera.position.x;
+  //var z = (arrGen[i].y*16)+camera.position.z;//swirl!!
 
       var clampPos = newChunkClamp({x:x,z:z});
       var chunk = Chunks[clampPos.x+",0,"+clampPos.z];
       if(chunk==undefined&&lazyVoxelData.done==true){
         lazyVoxelData.done = false;
-        createChunk(clampPos.x,0,clampPos.z);
-      }
-//    }
-//  }
+        createChunk(x,0,z);
+    //  }
+    }
+  }
 }
 }
 function signVec(vec,checkSign){//return sign
