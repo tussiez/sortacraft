@@ -72,7 +72,7 @@ class VoxelWorld {
 		}
 	}
   getFaceIndexFromCell(x,y,z){//face index group from cell
-    return faceIndex[x+","+y+","+z]
+    return this.faceIndex[x+","+y+","+z]
   }
   computeFaceIndexPosition(vx,vy,vz){
     return vx+","+vy+","+vz
