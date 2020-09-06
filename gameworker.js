@@ -479,6 +479,9 @@ class VoxelWorld {
     const {cellSize} = this;
     this.cellSliceSize = cellSize * cellSize;
     this.cells ={};
+    this.faceIndex = {};//per cell face idx
+    this.calculateFaces = options.calculateFaces;
+    this.currentFace = 0;
   }
   computeCellId(x,y,z){
     const {cellSize }= this;
@@ -513,6 +516,7 @@ class VoxelWorld {
     if(!cell){
       const {cellSize} = this;
       cell = new Uint8Array(cellSize*cellSize*cellSize);
+      this.faceIndex[x+","+y+","+z] = [];
       this.cells[cellId]=cell;
     }
     return cell;
@@ -533,6 +537,7 @@ class VoxelWorld {
 			return false;
 		}
 	}
+
   generateGeometryDataForCell(cellX, cellY, cellZ,rx,ry,rz) {
     const {cellSize, tileSize, tileTextureWidth, tileTextureHeight} = this;
     const positions = [];
@@ -542,6 +547,8 @@ class VoxelWorld {
     const startX = cellX * cellSize;
     const startY = cellY * cellSize;
     const startZ = cellZ * cellSize;
+   const faceIndexGroup = this.calculateFaces == true ? this.getFaceIndexFromCell(startX,startY,startZ) : undefined;//or not
+   this.currentFace = 0;//reset
     for (let y = 0; y < cellSize; ++y) {
       const voxelY = startY + y;
       for (let z = 0; z < cellSize; ++z) {
@@ -596,6 +603,7 @@ class VoxelWorld {
       normals,
       uvs,
       indices,
+      faceIndexGroup,
     };
   }
    intersectRay(start, end) { //this not by me, it strange physics :3
