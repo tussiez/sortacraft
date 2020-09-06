@@ -154,6 +154,7 @@ class VoxelWorld {
       uvs,
       indices,
       faceIndexGroup,
+      faceIndex:this.currentFace,
     };
   }
    intersectRay(start, end) { //this not by me, it strange physics :3
@@ -319,10 +320,12 @@ onmessage = function(e){
   }
   if(e.data[0]=='geometrydata'){
     //get geometry data @ pos
-    const {positions,normals,uvs,indices,faceIndexGroup} = voxelWorld.generateGeometryDataForCell(e.data[1]/64,e.data[2]/64,e.data[3]/64);//heavy loading
+    const {positions,normals,uvs,indices,faceIndexGroup,faceIndex} = voxelWorld.generateGeometryDataForCell(e.data[1]/64,e.data[2]/64,e.data[3]/64);//heavy loading
     //this will cover chunk bounds
     //calculate faceindxgroup
-
+    for(var face = 0; face<faceIndex;face++){
+      
+    }
     postMessage(['geometrydata',positions,normals,uvs,indices,e.data[4],e.data[5]]);//e.data[2] if pos
   }
 }
