@@ -131,7 +131,7 @@ class VoxelWorld {
                   ndx, ndx + 1, ndx + 2,
                   ndx + 2, ndx + 1, ndx + 3,
                 );
-                if(this.calculateFaces==true){
+                if(faceIndexGroup){
                   //add face to indx
                 //  faceIndexGroup[this.computeFaceIndexPosition(voxelX,voxelY,voxelZ,dir[0],dir[1],dir[2])] = 1;//set a face @ pos and dir
                 var faceIndexPosition = this.computeFaceIndexPosition(voxelX,voxelY,voxelZ);

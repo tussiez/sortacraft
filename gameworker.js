@@ -143,20 +143,6 @@ geometryDataWorker.onmessage = function(e){
     if(e.data[5]=='regular'){
     lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];//pos,norm,uv,ind
     lazyVoxelData.realFinish();//real finish
-    var x = e.data[6].x,y = e.data[6].y,z=e.data[6].z;
-    var neighbors = [
-      new THREE.Vector3(x-16,y,z),
-      new THREE.Vector3(x+16,y,z),
-      new THREE.Vector3(x,y,z-16),
-      new THREE.Vector3(x,y,z+16),
-    ];//get left/right/fwd/bwd chunks to update geodata, if possbile
-    for(let i =0;i<neighbors.length;i++){
-      //let for local scope
-      if(Chunks[stringVec(neighbors[i])]!=undefined){
-        var pos = neighbors[i];
-    //  geometryDataWorker.postMessage(['geometrydata',pos.x,pos.y,pos.z,'repeat',pos]);//pass "repeat" and pass pos for later
-    }//exists
-  };//post more !!! for fixing faces
   }else{
     //update geometry based on chunk
     var chunk = ChunksMesh[e.data[6].x+','+e.data[6].y+","+e.data[6].z];
