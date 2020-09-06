@@ -513,7 +513,6 @@ class VoxelWorld {
     if(!cell){
       const {cellSize} = this;
       cell = new Uint8Array(cellSize*cellSize*cellSize);
-      this.faceIndex[x+","+y+","+z] = [];
       this.cells[cellId]=cell;
     }
     return cell;
