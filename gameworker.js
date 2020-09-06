@@ -400,9 +400,7 @@ function lazyLoadChunks(){
   var clampMax = newChunkClamp({x:camera.position.x + renderDist,z:camera.position.z + renderDist});
   for(var x = clampMin.x;x<clampMax.x;x+=16){
     for(var z =clampMin.z;z<clampMax.z;z+=16){
-
-      var clampPos = newChunkClamp({x:x,z:z});
-      var chunk = Chunks[clampPos.x+",0,"+clampPos.z];
+      var chunk = Chunks[x+",0,"+z];
       if(chunk==undefined&&lazyVoxelData.done==true){
         lazyVoxelData.done = false;
         createChunk(x,0,z);
@@ -481,6 +479,9 @@ class VoxelWorld {
     const {cellSize} = this;
     this.cellSliceSize = cellSize * cellSize;
     this.cells ={};
+    this.faceIndex = [{pos:{x:0,y:0,z:0}}];//create face index [per cell]
+    this.calculateFaces = options.calculateFaces;
+    this.currentFace = 0;
   }
   computeCellId(x,y,z){
     const {cellSize }= this;
@@ -515,6 +516,7 @@ class VoxelWorld {
     if(!cell){
       const {cellSize} = this;
       cell = new Uint8Array(cellSize*cellSize*cellSize);
+      this.faceIndex.push({pos:{x:x,y:y,z:z}});//new cell (remember infinite.chunks vertically)
       this.cells[cellId]=cell;
     }
     return cell;
@@ -535,6 +537,12 @@ class VoxelWorld {
 			return false;
 		}
 	}
+  getFaceIndexFromCell(x,y,z){//face index group from cell
+    let pos =
+  }
+  computeFaceIndexPosition(vx,vy,vz){
+    return vx+","+vy+","+vz
+  }
   generateGeometryDataForCell(cellX, cellY, cellZ,rx,ry,rz) {
     const {cellSize, tileSize, tileTextureWidth, tileTextureHeight} = this;
     const positions = [];
@@ -544,7 +552,8 @@ class VoxelWorld {
     const startX = cellX * cellSize;
     const startY = cellY * cellSize;
     const startZ = cellZ * cellSize;
-
+   const faceIndexGroup = this.calculateFaces == true ? this.getFaceIndexFromCell(cellX,cellY,cellZ) : undefined;//or not
+   this.currentFace = 0;//reset
     for (let y = 0; y < cellSize; ++y) {
       const voxelY = startY + y;
       for (let z = 0; z < cellSize; ++z) {
@@ -588,18 +597,29 @@ class VoxelWorld {
                   ndx, ndx + 1, ndx + 2,
                   ndx + 2, ndx + 1, ndx + 3,
                 );
+                if(this.calculateFaces==true){
+                  //add face to indx
+                //  faceIndexGroup[this.computeFaceIndexPosition(voxelX,voxelY,voxelZ,dir[0],dir[1],dir[2])] = 1;//set a face @ pos and dir
+                var faceIndexPosition = this.computeFaceIndexPosition(voxelX,voxelY,voxelZ);
+                if(faceIndexGroup[faceIndexPosition].isArray() == true){
+                  faceIndexGroup[faceIndexPosition].push({dir:dir,index:this.currentFace});
+                }else {
+                  faceIndexGroup[faceIndexPosition] = [{dir:dir,index:this.currentFace}];
+                }
+                this.currentFace+=1;//inside fn for face addition to idx
+                }
 							}
             }
           }
         }
       }
     }
-
     return {
       positions,
       normals,
       uvs,
       indices,
+      faceIndexGroup,
     };
   }
    intersectRay(start, end) { //this not by me, it strange physics :3
