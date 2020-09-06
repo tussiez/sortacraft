@@ -479,7 +479,7 @@ class VoxelWorld {
     const {cellSize} = this;
     this.cellSliceSize = cellSize * cellSize;
     this.cells ={};
-    this.faceIndex = [{pos:{x:0,y:0,z:0}}];//create face index [per cell]
+    this.faceIndex = {};//per cell face idx
     this.calculateFaces = options.calculateFaces;
     this.currentFace = 0;
   }
@@ -516,7 +516,7 @@ class VoxelWorld {
     if(!cell){
       const {cellSize} = this;
       cell = new Uint8Array(cellSize*cellSize*cellSize);
-      this.faceIndex.push({pos:{x:x,y:y,z:z}});//new cell (remember infinite.chunks vertically)
+      this.faceIndex[x+","+y+","+z] = [];
       this.cells[cellId]=cell;
     }
     return cell;
@@ -538,7 +538,7 @@ class VoxelWorld {
 		}
 	}
   getFaceIndexFromCell(x,y,z){//face index group from cell
-    let pos =
+    return faceIndex[x+","+y+","+z]
   }
   computeFaceIndexPosition(vx,vy,vz){
     return vx+","+vy+","+vz
@@ -552,7 +552,7 @@ class VoxelWorld {
     const startX = cellX * cellSize;
     const startY = cellY * cellSize;
     const startZ = cellZ * cellSize;
-   const faceIndexGroup = this.calculateFaces == true ? this.getFaceIndexFromCell(cellX,cellY,cellZ) : undefined;//or not
+   const faceIndexGroup = this.calculateFaces == true ? this.getFaceIndexFromCell(startX,startY,startZ) : undefined;//or not
    this.currentFace = 0;//reset
     for (let y = 0; y < cellSize; ++y) {
       const voxelY = startY + y;
