@@ -9,6 +9,7 @@ const handlers = {
   keydown,
   keyup,
   downloadGame,
+  mousedown,
 }
 //variables
 var camera,
@@ -22,7 +23,7 @@ ChunksMesh={},
 PlayerChunk,
 geometryDataWorker = new Worker('geometrydataworker.js'),
 chunkIndex=[],
-done = false,
+done = true,
 light,
 shadows,
 material,
@@ -54,7 +55,7 @@ chunkWorker,
 lazyVoxelData = {
   current:0,//kindof like i
   needsClear:true,//needs to clear
-  done:false,//not done
+  done:true,//not done
   finishedPosting: false,
   lazyArray:[],//array of data
   lazyArrayTotal:undefined,
@@ -156,7 +157,7 @@ geometryDataWorker.onmessage = function(e){
     geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(e.data[3]), 2));
 
     geometry.setIndex(e.data[4]);//update geometry
-    //geometry.computeBoundingSphere();
+    geometry.computeBoundingSphere();
 
   }
   }
@@ -240,7 +241,7 @@ function main(dat){
   scene.add(sunSphere.object3d);
   sunLight = new THREEx.DayNight.SunLight();
   scene.add(sunLight.object3d);
-  createChunk(0,0,0);
+
   renderer.compile(scene,camera);//compile material shaders
   render();
   getFPS.framerate();//start fps counter
@@ -323,6 +324,7 @@ function playerMovement(){//move plyr
       camera.updateProjectionMatrix();
     }
   }
+
   if(checkIntersections()===true){
     bumping=true;
     goBack(moved);
@@ -330,11 +332,16 @@ function playerMovement(){//move plyr
   }else{
     bumping=false;
      camera.position.y-=.1;
+     moved.push('down');
       if(checkIntersections()===true){
         bumping=true;
         camera.position.y+=.1;
       }
     renderer.render(scene,camera);
+  }
+  PlayerChunk = chunkClamp(camera.position,true)
+  if(PlayerChunk == undefined&&camera.position.y<64){
+    goBack(moved)
   }
 }
 function goBack(arr){
@@ -351,8 +358,8 @@ function goBack(arr){
     if(arr[i]==='left'){
       controls.moveRight(.07);//swap
     }
-    if(arr[i]==='up'){
-
+    if(arr[i]==='down'){
+      camera.position.y+=.1;
     }
   }
 }
@@ -363,7 +370,7 @@ function resize(dat){
     camera.updateProjectionMatrix();//update size
   }
 }
-
+//custom methods
 function mousemove(dat){
   controls.mousemove({x:dat.moveX,y:dat.moveY});//pas info
 }
@@ -378,28 +385,8 @@ function AABBCollision(point,box){
   return (point.x >= box.minX && point.x <= box.maxX) &&
          (point.z >= box.minZ && point.z <= box.maxZ);
 }
-
-var renderDist = 32;//chunks*16
-
-function roundVec(v){
-  var roundedX = Number((v.x).toFixed(1));
-  var roundedY = Number((v.y).toFixed(1));
-  var roundedZ = Number((v.z).toFixed(1));
-  var vec = new THREE.Vector3(roundedX,roundedY,roundedZ);
-  return vec;
-}
-function lazyLoadChunks(){
-  var clampMin = newChunkClamp({x:camera.position.x - renderDist,z:camera.position.z - renderDist});
-  var clampMax = newChunkClamp({x:camera.position.x + renderDist,z:camera.position.z + renderDist});
-  for(var x = clampMin.x;x<clampMax.x;x+=16){
-    for(var z =clampMin.z;z<clampMax.z;z+=16){
-      var chunk = Chunks[x+",0,"+z];
-      if(chunk==undefined&&lazyVoxelData.done==true){
-        lazyVoxelData.done = false;
-        createChunk(x,0,z);
-    }
-  }
-}
+function compareVec(vec,vec2){
+  return vec.x==vec2.x&&vec.y==vec2.y&&vec.z==vec2.z;
 }
 function signVec(vec,checkSign){//return sign
 	if(checkSign===undefined){
@@ -420,6 +407,92 @@ function newChunkClamp(vec){//clamp position for new chunk
   var clampX = x-remainedX;
   var clampZ = z-remainedZ;
   return {x:clampX,z:clampZ}
+}
+function roundVec(v){
+  var roundedX = Number((v.x).toFixed(1));
+  var roundedY = Number((v.y).toFixed(1));
+  var roundedZ = Number((v.z).toFixed(1));
+  var vec = new THREE.Vector3(roundedX,roundedY,roundedZ);
+  return vec;
+}
+function mousedown(eventData){
+  var buttonPressed = eventData.buttonPressed;
+  if(buttonPressed==2){
+    modifyChunk(currentVoxel);
+  }
+  if(buttonPressed==0){
+    modifyChunk(0);//break
+  }
+}
+
+var renderDist = 32;//chunks*16
+
+function modifyChunk(voxel1){//modify a chunk
+
+
+var x = 0;//center
+var y = 0;
+const start = new THREE.Vector3();
+const end = new THREE.Vector3();
+start.setFromMatrixPosition(camera.matrixWorld);
+end.set(x, y, 1).unproject(camera);
+// compute a direction from start to end
+var dir = new THREE.Vector3();
+dir.subVectors(end, start).normalize();
+
+end.copy(start);
+//fix end to max reach
+end.addScaledVector(dir, maxReach);
+var chunk;
+var correctedPos;
+  const intersection = intersectWorld.intersectRay(start,end);//from large intersectworld
+  if (intersection) {
+    const voxelId = voxel1;
+
+    // the intersection point is on the face. That means
+    // the math imprecision could put us on either side of the face.
+    // so go half a normal into the voxel if removing (currentVoxel = 0)
+    // our out of the voxel if adding (currentVoxel  > 0)
+    const pos = intersection.position.map((v, ndx) => {
+      return v + intersection.normal[ndx] * (voxelId > 0 ? 0.5 : -0.5);
+    });
+    var posVec = new THREE.Vector3(pos[0],pos[1],pos[2]);
+    chunk = chunkClamp(posVec,false);
+    correctedPos = chunkClamp(posVec,true);
+    if(chunk){//no update unless chunk exists
+      var roundCam = floorVec(camera.position);
+      var roundPosVec = floorVec(posVec);//rounded
+      if(compareVec(roundCam,roundPosVec)===false){//cannot place block in self
+        if(voxel1===8){
+          //torch, set light
+          var light = new THREE.PointLight(0xffe53b,1,16);
+					light.renderOrder=1;
+          light.position.set(pos[0]+.5,pos[1]+.5,pos[2]+.5);//center light
+          var lightfr = floorVec(new THREE.Vector3(pos[0],pos[1],pos[2]));
+          ChunkLights[lightfr.x+","+lightfr.y+","+lightfr.z]=light;//for removal later
+          scene.add(light);
+        }
+    chunk.setVoxel(pos[0]-correctedPos.x,pos[1]-correctedPos.y,pos[2]-correctedPos.z, voxel1);//set voxel in world @ chunk clamped
+    intersectWorld.setVoxel(pos[0],pos[1],pos[2],voxel1);//set for intersects
+    geometryDataWorker.postMessage(['voxel',pos[0],pos[1],pos[2],voxel1]);//pass to intersectworker (nolag)
+    geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos]);
+  }
+  }
+}
+}
+
+function lazyLoadChunks(){
+  var clampMin = newChunkClamp({x:camera.position.x - renderDist,z:camera.position.z - renderDist});
+  var clampMax = newChunkClamp({x:camera.position.x + renderDist,z:camera.position.z + renderDist});
+  for(var x = clampMin.x;x<clampMax.x;x+=16){
+    for(var z =clampMin.z;z<clampMax.z;z+=16){
+      var chunk = Chunks[x+",0,"+z];
+      if(chunk==undefined&&lazyVoxelData.done==true){
+        lazyVoxelData.done = false;
+        createChunk(x,0,z);
+    }
+  }
+}
 }
 
 function chunkClamp(vec,pos2){

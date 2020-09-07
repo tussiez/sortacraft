@@ -47,7 +47,7 @@ document.body.addEventListener('mousedown',function(e){
   if(e.button==0){
   document.body.requestPointerLock();//lock pointer
   }
-  gameWorker.postMessage({type:'mousedown',event:fixEventPost(e)});
+  gameWorker.postMessage({type:'mousedown',buttonPressed:e.button});
 },false);
 document.body.addEventListener('contextmenu',function(e){e.preventDefault();e.stopPropagation();},false);//prevent contextmenu when placing/brekin
 //mouse press
