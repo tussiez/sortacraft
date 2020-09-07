@@ -87,11 +87,8 @@ class VoxelWorld {
           var realX = rx+voxelX;
           var realZ = rz+voxelZ;
           if (voxel) {
-            const transparentVoxel = this.getTransparentVoxel(voxelX,voxelY,voxelZ);
-            if(transparentVoxel==false){
             // voxel 0 is sky (empty) so for UVs we start at 0
             const uvVoxel = voxel - 1;
-
             // There is a voxel here but do we need faces for it?
             for (const {dir, corners, uvRow} of VoxelWorld.faces) {
               const neighbor = this.getVoxel(
@@ -100,25 +97,25 @@ class VoxelWorld {
                   voxelZ + dir[2]);
                   //||neighbor===4&&voxel!=4||neighbor===7&&voxel!=7
 									//transparent voxel handling
-							function addFace(){
-								const ndx = positions.length / 3;
-                for (const {pos, uv} of corners) {
-                  positions.push(pos[0] + x, pos[1] + y, pos[2] + z);
-                  normals.push(...dir);
-                  uvs.push(
-                        (uvVoxel +   uv[0]) * tileSize / tileTextureWidth,
-                    1 - (uvRow + 1 - uv[1]) * tileSize / tileTextureHeight);
-                }
-                indices.push(
-                  ndx, ndx + 1, ndx + 2,
-                  ndx + 2, ndx + 1, ndx + 3,
-                );
-							}
+                  if(!neighbor){
+                    addFace();
+                  }
+            }
+            function addFace(){
+              const ndx = positions.length / 3;
+              for (const {pos, uv} of corners) {
+                positions.push(pos[0] + x, pos[1] + y, pos[2] + z);
+                normals.push(...dir);
+                uvs.push(
+                      (uvVoxel +   uv[0]) * tileSize / tileTextureWidth,
+                  1 - (uvRow + 1 - uv[1]) * tileSize / tileTextureHeight);
+              }
+              indices.push(
+                ndx, ndx + 1, ndx + 2,
+                ndx + 2, ndx + 1, ndx + 3,
+              );
             }
           }
-        }else{
-          //append transparency AFTER
-        }
         }
       }
     }
