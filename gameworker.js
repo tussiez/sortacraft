@@ -47,6 +47,8 @@ normalNumComponents = 3,
 lazyVoxelWorld,
 jumping=false,
 bumping=false,
+maxReach = 6,//max player reach
+pointerBlock,
 moved = [],
 chunkWorker,
 lazyVoxelData = {
@@ -230,6 +232,10 @@ function main(dat){
     lightIntensity:0.01,
   });
 
+  pointerBlock = new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({wireframe:true,color:"white"}));
+  pointerBlock.scale.set(1.01,1.01,1.01);//to fix outlines not showing
+  scene.add(pointerBlock)
+
   sunSphere = new THREEx.DayNight.SunSphere();
   scene.add(sunSphere.object3d);
   sunLight = new THREEx.DayNight.SunLight();
@@ -246,6 +252,8 @@ function render(){
   updateDaytime()//update sun
 
   playerMovement();
+
+  blockPointer();//block outline
 
   camera.updateMatrixWorld();//req.for shadows
 
@@ -447,7 +455,31 @@ function chunkClamp(vec,pos2){
 
   }
 }
-
+function blockPointer(){
+  //highlight blocks to place/break
+  let start = new THREE.Vector3();
+  let end = new THREE.Vector3();
+  start.setFromMatrixPosition(camera.matrixWorld);
+  end.set(0,0,1).unproject(camera);//0,0 = center of screen
+  var dir = new THREE.Vector3();
+  dir.subVectors(end,start).normalize();
+  var roundDir = roundVec(dir)
+  end.copy(start);
+  end.addScaledVector(dir,maxReach);//enable max reach
+  let intersection = intersectWorld.intersectRay(start,end);
+  if(intersection){
+    //hit something, move outline to pos
+    let voxid = currentVoxel;
+    let posHit = intersection.position.map((v, ndx) => {
+      return v + intersection.normal[ndx] * -0.5
+    });
+    //clamp (no in betweens)
+    posHit[0] = (Math.floor(posHit[0])+.5)
+    posHit[1] = (Math.floor(posHit[1])+.5)
+    posHit[2] = (Math.floor(posHit[2])+.5)
+    pointerBlock.position.set(posHit[0],posHit[1],posHit[2]);//set wireframe @ pos
+  }
+}
 
 
 //DayNight(minify)
