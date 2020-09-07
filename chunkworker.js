@@ -110,28 +110,7 @@ self.onmessage = function(e){//onmessage
     var levels = {};
 
   //  for(var y = 0; y< 64; y++){
-  var treeMap = {};
-  function checkNeighboringTrees(x,z){
-  var neighbors = [
-    tree(x,z),
-    tree(x-1,z),
-    tree(x+1,z),
-    tree(x,z-1),
-    tree(x,z+1),
-    tree(x-1,z-1),
-    tree(x+1,z+1),
-  ];
-  var isNeighbor = false;
-  for(let i in neighbors){
-    if(neighbors[i]==true){
-      isNeighbor = true;
-    }
-  }
-  return isNeighbor;
-  }
-  function tree(x,z){
-    return treeMap[(x+","+z)]
-  }
+  const setV2 = function(x,y,z){setV(x,y,z,7)};//leaves fn
 
       for(var z = 0; z< cellSize; z++){
 
@@ -168,33 +147,15 @@ self.onmessage = function(e){//onmessage
         }
         var noisytree = (perlin.noise(((x+x1)*20.1),((y+y1)*20.1),((z+z1)*20.1))*10)-5;
         if(noisytree>3&&above==0&&below!=0&&y>hm){
-          setV(x,y,z,5)
-        }
-/*
-        if(Math.random()>0.8){
-          //can put a tree
-          if(below!=0&&above==0){
-            //should be a tree
-
-        type=5;
-        //tree growing:
-        var tr;
-        for(tr = 0;tr<Math.floor(Math.random()*3)+5;tr++){
-
-          localWorld.setVoxel(x,y+tr,type);//set in local voxelworld
-
-          postMessage(["voxel",x,y+tr,z,type]);//set in output(final)
-        }
-        function setV2(x,y,z){postMessage(["voxel",x,y,z,7]);localWorld.setVoxel(x,y,z,7)};//set voxel
-          //seed and grow tree trunk
-          //tr = end height
-          tr = tr+y;
-
+          setV(x,y,z,5);
+          let tr = 6;
+          for(var i = 0;i<tr;i++){
+            setV(x,y+i,z,5);
+          }
+          tr+=y;//adj
           //TOP
           setV2(x,tr,z);
           setV2(x,tr+1,z);
-
-
           //FRONT
           setV2(x-1,tr-2,z);//set leaves
           setV2(x-1,tr-1,z);
@@ -203,8 +164,6 @@ self.onmessage = function(e){//onmessage
           setV2(x-2,tr-2,z);
           setV2(x-2,tr-1,z);
           //setV(x-2,tr,z); trim?
-
-
           //BACK
           setV2(x+1,tr-2,z);
           setV2(x+1,tr-1,z);
@@ -213,8 +172,6 @@ self.onmessage = function(e){//onmessage
           setV2(x+2,tr-2,z);
           setV2(x+2,tr-1,z);
          // setV(x+2,tr,z);trim???
-
-
           //LEFT
           setV2(x,tr-2,z-1);
           setV2(x,tr-1,z-1);
@@ -222,9 +179,6 @@ self.onmessage = function(e){//onmessage
           //LEFT
           setV2(x,tr-2,z-2);
           setV2(x,tr-1,z-2);
-         // setV(x,tr,z-2);trim
-
-
           //RIGHT
           setV2(x,tr-2,z+1);
           setV2(x,tr-1,z+1);
@@ -233,7 +187,6 @@ self.onmessage = function(e){//onmessage
           setV2(x,tr-2,z+2);
           setV2(x,tr-1,z+2);
           //setV(x,tr,z+2); trim?
-
           //FILL(L+R)
           setV2(x-1,tr-2,z+1);
           setV2(x+1,tr-2,z+1);
@@ -241,7 +194,6 @@ self.onmessage = function(e){//onmessage
           setV2(x+1,tr-1,z+1);
           setV2(x-1,tr,z+1);
           setV2(x+1,tr,z+1);
-
           //FILL (F&B)
           setV2(x-1,tr-2,z-1);
           setV2(x+1,tr-2,z-1);
@@ -249,7 +201,6 @@ self.onmessage = function(e){//onmessage
           setV2(x+1,tr-1,z-1);
           setV2(x-1,tr,z-1);
           setV2(x+1,tr,z-1);
-
           //FILL CORNERS (1)
           setV2(x-2,tr-2,z+2);
           setV2(x-2,tr-2,z-2);
@@ -264,12 +215,7 @@ self.onmessage = function(e){//onmessage
           setV2(x+1,tr-2,z-2);//other
           setV2(x+2,tr-2,z+1);//one
           setV2(x+2,tr-2,z-1);//other
-
-
         }
-        treeMap[x+","+z]=true;
-        }
-        */
 
       }
     }
