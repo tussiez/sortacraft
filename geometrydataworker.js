@@ -98,10 +98,10 @@ class VoxelWorld {
                   //||neighbor===4&&voxel!=4||neighbor===7&&voxel!=7
 									//transparent voxel handling
                   if(!neighbor){
-                    addFace();
+                    addFace(corners,dir,uvRow);
                   }
             }
-            function addFace(){
+            function addFace(corners,dir,uvRow){
               const ndx = positions.length / 3;
               for (const {pos, uv} of corners) {
                 positions.push(pos[0] + x, pos[1] + y, pos[2] + z);
