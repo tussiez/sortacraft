@@ -76,6 +76,7 @@ class VoxelWorld {
     const startX = cellX * cellSize;
     const startY = cellY * cellSize;
     const startZ = cellZ * cellSize;
+    var needsClearVoxel = [];
     for (let y = 0; y < cellSize; ++y) {
       const voxelY = startY + y;
       for (let z = 0; z < cellSize; ++z) {
@@ -86,8 +87,11 @@ class VoxelWorld {
           var realX = rx+voxelX;
           var realZ = rz+voxelZ;
           if (voxel) {
+            const transparentVoxel = this.getTransparentVoxel(voxelX,voxelY,voxelZ);
+            if(transparentVoxel==false){
             // voxel 0 is sky (empty) so for UVs we start at 0
             const uvVoxel = voxel - 1;
+
             // There is a voxel here but do we need faces for it?
             for (const {dir, corners, uvRow} of VoxelWorld.faces) {
               const neighbor = this.getVoxel(
@@ -96,16 +100,6 @@ class VoxelWorld {
                   voxelZ + dir[2]);
                   //||neighbor===4&&voxel!=4||neighbor===7&&voxel!=7
 									//transparent voxel handling
-									if(this.getTransparentVoxel(voxelX,voxelY,voxelZ)===true){//this is a transparent voxel
-										if(neighbor!=voxel){
-											//neighbor is not self (transparent) so add
-											addFace();
-										}
-									}else{
-										if(!neighbor||this.getTransparentVoxel(voxelX+dir[0],voxelY+dir[1],voxelZ+dir[2])===true){//no neighbor OR neighbor is transparent
-											addFace();//face add
-										}
-									}
 							function addFace(){
 								const ndx = positions.length / 3;
                 for (const {pos, uv} of corners) {
@@ -122,6 +116,9 @@ class VoxelWorld {
 							}
             }
           }
+        }else{
+          //append transparency AFTER
+        }
         }
       }
     }
