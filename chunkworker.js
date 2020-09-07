@@ -116,7 +116,7 @@ self.onmessage = function(e){//onmessage
           setV(x,y-3,z,6);
         }
         var noisytree = (perlin.noise(((x+x1)*20.1),((y+y1)*20.1),((z+z1)*20.1))*10)-5;
-        if(noisytree>3&&above==0&&below!=0&&y>hm){
+        if(noisytree>3&&above==0&&below!=0&&y>hm&&x<12&&x>4&&z<12&&z>4){
           setV(x,y,z,5);
           let tr = 6;
           for(var i = 0;i<tr;i++){
