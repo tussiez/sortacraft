@@ -95,8 +95,12 @@ class VoxelWorld {
                   voxelX + dir[0],
                   voxelY + dir[1],
                   voxelZ + dir[2]);
-                  //||neighbor===4&&voxel!=4||neighbor===7&&voxel!=7
-									//transparent voxel handling
+                  const transparentVoxel = this.getTransparentVoxel(
+                    voxelX+dir[0],
+                    voxelY+dir[1],
+                    voxelZ+dir[2],
+                  )
+                  //handle voxels
                   if(!neighbor){
                     addFace(corners,dir,uvRow);
                   }

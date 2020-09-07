@@ -132,10 +132,10 @@ worldTextureBitmap = new THREE.CanvasTexture(bmap,undefined,undefined,undefined,
   material = new THREE.MeshLambertMaterial({
     color:'gray',
     transparent:true,
-    alphaTest:0.1,
+   alphaTest:.1,
     map:worldTextureBitmap,//texture
   });//setup mat
-//  shadows.setupMaterial(material)
+  shadows.setupMaterial(material)
 
 }),
 geometryDataWorker.onmessage = function(e){
@@ -215,7 +215,7 @@ function main(dat){
   camera.position.y = 64;
   var ambient = new THREE.AmbientLight(0xffffff,0.4);
   scene.add(ambient);//ambient light
-/*  shadows = new CSM({
+  shadows = new CSM({
     maxFar:camera.far,
     cascades:4,
     mode:'practical',
@@ -226,7 +226,7 @@ function main(dat){
     camera:camera,
     lightIntensity:0.01,
   });
-  */
+
   sunSphere = new THREEx.DayNight.SunSphere();
   scene.add(sunSphere.object3d);
   sunLight = new THREEx.DayNight.SunLight();
@@ -246,7 +246,7 @@ function render(){
 
   camera.updateMatrixWorld();//req.for shadows
 
-  //shadows.update();//update csm
+  shadows.update();//update csm
 
   if(PlayerChunk!='hold'){//dont change unless not hold or undefined
     PlayerChunk = chunkClamp(camera.position,true);//clamp chunk to player area
