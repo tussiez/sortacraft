@@ -148,7 +148,7 @@ self.onmessage = function(e){//onmessage
         }
 
       }
-  /*
+
   for(var x = 0;x<cellSize;x++){
     for(var z = 0;z<cellSize;z++){
       for(var y = 0;y<64;y++){
@@ -166,11 +166,14 @@ self.onmessage = function(e){//onmessage
           setV(x,y-2,z,6);
           setV(x,y-3,z,6);
         }
-        /*
-        var doTree = perlin.noise((x+x1)/2,y/2,(z+z1)/2);
-        if(doTree>0){
+        var noisytree = (perlin.noise(((x+x1)*20.1),((y+y1)*20.1),((z+z1)*20.1))*10)-5;
+        if(noisytree>3&&above==0&&below!=0&&y>hm){
+          setV(x,y,z,5)
+        }
+/*
+        if(Math.random()>0.8){
           //can put a tree
-          if(x<=12&&x>=4&&z<=12&&z>=4){
+          if(below!=0&&above==0){
             //should be a tree
 
         type=5;
@@ -266,11 +269,12 @@ self.onmessage = function(e){//onmessage
         }
         treeMap[x+","+z]=true;
         }
-        
+        */
+
       }
     }
   }
-  */
+
 function setV(x,y,z,type){
   localWorld.setVoxel(x,y,z,type);
   postMessage(['voxel',x,y,z,type]);
