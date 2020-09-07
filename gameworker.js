@@ -209,11 +209,14 @@ function main(dat){
   camera = new THREE.PerspectiveCamera(70,dat.width/dat.height,0.1,500);
   scene = new THREE.Scene();
   renderer = new THREE.WebGLRenderer({canvas:dat.canvas});
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.autoUpdate = false;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setSize(dat.width,dat.height,false);//req.false
   controls = new PointerLockControls(camera);
   camera.position.z = 3;
   camera.position.y = 64;
-  var ambient = new THREE.AmbientLight(0xffffff,0.4);
+  var ambient = new THREE.AmbientLight(0xffffff,0.3);
   scene.add(ambient);//ambient light
   shadows = new CSM({
     maxFar:camera.far,
