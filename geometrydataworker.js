@@ -79,9 +79,9 @@ class VoxelWorld {
     var needsClearVoxel = [];
     for (let y = 0; y < cellSize; ++y) {
       const voxelY = startY + y;
-      for (let z = 0; z < cellSize; ++z) {
+      for (let z = 0; z < 16; ++z) {
         const voxelZ = startZ + z;
-        for (let x = 0; x < cellSize; ++x) {
+        for (let x = 0; x < 16; ++x) {
           const voxelX = startX + x;
           const voxel = this.getVoxel(voxelX, voxelY, voxelZ);
           var realX = rx+voxelX;

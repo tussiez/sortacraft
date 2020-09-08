@@ -137,10 +137,11 @@ worldTextureBitmap = new THREE.CanvasTexture(bmap,undefined,undefined,undefined,
   material = new THREE.MeshLambertMaterial({
     color:'gray',
     transparent:true,
-   alphaTest:.1,
+  alphaTest:0.1,
     map:worldTextureBitmap,//texture
   });//setup mat
-  shadows.setupMaterial(material)
+  shadows.setupMaterial(material);
+  renderer.compile(scene,camera);//compile
 
 }),
 geometryDataWorker.onmessage = function(e){
