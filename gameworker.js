@@ -402,11 +402,14 @@ return new THREE.Vector3((Math.floor(v.x)),(Math.floor(v.y)),(Math.floor(v.z)));
 function newChunkClamp(vec){//clamp position for new chunk
   var x = vec.x;
   var z = vec.z;
+  var y = vec.y || 0;
   var remainedX  = x % 16;
   var remainedZ = z % 16;
+  var remainedY = y % 16;
   var clampX = x-remainedX;
   var clampZ = z-remainedZ;
-  return {x:clampX,z:clampZ}
+  var clampY = y-remainedY;
+  return {x:clampX,y:clampY,z:clampZ}
 }
 function roundVec(v){
   var roundedX = Number((v.x).toFixed(1));
@@ -458,26 +461,21 @@ var correctedPos;
     });
     var posVec = new THREE.Vector3(pos[0],pos[1],pos[2]);
     chunk = chunkClamp(posVec,false);
-    correctedPos = chunkClamp(posVec,true);
-    if(chunk){//no update unless chunk exists
+    correctedPos = chunkClamp(posVec,true);//no update unless chunk exists
       var roundCam = floorVec(camera.position);
       var roundPosVec = floorVec(posVec);//rounded
       if(compareVec(roundCam,roundPosVec)===false){//cannot place block in self
-        if(voxel1===8){
-          //torch, set light
-          var light = new THREE.PointLight(0xffe53b,1,16);
-					light.renderOrder=1;
-          light.position.set(pos[0]+.5,pos[1]+.5,pos[2]+.5);//center light
-          var lightfr = floorVec(new THREE.Vector3(pos[0],pos[1],pos[2]));
-          ChunkLights[lightfr.x+","+lightfr.y+","+lightfr.z]=light;//for removal later
-          scene.add(light);
-        }
+        if(chunk){
     chunk.setVoxel(pos[0]-correctedPos.x,pos[1]-correctedPos.y,pos[2]-correctedPos.z, voxel1);//set voxel in world @ chunk clamped
     intersectWorld.setVoxel(pos[0],pos[1],pos[2],voxel1);//set for intersects
     geometryDataWorker.postMessage(['voxel',pos[0],pos[1],pos[2],voxel1]);//pass to intersectworker (nolag)
     geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos]);
-  }
-  }
+  }else{
+    console.log('no chunkdetected')
+
+}
+
+}
 }
 }
 
@@ -909,7 +907,23 @@ chunkWorker.onmessage = function(e){
   console.warn('Thread Warning:\n'+'Texture not loaded. Waiting 250ms..')
 }
 }
+function createEmptyChunk(position){
+  var geometry = new THREE.BufferGeometry();
+  var mesh = new THREE.Mesh(geometry,material);//need emtpty area for geometry data to fill in
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.position.set(position.x,position.y,position.z);
+  ChunksMesh[position.x+","+position.y+","+position.z]=mesh;
+  Chunks[position.x+","+position.y+","+position.z] = new VoxelWorld({
+    cellSize,
+    tileSize,
+    tileTextureWidth,
+    tileTextureHeight
+  })
+  scene.add(mesh);
+  renderer.shadowMap.needsUpdate = true;//do i relaly need thid
 
+}
 function loadChunk(x,y,z,world1,dat){
 //load in chunk
 //set pos,norm,uv,ind
