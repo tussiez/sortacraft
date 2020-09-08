@@ -22,6 +22,7 @@ Chunks = {},
 ChunksMesh={},
 PlayerChunk,
 geometryDataWorker = new Worker('geometrydataworker.js'),
+geometryDataWorker2 = new Worker('geometrydataworker.js'),//for chunk update
 chunkIndex=[],
 done = true,
 light,
@@ -90,6 +91,7 @@ lazyVoxelData = {
     lazyVoxelWorld.setVoxel(voxelInfo.x,voxelInfo.y,voxelInfo.z,voxelInfo.type);//set
     intersectWorld.setVoxel(voxelInfo.intersect.x+voxelInfo.x,voxelInfo.intersect.y+voxelInfo.y,voxelInfo.intersect.z+voxelInfo.z,voxelInfo.type);//intersect
     geometryDataWorker.postMessage(['voxel',voxelInfo.intersect.x+voxelInfo.x,voxelInfo.intersect.y+voxelInfo.y,voxelInfo.intersect.z+voxelInfo.z,voxelInfo.type])
+    geometryDataWorker2.postMessage(['voxel',voxelInfo.intersect.x+voxelInfo.x,voxelInfo.intersect.y+voxelInfo.y,voxelInfo.intersect.z+voxelInfo.z,voxelInfo.type])
     if(this.current<this.lazyArrayTotal){
     this.current+=1;
   }
@@ -160,6 +162,21 @@ geometryDataWorker.onmessage = function(e){
     geometry.computeBoundingSphere();
 
   }
+  }
+}
+geometryDataWorker2.onmessage = function(e){
+  if(e.data[0]=='geometrydata'){
+    //update geometry based on chunk
+    var chunk = ChunksMesh[e.data[6].x+','+e.data[6].y+","+e.data[6].z];
+    var geometry = chunk.geometry;
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(e.data[1]), 3));
+
+    geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(e.data[2]), 3));
+
+    geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(e.data[3]), 2));
+
+    geometry.setIndex(e.data[4]);//update geometry
+    geometry.computeBoundingSphere();
   }
 }
 function stringVec(vec){
@@ -469,7 +486,7 @@ var correctedPos;
     chunk.setVoxel(pos[0]-correctedPos.x,pos[1]-correctedPos.y,pos[2]-correctedPos.z, voxel1);//set voxel in world @ chunk clamped
     intersectWorld.setVoxel(pos[0],pos[1],pos[2],voxel1);//set for intersects
     geometryDataWorker.postMessage(['voxel',pos[0],pos[1],pos[2],voxel1]);//pass to intersectworker (nolag)
-    geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos]);
+    geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,{x:pos[0],y:pos[1],z:pos[2]}]);
   }else{
     console.log('no chunkdetected')
 

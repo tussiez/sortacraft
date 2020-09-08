@@ -289,10 +289,14 @@ const voxelWorld = new VoxelWorld({
 });//prep voxelwordl
 onmessage = function(e){
   if(e.data[0]=='voxel'){
+    if(e.data[4]==0){
+      console.log('BReaking');
+    }
     voxelWorld.setVoxel(e.data[1],e.data[2],e.data[3],e.data[4]);//set voxel
   }
   if(e.data[0]=='geometrydata'){
     //get geometry data @ pos
+    console.log('Gen.GeoData')
     const {positions,normals,uvs,indices,faceIndexGroup,faceIndex} = voxelWorld.generateGeometryDataForCell(e.data[1]/64,e.data[2]/64,e.data[3]/64);//heavy loading
     //this will cover chunk bounds
     //calculate faceindxgroup
