@@ -167,6 +167,10 @@ geometryDataWorker.onmessage = function(e){
 }
 geometryDataWorker2.onmessage = function(e){
   if(e.data[0]=='geometrydata'){
+    if(e.data[5]=='regular'){
+    lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];//pos,norm,uv,ind
+    lazyVoxelData.realFinish();//real finish
+  }else{
     //update geometry based on chunk
     var chunk = ChunksMesh[e.data[6].x+','+e.data[6].y+","+e.data[6].z];
     var geometry = chunk.geometry;
@@ -178,6 +182,8 @@ geometryDataWorker2.onmessage = function(e){
 
     geometry.setIndex(e.data[4]);//update geometry
     geometry.computeBoundingSphere();
+
+  }
   }
 }
 function stringVec(vec){
@@ -467,10 +473,10 @@ function vecFromArray(array){
 function mousedown(eventData){
   var buttonPressed = eventData.buttonPressed;
   if(buttonPressed==2){
-    modifyChunk2(currentVoxel);
+    modifyChunk(currentVoxel);
   }
   if(buttonPressed==0){
-    modifyChunk2(0);//break
+    modifyChunk(0);//break
   }
 }
 
