@@ -304,31 +304,32 @@ function updateDaytime(){
 }
 
 function playerMovement(){//move plyr
-  moved =[];
+  moved[0]=0;
+  moved[1] = 0;
+  moved[2] = 0;
+  moved[3] = 0;
+  moved[4] = 0;
   if(keys['w']){
     controls.moveForward(.07);
-    moved.push('forward');
+  moved[0]=1;
 
   }
   if(keys['a']){
     controls.moveRight(-.07);
-    moved.push('left');
-
+  moved[1]=1;
   }
-  if(keys[' ']&&jumping==false){
-    jumping==true;
+  if(keys[' ']){
+    console.log('UP')
     camera.position.y+=0.1;
-    moved.push('up');
-    jumping=false;
+    moved[2]=1;
   }
   if(keys['s']){
     controls.moveForward(-.07);
-    moved.push('backward');
-
+moved[3]=1;
   }
   if(keys['d']){
     controls.moveRight(.07);
-    moved.push('right')
+    moved[4]=1;
 
   }
   if(keys['Shift']){
@@ -344,16 +345,22 @@ function playerMovement(){//move plyr
   }
 
   if(checkIntersections()===true){
+
     bumping=true;
     goBack(moved);
+
+
     renderer.render(scene,camera)
   }else{
     bumping=false;
      camera.position.y-=.1;
-     moved.push('down');
+     moved[5]=1;
       if(checkIntersections()===true){
+        console.log(intersectWorld.getVoxel(camera.position.x,camera.position.y+.1,camera.position.z))
+        if(intersectWorld.getVoxel(camera.position.x,camera.position.y+.1,camera.position.z)===0){
         bumping=true;
         camera.position.y+=.1;
+      }
       }
     renderer.render(scene,camera);
   }
@@ -363,23 +370,26 @@ function playerMovement(){//move plyr
   }
 }
 function goBack(arr){
-  for(var i =0;i<arr.length;i++){
-    if(arr[i]==='forward'){
+    if(arr[0]){
       controls.moveForward(-.07)
     }
-    if(arr[i]==='backward'){
+    if(arr[1]){
+      controls.moveRight(.07);
+    }
+    if(arr[2]){
+
+    //camera.position.y-=.1;
+    }
+    if(arr[3]){
       controls.moveForward(.07);
     }
-    if(arr[i]==='right'){
-      controls.moveRight(-.07);//swap
+    if(arr[4]){
+      controls.moveRight(-.07);
     }
-    if(arr[i]==='left'){
-      controls.moveRight(.07);//swap
-    }
-    if(arr[i]==='down'){
+    if(arr[5]){
       camera.position.y+=.1;
     }
-  }
+
 }
 function resize(dat){
   if(renderer){
