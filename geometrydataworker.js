@@ -84,6 +84,7 @@ class VoxelWorld {
         for (let x = 0; x < 16; ++x) {
           const voxelX = startX + x;
           const voxel = this.getVoxel(voxelX, voxelY, voxelZ);
+          const isTransparent = this.getTransparentVoxel(voxelX,voxelY,voxelZ);
           var realX = rx+voxelX;
           var realZ = rz+voxelZ;
           if (voxel) {
@@ -101,7 +102,7 @@ class VoxelWorld {
                     voxelZ+dir[2],
                   )
                   //handle voxels
-                  if(!neighbor){
+                  if(!neighbor||transparentVoxel&&!isTransparent){
                     addFace(corners,dir,uvRow);
                   }
             }
