@@ -309,6 +309,7 @@ function playerMovement(){//move plyr
   moved[2] = 0;
   moved[3] = 0;
   moved[4] = 0;
+  var preMovement = new THREE.Vector3().copy(camera.position)
   if(keys['w']){
     controls.moveForward(.07);
   moved[0]=1;
@@ -318,11 +319,7 @@ function playerMovement(){//move plyr
     controls.moveRight(-.07);
   moved[1]=1;
   }
-  if(keys[' ']){
-    console.log('UP')
-    camera.position.y+=0.1;
-    moved[2]=1;
-  }
+
   if(keys['s']){
     controls.moveForward(-.07);
 moved[3]=1;
@@ -344,6 +341,7 @@ moved[3]=1;
     }
   }
 
+
   if(checkIntersections()===true){
 
     bumping=true;
@@ -356,17 +354,22 @@ moved[3]=1;
      camera.position.y-=.1;
      moved[5]=1;
       if(checkIntersections()===true){
-        console.log(intersectWorld.getVoxel(camera.position.x,camera.position.y+.1,camera.position.z))
-        if(intersectWorld.getVoxel(camera.position.x,camera.position.y+.1,camera.position.z)===0){
+
         bumping=true;
         camera.position.y+=.1;
-      }
+
       }
     renderer.render(scene,camera);
   }
   PlayerChunk = chunkClamp(camera.position,true)
   if(PlayerChunk == undefined&&camera.position.y<64){
     goBack(moved)
+  }
+  if(keys[' ']){
+  //  moved[2] =1;//preset
+    camera.position.y+=0.1;
+
+
   }
 }
 function goBack(arr){
