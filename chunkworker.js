@@ -97,7 +97,7 @@ self.onmessage = function(e){//onmessage
         }
 
       }
-
+/*
   for(var x = 0;x<cellSize;x++){
     for(var z = 0;z<cellSize;z++){
       for(var y = 0;y<64;y++){
@@ -190,6 +190,7 @@ self.onmessage = function(e){//onmessage
       }
     }
   }
+  */
 
 function setV(x,y,z,type){
   localWorld.setVoxel(x,y,z,type);

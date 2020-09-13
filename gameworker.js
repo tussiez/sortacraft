@@ -445,7 +445,7 @@ function newChunkClamp(vec){//clamp position for new chunk
   var y = vec.y || 0;
   var remainedX  = x % 16;
   var remainedZ = z % 16;
-  var remainedY = y % 16;
+  var remainedY = y % 64;//chunks are 16x 64 x16
   var clampX = x-remainedX;
   var clampZ = z-remainedZ;
   var clampY = y-remainedY;
@@ -458,18 +458,86 @@ function roundVec(v){
   var vec = new THREE.Vector3(roundedX,roundedY,roundedZ);
   return vec;
 }
+function stringifyVec(v){//stringify a vector3
+  return v.x+","+v.y+","+v.z
+}
+function vecFromArray(array){
+  return new THREE.Vector3(array[0],array[1],array[2]);//vec from array
+}
 function mousedown(eventData){
   var buttonPressed = eventData.buttonPressed;
   if(buttonPressed==2){
-    modifyChunk(currentVoxel);
+    modifyChunk2(currentVoxel);
   }
   if(buttonPressed==0){
-    modifyChunk(0);//break
+    modifyChunk2(0);//break
   }
 }
 
 var renderDist = 32;//chunks*16
+function modifyChunk2(voxel1){
+  const start = new THREE.Vector3();
+  const end = new THREE.Vector3();
+  start.setFromMatrixPosition(camera.matrixWorld);
+  end.set(0,0,1).unproject(camera);
 
+  //dir computation
+  var dir = new THREE.Vector3();
+  dir.subVectors(end,start).normalize();//reduce
+
+  //set a maximum reach of six blocks (defined. in maxReach var)
+
+  end.copy(start);
+  end.addScaledVector(dir,maxReach);//set
+
+  var selectedChunk;//prepare some variables
+  var chunkPosition;
+
+  //get the intersection from intersectworld octree
+
+  const intersection = intersectWorld.intersectRay(start,end);//find a hit
+
+  if(intersection){//got a voxel
+    const voxelId = voxel1;//set for comparison between break/place
+
+    const pos = intersection.position.map(function(v,ndx){//map position to normal
+      //the comparison is to correct mathematical imprecision.
+      //if you aree trying to break the block, go half a normal INTO the voxel.
+      //if you are trying to place, you need to go half a normal OUT of the voxel, adding the direction from normal
+      return v + intersection.normal[ndx] * (voxelId > 0 ? 0.5 : -0.5);
+    });
+
+    var intersectionVector = vecFromArray(pos);//vec from array
+
+
+    chunkPosition = newChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
+
+
+    selectedChunk = Chunks[stringifyVec(chunkPosition)];//stringify the vector to get chunk picked
+
+
+    if(selectedChunk){
+
+      //the chunk exists
+
+
+
+      var relativeVoxelPosition = intersectionVector.sub(chunkPosition);//get voxel relative to specific chunk
+
+
+      selectedChunk.setVoxel(relativeVoxelPosition.x,relativeVoxelPosition.y,relativeVoxelPosition.z,voxel1);//set voxel @ chunk
+
+      intersectWorld.setVoxel(intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1);//for intesection later at world relative
+
+      geometryDataWorker.postMessage(['voxel',intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1]);//set for geometry data update
+
+      geometryDataWorker2.postMessage(['voxel',intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1]);//for chunkupdATE
+
+      geometryDataWorker2.postMessage(['geometrydata',chunkPosition.x,chunkPosition.y,chunkPosition.z,'chunk_update',chunkPosition,{x:pos[0],y:pos[1],z:pos[2]}]);
+    }
+
+  }
+}
 function modifyChunk(voxel1){//modify a chunk
 
 
