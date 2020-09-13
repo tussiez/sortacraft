@@ -32,6 +32,9 @@ function download(filename, text) {
   document.body.removeChild(element);
 }
 //event handlers
+var touchPosition = {x:0,y:0};
+var lastTouchPos = {x:0,y:0}
+var touchMove = false;
 window.addEventListener('resize',function(e){
   gameWorker.postMessage({type:'resize',width:window.innerWidth,height:window.innerHeight})
   updateCrosshair();
@@ -41,7 +44,25 @@ document.body.addEventListener('keydown',function(e){
 });
 document.body.addEventListener('keyup',function(e){
   gameWorker.postMessage({type:'keyup',key:e.key});
-})
+});
+document.body.addEventListener('touchstart',function(e){
+  var y = e.changedTouches[0].pageY || 0,x = e.changedTouches[0].pageX || 0;
+  touchPosition.x =x;
+  touchPosition.y = y;
+  lastTouchPos = touchPosition;//reset
+  touchMove = true;
+});
+document.body.addEventListener('touchend',function(e){
+  touchMove = false;
+});
+document.body.addEventListener('touchmove',function(e){
+  var y = e.changedTouches[0].pageY || 0,x = e.changedTouches[0].pageX || 0;
+  var posX =x - lastTouchPos.x;
+  var posY =y - lastTouchPos.y;
+  gameWorker.postMessage({type:'mousemove',type2:'touch',moveX:posX,moveY:posY});//simulate a mouse move
+  lastTouchPos.x = e.clientX;
+  lastTouchPos.y = e.clientY;
+});
 //key updates
 document.body.addEventListener('mousedown',function(e){
   if(e.button==0){

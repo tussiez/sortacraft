@@ -390,7 +390,16 @@ function resize(dat){
 }
 //custom methods
 function mousemove(dat){
-  controls.mousemove({x:dat.moveX,y:dat.moveY});//pas info
+  if(dat.type2 == 'touch'){
+    if(dat.moveX.isNaN()||dat.moveY.isNaN()){
+      dat.moveX = 0;
+      dat.moveY =0;
+    }
+  var mVec = new THREE.Vector2(dat.moveX,dat.moveY);
+}else{
+  var mVec = new THREE.Vector2(dat.moveX,dat.moveY);
+}
+  controls.mousemove(mVec);//pas info
 }
 function inRange(val,min,max){
   return val >=min&&val<=max;//in range of max/min
