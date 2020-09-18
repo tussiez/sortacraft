@@ -13,6 +13,7 @@ const handlers = {
   downloadGame,
   mousedown,
 }
+//hello there
 //variables
 var camera,
 scene,
