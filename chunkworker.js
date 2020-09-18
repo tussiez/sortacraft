@@ -65,43 +65,71 @@ self.onmessage = function(e){//onmessage
     //local voxelworld
 
     //first loop, carve out stone/grass?
-    function mineHeight(x,z){
+    function mineHeight(x,z,y){
       var x2a = x+x1;
       var z2a = z+z1;
-      var ele = perlin.noise(x2a/64,z2a/64,0);//stripe artifact
-      var rough = perlin.noise(x2a/32,z2a/32,0);
-      var det = perlin.noise(x2a*16,z2a*16,0);
+      y = y || 0;
+      var ele = perlin.noise(x2a/64,z2a/64,y);//stripe artifact
+      var rough = perlin.noise(x2a/32,z2a/32,y);
+      var det = perlin.noise(x2a*16,z2a*16,y);
       return Math.round(((ele + (rough*det)*4)*cellSize)+12);
     }
 
 
     var progress = 0;
+    var caveSize = .35;
+    var caveBias = .10
 
     var total = (cellSize*cellSize*64)*2;//dupe
     var levels = {};
+    var caveBlks = {};
+
 
   const setV2 = function(x,y,z){setV(x,y,z,7)};//leaves fn
 
-      for(var z = 0; z< cellSize; z++){
-
-        for(var x = 0; x< cellSize; x++){
-          var hm = mineHeight(x,z);
-          var type = 2;
-          localWorld.setVoxel(x,hm,z,type);
-          postMessage(['voxel',x,hm,z,type]);
-          levels[x+","+z]=hm;
-
-          progress += 1;
-
-
-        }
-
-      }
-/*
   for(var x = 0;x<cellSize;x++){
     for(var z = 0;z<cellSize;z++){
       for(var y = 0;y<64;y++){
+        var attenuatedCaveSize = caveSize - ((y/170)-caveBias);
+        var density = perlin.noise((x+x1)/12,(z+z1)/12,(y+y1)/12);
+        var hm = mineHeight(x,z);
+        levels[x+","+z]=hm;
+        if(y<hm){
+        if(density>attenuatedCaveSize){
+          localWorld.setVoxel(x,y,z,1);
+          postMessage(['voxel',x,y,z,1]);
+            caveBlks[x+","+y+","+z]=1;
+        }else{
+          if(y<5){
+            localWorld.setVoxel(x,y,z,1);
+            postMessage(['voxel',x,y,z,1])
+          }
+          caveBlks[x+","+y+","+z]=0;
+        }
+      }else{
+          caveBlks[x+","+y+","+z]=0;
+      }
+    }
+  }
+}
 
+            for(var z = 0; z< cellSize; z++){
+
+              for(var x = 0; x< cellSize; x++){
+                var hm = levels[x+","+z];
+                var type = 2;
+                if(localWorld.getVoxel(x,hm,z)==0&&caveBlks[x+","+(hm-1)+","+z]==1){
+                localWorld.setVoxel(x,hm,z,type);
+                postMessage(['voxel',x,hm,z,type]);
+              }
+
+
+
+              }
+
+            }
+
+        /*
         var below = localWorld.getVoxel(x,y-1,z);
         var type = localWorld.getVoxel(x,y,z);
         var hm = levels[x+","+z]
@@ -111,10 +139,14 @@ self.onmessage = function(e){//onmessage
         }
         var above = localWorld.getVoxel(x,y+1,z);
         if(above==2){
-          setV(x,y-1,z,6);
+          setV(x,y,z,6);
+          setV(x,y-1,z,6)
           setV(x,y-2,z,6);
           setV(x,y-3,z,6);
         }
+        */
+
+        /*
         var noisytree = (perlin.noise(((x+x1)*20.1),((y+y1)*20.1),((z+z1)*20.1))*10)-5;
         if(noisytree>3&&above==0&&below!=0&&y>hm&&x<12&&x>4&&z<12&&z>4){
           setV(x,y,z,5);
@@ -186,11 +218,12 @@ self.onmessage = function(e){//onmessage
           setV2(x+2,tr-2,z+1);//one
           setV2(x+2,tr-2,z-1);//other
         }
+        */
 
       }
-    }
-  }
-  */
+
+
+
 
 function setV(x,y,z,type){
   localWorld.setVoxel(x,y,z,type);
@@ -201,7 +234,7 @@ function setV(x,y,z,type){
     var {positions,normals,uvs,indices}= localWorld.generateGeometryDataForCell(0,0,0);
     postMessage(['complete',positions,normals,uvs,indices]);//done
 
-  }
+
 
 }
 

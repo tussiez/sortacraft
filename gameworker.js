@@ -1,6 +1,8 @@
 //main thread for Threejs
 import * as THREE from 'https://threejs.org/build/three.module.js'
 import {CSM} from 'https://threejs.org/examples/jsm/csm/CSM.js'//csm
+import * as SPE from '/sortacraft/pe.js'
+console.log(SPE)
 //import {PointerLockControls} from 'modified_pointerlock.js'//modified pointerlock
 const handlers = {
   main,
@@ -16,10 +18,15 @@ var camera,
 scene,
 renderer,
 controls,
+particleGroup,
+emitter,
+clock,
 cube,
 keys=[],
 Chunks = {},
 ChunksMesh={},
+CullChunkIndex=[],
+CullChunks = {},
 PlayerChunk,
 geometryDataWorker = new Worker('geometrydataworker.js'),
 geometryDataWorker2 = new Worker('geometrydataworker.js'),//for chunk update
@@ -111,6 +118,9 @@ realFinish:function(){
   this.current = 0;
   loadChunk(posVec.x,posVec.y,posVec.z,lazyVoxelWorld,this.geometryData);//load in chunk
   Chunks[posVec.x+","+posVec.y+","+posVec.z]=lazyVoxelWorld;//chunk lib
+  CullChunks[posVec.x+","+posVec.y+","+posVec.z] = lazyVoxelWorld;//chunk culling lib
+  CullChunkIndex.push(posVec.x+","+posVec.y+","+posVec.z);//add for faster reading
+
   chunkIndex.push(posVec.x+","+posVec.y+","+posVec.z);//chunk index
   done=true;//for new chunks
 },
@@ -241,6 +251,7 @@ function main(dat){
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setSize(dat.width,dat.height,false);//req.false
   controls = new PointerLockControls(camera);
+  clock = new THREE.Clock();
   camera.position.z = 3;
   camera.position.y = 64;
   var ambient = new THREE.AmbientLight(0xffffff,0.3);
@@ -267,12 +278,57 @@ function main(dat){
   scene.add(sunLight.object3d);
 
   renderer.compile(scene,camera);//compile material shaders
+//  initParticles();//particle
   render();
   getFPS.framerate();//start fps counter
 }
-function render(){
+function initParticles() {
+  particleGroup = new SPE.Group({
+    texture: {
+            value: texture
+        }
+  });
 
+  emitter = new SPE.Emitter({
+        maxAge: {
+            value: .5
+        },
+    position: {
+            value: new THREE.Vector3(0, 0, -50),
+            spread: new THREE.Vector3( 0, 0, 0 )
+        },
+
+    acceleration: {
+            value: new THREE.Vector3(0, 0, 0),
+            spread: new THREE.Vector3( 20, -20, 20 )
+        },
+
+    velocity: {
+            value: new THREE.Vector3(0, 0, 0),
+            spread: new THREE.Vector3(40, -40, 40)
+        },
+
+   color: {
+            value:  new THREE.Color('gray')
+        },
+        opacity:{
+          value: 2
+        },
+
+        size: {
+            value: 2
+        },
+
+    particleCount: 50
+  });
+
+  particleGroup.addEmitter( emitter );
+  scene.add( particleGroup.mesh );
+}
+function render(){
   requestAnimationFrame(render);
+
+  //particleGroup.tick(clock.getDelta())
 
   updateDaytime()//update sun
 
@@ -292,8 +348,12 @@ function render(){
 
   lazyLoadChunks();//init lazy loadin g
 
-}
+  checkCullChunks();//check chunks that can be culled and cull them
 
+}
+function checkCullChunks(){
+
+}
 function updateDaytime(){
   sunAngle	+= clock.getDelta()/dayDuration * Math.PI*2;
   sunLight.update(sunAngle);
@@ -449,9 +509,10 @@ function newChunkClamp(vec){//clamp position for new chunk
   var x = vec.x;
   var z = vec.z;
   var y = vec.y || 0;
-  var remainedX  = x % 16;
-  var remainedZ = z % 16;
+  var remainedX  = Math.sign(x) > -1 ? x % 16 : x % -16;
+  var remainedZ = Math.sign(z) > -1 ? z % 16 : z % -16;
   var remainedY = y % 64;//chunks are 16x 64 x16
+
   var clampX = x-remainedX;
   var clampZ = z-remainedZ;
   var clampY = y-remainedY;
@@ -473,10 +534,10 @@ function vecFromArray(array){
 function mousedown(eventData){
   var buttonPressed = eventData.buttonPressed;
   if(buttonPressed==2){
-    modifyChunk(currentVoxel);
+    modifyChunk2(currentVoxel);
   }
   if(buttonPressed==0){
-    modifyChunk(0);//break
+    modifyChunk2(0);//break
   }
 }
 
@@ -518,28 +579,35 @@ function modifyChunk2(voxel1){
 
     chunkPosition = newChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
 
-
     selectedChunk = Chunks[stringifyVec(chunkPosition)];//stringify the vector to get chunk picked
-
 
     if(selectedChunk){
 
       //the chunk exists
 
+      var correctedPos = chunkClamp(intersectionVector,true);
 
-
-      var relativeVoxelPosition = intersectionVector.sub(chunkPosition);//get voxel relative to specific chunk
-
-
-      selectedChunk.setVoxel(relativeVoxelPosition.x,relativeVoxelPosition.y,relativeVoxelPosition.z,voxel1);//set voxel @ chunk
+      selectedChunk.setVoxel(pos[0]-correctedPos.x,pos[1]-correctedPos.y,pos[2]-correctedPos.z,voxel1);//set voxel @ chunk
 
       intersectWorld.setVoxel(intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1);//for intesection later at world relative
 
       geometryDataWorker.postMessage(['voxel',intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1]);//set for geometry data update
 
-      geometryDataWorker2.postMessage(['voxel',intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1]);//for chunkupdATE
+      geometryDataWorker2.postMessage(['voxel',pos[0],pos[1],pos[2],voxel1]);//for chunkupdATE
 
-      geometryDataWorker2.postMessage(['geometrydata',chunkPosition.x,chunkPosition.y,chunkPosition.z,'chunk_update',chunkPosition,{x:pos[0],y:pos[1],z:pos[2]}]);
+      geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,correctedPos]);
+    }
+
+    if(pos[1]>64&&selectedChunk==undefined){
+      //vertical chunk non-existent
+      console.log('Needing a new vertical chunk')
+     selectedChunk = createEmptyChunk(chunkPosition);//create new vertical chunk @ pos
+     var correctedPos = chunkPosition;
+     selectedChunk.setVoxel(pos[0]-correctedPos.x,pos[1]-correctedPos.y,pos[2]-correctedPos.z,voxel1);
+     intersectWorld.setVoxel(intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1);
+     geometryDataWorker.postMessage(['voxel',intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1]);
+     geometryDataWorker2.postMessage(['voxel',intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1]);
+     geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,correctedPos])
     }
 
   }
@@ -665,6 +733,10 @@ function blockPointer(){
     pointerBlock.position.set(posHit[0],posHit[1],posHit[2]);//set wireframe @ pos
   }
 }
+
+//3D Particles!!
+
+
 
 
 //DayNight(minify)
@@ -1033,10 +1105,12 @@ function createEmptyChunk(position){
     tileSize,
     tileTextureWidth,
     tileTextureHeight
-  })
+  });
+    chunkIndex.push(position.x+","+position.y+","+position.z);//REQUIRE
+
   scene.add(mesh);
   renderer.shadowMap.needsUpdate = true;//do i relaly need thid
-
+  return Chunks[position.x+","+position.y+","+position.z];
 }
 function loadChunk(x,y,z,world1,dat){
 //load in chunk
