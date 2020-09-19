@@ -398,36 +398,61 @@ function playerMovement(){//move plyr
   moved[5] = 0;;
   var preMovement = new THREE.Vector3().copy(camera.position)
   if(keys['w']){
-    controls.moveForward(.07);
+    controls.moveForward(.2);
   moved[0]=1;
+  if(checkIntersections()==true){
+  controls.moveForward(-.2)//pre check so you cant see inside
+  }else{
+  controls.moveForward(-.13);
+  }
 
   }
   if(keys['a']){
-    controls.moveRight(-.07);
+    controls.moveRight(-.2);
   moved[1]=1;
+  if(checkIntersections()==true){
+  controls.moveRight(.2)//pre check so you cant see inside
+  }else{
+  controls.moveRight(.13);
+  }
   }
 
   if(keys['s']){
-    controls.moveForward(-.07);
+    controls.moveForward(-.2);
 moved[3]=1;
+if(checkIntersections()==true){
+controls.moveForward(.2)//pre check so you cant see inside
+}else{
+controls.moveForward(.13);
+}
   }
   if(keys['d']){
-    controls.moveRight(.07);
+    controls.moveRight(.2);
     moved[4]=1;
+    if(checkIntersections()==true){
+    controls.moveRight(-.2)//pre check so you cant see inside
+    }else{
+    controls.moveRight(-.13);
+  }
 
   }
   if(keys[' ']){
     jumping=true;
     moved[2] =1;//preset
-    camera.position.y+=0.1;
+    camera.position.y+=0.5;
+    if(checkIntersections()==true){
+      camera.position.y-=0.5;//pre check so you cant see inside the ceiling
+    }else{
+    camera.position.y-=0.4;
+  }
 
 
   }else{
     jumping=false;
   }
   if(keys['Shift']){
-    if(camera.fov!=60){
-      camera.fov = 60;
+    if(camera.fov!=65){
+      camera.fov = 65;
       camera.updateProjectionMatrix();
     }
   }else{
