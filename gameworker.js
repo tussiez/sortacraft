@@ -211,8 +211,6 @@ geometryDataWorker2.onmessage = function(e){
     //now you can remove
   CullChunks[e.data[6].x+","+e.data[6].y+","+e.data[6].z] = undefined;
     //remove for optimize
-
-    console.log('Cleared 1 Chunk')
   }
   }
 }
@@ -369,7 +367,6 @@ for(var i = 0;i<CullChunkIndex.length;i++){
     //custom method: cull_faces [with extra var for idx] (when complete, strip this chunk from culling list)
     geometryDataWorker2.postMessage(['geometrydata',pos.x,pos.y,pos.z,'cull_faces',pos,pos,i]);//why is there so many times?so ineff
     CullChunkIndex.splice(i,1);//Clear so its doesnt repeat
-    console.log(renderer.info.render.triangles);
   }
 }
 }
