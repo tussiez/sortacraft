@@ -147,7 +147,7 @@ worldTextureBitmap = new THREE.CanvasTexture(bmap,undefined,undefined,undefined,
 //worldTextureBitmap = bmap;
   material = new THREE.MeshLambertMaterial({
     color:'gray',
-    transparent:true,
+    transparent:false,
   alphaTest:0.1,
     map:worldTextureBitmap,//texture
   });//setup mat
