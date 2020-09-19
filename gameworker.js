@@ -2,7 +2,7 @@
 import * as THREE from 'https://threejs.org/build/three.module.js'
 import {CSM} from 'https://threejs.org/examples/jsm/csm/CSM.js'//csm
 import * as SPE from '/sortacraft/pe.js'
-console.log(SPE)
+
 //import {PointerLockControls} from 'modified_pointerlock.js'//modified pointerlock
 const handlers = {
   main,
