@@ -49,7 +49,7 @@ self.onmessage = function(e){//onmessage
     var y1 = e.data[7];
     var z1 = e.data[8];
     var biome = e.data[10];
-    var perlin = new Perlin(seed);//for seed
+    var perlin = new Perlin(Math.floor(Math.random()*65535);//for seed
 
     var localWorld = new VoxelWorld({
 
@@ -117,8 +117,8 @@ self.onmessage = function(e){//onmessage
           caveBlks[x+","+y+","+z]=0;
         }
         if(oreNoise<attenuatedOreCount){
-          localWorld.setVoxel(x,y,z,12);
-          postMessage(['voxel',x,y,z,12]);
+          localWorld.setVoxel(x,y,z,11);
+          postMessage(['voxel',x,y,z,11]);
         }
       }else{
           caveBlks[x+","+y+","+z]=0;
