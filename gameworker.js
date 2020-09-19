@@ -1,7 +1,6 @@
 //main thread for Threejs
 import * as THREE from 'https://threejs.org/build/three.module.js'
 import {CSM} from 'https://threejs.org/examples/jsm/csm/CSM.js'//csm
-import * as SPE from '/sortacraft/pe.js'
 
 //import {PointerLockControls} from 'modified_pointerlock.js'//modified pointerlock
 const handlers = {
@@ -12,6 +11,7 @@ const handlers = {
   keyup,
   downloadGame,
   mousedown,
+  wheel
 }
 //hello there
 //variables
@@ -145,7 +145,7 @@ worldTextureLoader.setOptions({imageOrientation:'flipY'});//flips when using bit
 worldTextureBitmap = worldTextureLoader.load('textures.png',function(bmap){
 worldTextureBitmap = new THREE.CanvasTexture(bmap,undefined,undefined,undefined,THREE.NearestFilter,THREE.NearestFilter);//build texture from xhr req
 //worldTextureBitmap = bmap;
-  material = new THREE.MeshLambertMaterial({
+  material = new THREE.MeshBasicMaterial({
     color:'gray',
     transparent:false,
   alphaTest:0.1,
@@ -213,6 +213,22 @@ onmessage = function(e) {
 };
 function downloadGame(){
   postMessage(['chunks',Chunks]);//post chunks
+}
+function wheel(dat){
+  if(dat.deltaY>0){
+    if(currentVoxel<16){
+      currentVoxel+=1;
+
+    }else{
+      currentVoxel = 1;
+    }
+  }else{
+    if(currentVoxel>1){
+      currentVoxel-=1;
+    }else{
+      currentVoxel = 16;
+    }
+  }
 }
 function checkIntersections(){
   //checking for hits

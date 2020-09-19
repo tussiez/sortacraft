@@ -78,6 +78,8 @@ self.onmessage = function(e){//onmessage
 
     var progress = 0;
     var caveSize = .35;
+    var oreSize = .22;
+    var oreBias = .01;
     var caveBias = .10
 
     var total = (cellSize*cellSize*64)*2;//dupe
@@ -92,10 +94,12 @@ self.onmessage = function(e){//onmessage
       for(var y = 0;y<64;y++){
 
         //test
-        var type = Math.floor(Math.random()*16)+1;
+        var type = 1;
 
         var attenuatedCaveSize = caveSize - ((y/170)-caveBias);
+        var attenuatedOreCount = oreSize - ((y/250)-oreBias);
         var density = perlin.noise((x+x1)/12,(z+z1)/12,(y+y1)/12);
+        var oreNoise = perlin.noise((x+x1)/6,(z+z1)/6,(y+y1)/6);
         var hm = mineHeight(x,z);
         levels[x+","+z]=hm;
         if(y<hm){
@@ -108,7 +112,13 @@ self.onmessage = function(e){//onmessage
             localWorld.setVoxel(x,y,z,type);
             postMessage(['voxel',x,y,z,type])
           }
+          //ORES
+
           caveBlks[x+","+y+","+z]=0;
+        }
+        if(oreNoise<attenuatedOreCount){
+          localWorld.setVoxel(x,y,z,12);
+          postMessage(['voxel',x,y,z,12]);
         }
       }else{
           caveBlks[x+","+y+","+z]=0;
@@ -121,7 +131,7 @@ self.onmessage = function(e){//onmessage
 
               for(var x = 0; x< cellSize; x++){
                 var hm = levels[x+","+z];
-                var type = Math.floor(Math.random()*16)+1;//test
+                var type = 2
                 if(localWorld.getVoxel(x,hm,z)==0&&caveBlks[x+","+(hm-1)+","+z]==1){
                 localWorld.setVoxel(x,hm,z,type);
                 postMessage(['voxel',x,hm,z,type]);

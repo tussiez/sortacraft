@@ -77,7 +77,7 @@ document.body.addEventListener('mousemove',function(e){
 });
 //move mouse
 document.body.addEventListener('wheel',function(e){
-  gameWorker.postMessage({type:'wheel',event:fixEventPost(e)});
+  gameWorker.postMessage({type:'wheel',deltaY:e.deltaY});
 });
 //mouse scroll
 
