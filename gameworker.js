@@ -18,6 +18,7 @@ const handlers = {
 var camera,
 scene,
 renderer,
+seed = Math.floor(Math.random()*65535),
 controls,
 particleGroup,
 emitter,
@@ -1128,7 +1129,7 @@ function createChunk(x,y,z){
 chunkWorker = new Worker('chunkworker.js');
 var currentBiome = 'caves';
 lazyVoxelData.needsClear = true;//need a clear
-chunkWorker.postMessage(['create',16,tileSize,tileTextureWidth,tileTextureHeight,12345,x,y,z,heightMult,currentBiome,2]);
+chunkWorker.postMessage(['create',16,tileSize,tileTextureWidth,tileTextureHeight,globalSeed,x,y,z,heightMult,currentBiome,2]);
 done=false;
 var startCount = 0;
 chunkWorker.onmessage = function(e){
