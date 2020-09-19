@@ -299,49 +299,6 @@ function main(dat){
   render();
   getFPS.framerate();//start fps counter
 }
-function initParticles() {
-  particleGroup = new SPE.Group({
-    texture: {
-            value: texture
-        }
-  });
-
-  emitter = new SPE.Emitter({
-        maxAge: {
-            value: .5
-        },
-    position: {
-            value: new THREE.Vector3(0, 0, -50),
-            spread: new THREE.Vector3( 0, 0, 0 )
-        },
-
-    acceleration: {
-            value: new THREE.Vector3(0, 0, 0),
-            spread: new THREE.Vector3( 20, -20, 20 )
-        },
-
-    velocity: {
-            value: new THREE.Vector3(0, 0, 0),
-            spread: new THREE.Vector3(40, -40, 40)
-        },
-
-   color: {
-            value:  new THREE.Color('gray')
-        },
-        opacity:{
-          value: 2
-        },
-
-        size: {
-            value: 2
-        },
-
-    particleCount: 50
-  });
-
-  particleGroup.addEmitter( emitter );
-  scene.add( particleGroup.mesh );
-}
 function render(){
   requestAnimationFrame(render);
 
