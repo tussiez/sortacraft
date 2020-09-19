@@ -90,19 +90,23 @@ self.onmessage = function(e){//onmessage
   for(var x = 0;x<cellSize;x++){
     for(var z = 0;z<cellSize;z++){
       for(var y = 0;y<64;y++){
+
+        //test
+        var type = Math.floor(Math.random()*16)+1;
+
         var attenuatedCaveSize = caveSize - ((y/170)-caveBias);
         var density = perlin.noise((x+x1)/12,(z+z1)/12,(y+y1)/12);
         var hm = mineHeight(x,z);
         levels[x+","+z]=hm;
         if(y<hm){
         if(density>attenuatedCaveSize){
-          localWorld.setVoxel(x,y,z,1);
-          postMessage(['voxel',x,y,z,1]);
+          localWorld.setVoxel(x,y,z,type);
+          postMessage(['voxel',x,y,z,type]);
             caveBlks[x+","+y+","+z]=1;
         }else{
           if(y<5){
-            localWorld.setVoxel(x,y,z,1);
-            postMessage(['voxel',x,y,z,1])
+            localWorld.setVoxel(x,y,z,type);
+            postMessage(['voxel',x,y,z,type])
           }
           caveBlks[x+","+y+","+z]=0;
         }
@@ -117,7 +121,7 @@ self.onmessage = function(e){//onmessage
 
               for(var x = 0; x< cellSize; x++){
                 var hm = levels[x+","+z];
-                var type = 2;
+                var type = Math.floor(Math.random()*16)+1;//test
                 if(localWorld.getVoxel(x,hm,z)==0&&caveBlks[x+","+(hm-1)+","+z]==1){
                 localWorld.setVoxel(x,hm,z,type);
                 postMessage(['voxel',x,hm,z,type]);
