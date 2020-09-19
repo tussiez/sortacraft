@@ -297,6 +297,6 @@ onmessage = function(e){
     const {positions,normals,uvs,indices,faceIndexGroup,faceIndex} = voxelWorld.generateGeometryDataForCell(e.data[1]/64,e.data[2]/64,e.data[3]/64);//heavy loading
     //this will cover chunk bounds
     //calculate faceindxgroup
-    postMessage(['geometrydata',positions,normals,uvs,indices,e.data[4],e.data[5]]);//e.data[2] if pos
+    postMessage(['geometrydata',positions,normals,uvs,indices,e.data[4],e.data[5],e.data[6]]);//e.data[2] if pos + e.data[6] if it is idx
   }
 }

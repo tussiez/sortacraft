@@ -181,7 +181,7 @@ geometryDataWorker2.onmessage = function(e){
     if(e.data[5]=='regular'){
     lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];//pos,norm,uv,ind
     lazyVoxelData.realFinish();//real finish
-  }else{
+  } if(e.data[5]=='geometrydata'){
     //update geometry based on chunk
     var chunk = ChunksMesh[e.data[6].x+','+e.data[6].y+","+e.data[6].z];
     var geometry = chunk.geometry;
@@ -194,6 +194,24 @@ geometryDataWorker2.onmessage = function(e){
     geometry.setIndex(e.data[4]);//update geometry
     geometry.computeBoundingSphere();
 
+  }
+  if(e.data[5]=='cull_faces'){
+    //cull faces
+    //remmeber to remove from idx
+    var chunk = ChunksMesh[e.data[6].x+","+e.data[6].y+","+e.data[6].z];
+    //get from cull chunks
+    var geo = chunk.geometry;
+    geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(e.data[1]),3));
+    geo.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(e.data[2]),3));
+    geo.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(e.data[3]),2));
+
+    geo.setIndex(e.data[4]);
+    geo.computeBoundingSphere();//if not chunk no updatre.
+    //now you can remove
+  CullChunks[e.data[6].x+","+e.data[6].y+","+e.data[6].z] = undefined;
+    //remove for optimize
+
+    console.log('Cleared 1 Chunk')
   }
   }
 }
@@ -270,7 +288,7 @@ function main(dat){
   controls = new PointerLockControls(camera);
   clock = new THREE.Clock();
   camera.position.z = 3;
-  camera.position.y = 64;
+  camera.position.y = 128;
   var ambient = new THREE.AmbientLight(0xffffff,0.3);
   scene.add(ambient);//ambient light
   shadows = new CSM({
@@ -325,8 +343,38 @@ function render(){
   checkCullChunks();//check chunks that can be culled and cull them
 
 }
+function stringifyVec2(x,y,z){
+  return x+","+y+","+z;
+}
 function checkCullChunks(){
+for(var i = 0;i<CullChunkIndex.length;i++){
+  var chunk = CullChunks[CullChunkIndex[i]];
+  var pos = vecFromString(CullChunkIndex[i]);
+  var fourNeighbors = [
+    CullChunks[stringifyVec2(pos.x+16,pos.y,pos.z)],
+    CullChunks[stringifyVec2(pos.x-16,pos.y,pos.z)],
+    CullChunks[stringifyVec2(pos.x,pos.y,pos.z+16)],
+    CullChunks[stringifyVec2(pos.x,pos.y,pos.z-16)]
+  ];
 
+  //get neighbors for chunks
+  var allThere = false;
+  for(var lp = 0;lp<4;lp++){
+    if(fourNeighbors[lp]) allThere=true;
+  }//check if all chunks there yet to clear out
+  if(allThere==true){
+    //because all chunks there , you can regenerated geometry data
+
+    //custom method: cull_faces [with extra var for idx] (when complete, strip this chunk from culling list)
+    geometryDataWorker2.postMessage(['geometrydata',pos.x,pos.y,pos.z,'cull_faces',pos,pos,i]);//why is there so many times?so ineff
+    CullChunkIndex.splice(i,1);//Clear so its doesnt repeat
+    console.log(renderer.info.render.triangles);
+  }
+}
+}
+function vecFromString(str){
+  let spl = str.split(',');
+  return new THREE.Vector3(spl[0],spl[1],spl[2]);
 }
 function updateDaytime(){
   sunAngle	+= clock.getDelta()/dayDuration * Math.PI*2;
@@ -349,7 +397,7 @@ function playerMovement(){//move plyr
   moved[2] = 0;
   moved[3] = 0;
   moved[4] = 0;
-  moved[5] = 0;
+  moved[5] = 0;;
   var preMovement = new THREE.Vector3().copy(camera.position)
   if(keys['w']){
     controls.moveForward(.07);
@@ -412,7 +460,7 @@ moved[3]=1;
   }
   PlayerChunk = chunkClamp(camera.position,true)
   if(PlayerChunk == undefined&&camera.position.y<64){
-    goBack(moved)
+  //  goBack(moved)
   }
 }
 function goBack(arr){
@@ -502,8 +550,7 @@ function negativeChunkClamp(vec){
   clampZ = vec.z+remainedZ;
   }
   */
-  console.log(camera.position)
-  console.log(new THREE.Vector3(clampX,clampY,clampZ))
+
   return new THREE.Vector3(clampX,clampY,clampZ)
 }
 function newChunkClamp(vec){//clamp position for new chunk
