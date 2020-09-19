@@ -392,6 +392,7 @@ function playerMovement(){//move plyr
   moved[2] = 0;
   moved[3] = 0;
   moved[4] = 0;
+  moved[5] = 0;
   var preMovement = new THREE.Vector3().copy(camera.position)
   if(keys['w']){
     controls.moveForward(.07);
@@ -410,6 +411,12 @@ moved[3]=1;
   if(keys['d']){
     controls.moveRight(.07);
     moved[4]=1;
+
+  }
+  if(keys[' ']){
+    moved[2] =1;//preset
+    camera.position.y+=0.1;
+
 
   }
   if(keys['Shift']){
@@ -434,25 +441,21 @@ moved[3]=1;
     renderer.render(scene,camera)
   }else{
     bumping=false;
-     camera.position.y-=.1;
+     camera.position.y-=.2;
      moved[5]=1;
       if(checkIntersections()===true){
 
         bumping=true;
-        camera.position.y+=.1;
+        camera.position.y+=.2;
 
+      }else{
+        camera.position.y+=.1;
       }
     renderer.render(scene,camera);
   }
   PlayerChunk = chunkClamp(camera.position,true)
   if(PlayerChunk == undefined&&camera.position.y<64){
     goBack(moved)
-  }
-  if(keys[' ']){
-  //  moved[2] =1;//preset
-    camera.position.y+=0.1;
-
-
   }
 }
 function goBack(arr){
@@ -464,7 +467,7 @@ function goBack(arr){
     }
     if(arr[2]){
 
-    //camera.position.y-=.1;
+    camera.position.y-=.1;
     }
     if(arr[3]){
       controls.moveForward(.07);
@@ -473,7 +476,7 @@ function goBack(arr){
       controls.moveRight(-.07);
     }
     if(arr[5]){
-      camera.position.y+=.1;
+    //  camera.position.y+=.1;
     }
 
 }
