@@ -18,7 +18,7 @@ const handlers = {
 var camera,
 scene,
 renderer,
-seed = Math.floor(Math.random()*65535),
+globalSeed = Math.floor(Math.random()*65535),
 controls,
 particleGroup,
 emitter,
