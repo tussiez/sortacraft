@@ -522,6 +522,30 @@ function signVec(vec,checkSign){//return sign
 function floorVec(v){
 return new THREE.Vector3((Math.floor(v.x)),(Math.floor(v.y)),(Math.floor(v.z)));
 }
+function negativeChunkClamp(vec){
+
+  var remainedX = vec.x % 16;
+  var remainedY = vec.y % 64;
+  var remainedZ = vec.z % 16;
+
+  var clampX = vec.x - remainedX;
+  var clampY = vec.y - remainedY;
+  var clampZ = vec.z - remainedZ;
+  /*
+  if(vec.x < 0){
+    remainedX = vec.x % -16;
+  clampX = vec.x+remainedX;
+
+  }
+  if(vec.z < 0){
+    remainedZ = vec.z % -16;
+  clampZ = vec.z+remainedZ;
+  }
+  */
+  console.log(camera.position)
+  console.log(new THREE.Vector3(clampX,clampY,clampZ))
+  return new THREE.Vector3(clampX,clampY,clampZ)
+}
 function newChunkClamp(vec){//clamp position for new chunk
   var x = vec.x;
   var z = vec.z;
@@ -594,7 +618,7 @@ function modifyChunk2(voxel1){
     var intersectionVector = vecFromArray(pos);//vec from array
 
 
-    chunkPosition = newChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
+    chunkPosition = negativeChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
 
     selectedChunk = Chunks[stringifyVec(chunkPosition)];//stringify the vector to get chunk picked
 
@@ -602,8 +626,8 @@ function modifyChunk2(voxel1){
 
       //the chunk exists
 
-      var correctedPos = chunkClamp(intersectionVector,true);
-
+     var correctedPos = chunkClamp(intersectionVector,true);
+  //  var correctedPos = chunkPosition
       selectedChunk.setVoxel(pos[0]-correctedPos.x,pos[1]-correctedPos.y,pos[2]-correctedPos.z,voxel1);//set voxel @ chunk
 
       intersectWorld.setVoxel(intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1);//for intesection later at world relative
@@ -618,7 +642,9 @@ function modifyChunk2(voxel1){
     if(pos[1]>64&&selectedChunk==undefined){
       //vertical chunk non-existent
       console.log('Needing a new vertical chunk')
-     selectedChunk = createEmptyChunk(chunkPosition);//create new vertical chunk @ pos
+
+     selectedChunk= createEmptyChunk(chunkPosition);//create new vertical chunk @ pos
+
      var correctedPos = chunkPosition;
      selectedChunk.setVoxel(pos[0]-correctedPos.x,pos[1]-correctedPos.y,pos[2]-correctedPos.z,voxel1);
      intersectWorld.setVoxel(intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1);
