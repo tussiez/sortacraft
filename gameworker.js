@@ -419,10 +419,13 @@ moved[3]=1;
 
   }
   if(keys[' ']){
+    jumping=true;
     moved[2] =1;//preset
     camera.position.y+=0.1;
 
 
+  }else{
+    jumping=false;
   }
   if(keys['Shift']){
     if(camera.fov!=60){
@@ -446,6 +449,7 @@ moved[3]=1;
     renderer.render(scene,camera)
   }else{
     bumping=false;
+    if(jumping==false){
      camera.position.y-=.2;
      moved[5]=1;
       if(checkIntersections()===true){
@@ -456,6 +460,7 @@ moved[3]=1;
       }else{
         camera.position.y+=.1;
       }
+    }
     renderer.render(scene,camera);
   }
   PlayerChunk = chunkClamp(camera.position,true)
