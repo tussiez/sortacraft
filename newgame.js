@@ -1,5 +1,11 @@
 var gameWorker = new Worker('gameworker.js',{type:"module"});//enable modules
 //setup dom
+
+import TWEEN from 'https://website.hicam.net/sortacraft/tween.js'
+var fromTween = {op:1,reset:false};
+var toTween = {op:0,reset:false};//invisible
+var tween;
+var tweenRunning = false;
 window["downloadWorld"] = function(){
   gameWorker.postMessage({type:'downloadGame'});
 }
@@ -20,13 +26,27 @@ gameWorker.onmessage = function(e){
   }
   if(e.data[0]=='voxel_title'){
     document.getElementById('voxelNameOuter').style.display='block';
+    fromTween.op = 1;//reset
     document.getElementById('voxelName').innerText = e.data[1];
-    setTimeout(function(){
-      document.getElementById('voxelNameOuter').style.display='none';
-      document.getElementById('voxelName').innerText = '';
-    },1500);
+    if(tweenRunning==true){
+      tween.stop();
+      tweenRunning = false;
+      fromTween.op = 1;
+      document.getElementById('voxelNameOuter').style.opacity = 1;
+    }
+       tween = new TWEEN.Tween(fromTween).to(toTween,1000).onUpdate(function(){
+        document.getElementById('voxelNameOuter').style.opacity =fromTween.op;
+        tweenRunning=true;
+      }).delay(1000).start();//start tween
+
   }
 }
+
+function tweenLoop(){
+  requestAnimationFrame(tweenLoop);
+  TWEEN.update();
+}
+tweenLoop();
 function download(filename, text) {
   var element = document.createElement('a');
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));

@@ -46,6 +46,7 @@ canvas{
   border-radius:10px;
   top:calc(70% - 20px);
   left:calc(50% - 150px);
+  opacity:1;
   display:none;
 }
 #voxelName{
