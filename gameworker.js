@@ -61,6 +61,7 @@ bumping=false,
 maxReach = 6,//max player reach
 pointerBlock,
 moved = [],
+amountOfVoxels = 28,
 chunkWorker,
 lazyVoxelData = {
   current:0,//kindof like i
@@ -233,7 +234,7 @@ function downloadGame(){
 }
 function wheel(dat){
   if(dat.deltaY>0){
-    if(currentVoxel<16){
+    if(currentVoxel<amountOfVoxels){
       currentVoxel+=1;
 
     }else{
@@ -243,7 +244,7 @@ function wheel(dat){
     if(currentVoxel>1){
       currentVoxel-=1;
     }else{
-      currentVoxel = 16;
+      currentVoxel = amountOfVoxels;
     }
   }
 }
