@@ -621,7 +621,9 @@ function mousedown(eventData){
 
 var renderDist = 32;//chunks*16
 function voxelInSelf(voxel){
-  return AABBCollision(camera.position,{
+  var camPos = new THREE.Vector3().copy(camera.position)
+  camPos.y -=1;
+  var voxelBounds = {
     min:{
       x:voxel.x,
       y:voxel.y,
@@ -631,8 +633,9 @@ function voxelInSelf(voxel){
       x:voxel.x+1,
       y:voxel.y+1,
       z:voxel.z+1,//voxel size
-    },
-  });//aabb
+    }
+  };
+  return AABBCollision(camPos,voxelBounds);//aabb
 }
 function modifyChunk2(voxel1){
   const start = new THREE.Vector3();

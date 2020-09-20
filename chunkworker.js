@@ -21,7 +21,13 @@ const rand = {
   },
 }
 
-importScripts('https://threejs.org/build/three.min.js');
+//importScripts('https://threejs.org/build/three.min.js'); waste of time
+
+THREE = {
+  MathUtils: {
+    euclideanModulo:function(c,a){return(c%a+a)%a}
+  }
+}//euclidean modulo support
 
 self.onmessage = function(e){//onmessage
 
@@ -108,10 +114,7 @@ self.onmessage = function(e){//onmessage
           postMessage(['voxel',x,y,z,type]);
             caveBlks[x+","+y+","+z]=1;
         }else{
-          if(y<5&&y>1){
-            localWorld.setVoxel(x,y,z,type);
-            postMessage(['voxel',x,y,z,type])
-          }
+
           //ORES
 
           caveBlks[x+","+y+","+z]=0;
@@ -127,6 +130,10 @@ self.onmessage = function(e){//onmessage
       if(y==0){
         localWorld.setVoxel(x,y,z,16);
         postMessage(['voxel',x,y,z,16])
+      }
+      if(y==1){
+        localWorld.setVoxel(x,y,z,type);
+        postMessage(['voxel',x,y,z,type])
       }
     }
   }
