@@ -35,6 +35,19 @@ canvas{
   left:1%;
   color:black;
 }
+#voxelName{
+  z-index:999;
+  position:absolute;
+  height:200px;
+  width:40px;
+  font-size:24px;
+  background-color:rgba(0,0,0,.7);
+  color:white;
+  border-radius:20px;
+  top:20%;
+  left:20%;
+  display:none;
+}
 #worldgen{
   z-index:999;
   position: absolute;

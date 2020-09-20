@@ -63,6 +63,36 @@ pointerBlock,
 moved = [],
 amountOfVoxels = 28,
 chunkWorker,
+voxelNames = [
+  'Stone',
+  'Grass Block',
+  'Sand',
+  'Water',
+  'Log',
+  'Soil',
+  'Leaves',
+  'Light Block',
+  'Furnace[Unlit]',
+  'Diamond Ore',
+  'Redstone Ore',
+  'Lapis Lazuli',
+  'Emerald Ore',
+  'Workbench',
+  'Furnace[Lit]',
+  'Obsidian',
+  'Brick Block',
+  'Redstone Block',
+  'Prismarine',
+  'Bookshelf',
+  'End Stone',
+  'Yellow Block',
+  'Green Block',
+  'Red Block',
+  'Light Blue Block',
+  'Black Block',
+  'Brown Block',
+  'Copper Ore'
+],//voxe names (by idx)
 lazyVoxelData = {
   current:0,//kindof like i
   needsClear:true,//needs to clear
@@ -247,6 +277,8 @@ function wheel(dat){
       currentVoxel = amountOfVoxels;
     }
   }
+  console.log(voxelNames[currentVoxel]);
+  postMessage(['voxel_title',voxelNames[currentVoxel]]
 }
 function checkIntersections(){
   //checking for hits

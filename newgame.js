@@ -18,6 +18,14 @@ gameWorker.onmessage = function(e){
   if(e.data[0]=='chunks'){
     download('my_world.dat',JSON.stringify(e.data[1]))
   }
+  if(e.data[0]=='voxel_title'){
+    document.getElementById('voxelName').style.display='block';
+    document.getElementById('voxelName').innerText = e.data[1];
+    setTimeout(function(){
+      document.getElementById('voxelName').style.display='none';
+      document.getElementById('voxelName').innerText = '';
+    },1500);
+  }
 }
 function download(filename, text) {
   var element = document.createElement('a');
