@@ -108,7 +108,7 @@ self.onmessage = function(e){//onmessage
           postMessage(['voxel',x,y,z,type]);
             caveBlks[x+","+y+","+z]=1;
         }else{
-          if(y<5){
+          if(y<5&&y>1){
             localWorld.setVoxel(x,y,z,type);
             postMessage(['voxel',x,y,z,type])
           }
