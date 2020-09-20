@@ -278,7 +278,7 @@ function wheel(dat){
     }
   }
   console.log(voxelNames[currentVoxel]);
-  postMessage(['voxel_title',voxelNames[currentVoxel]]
+  postMessage(['voxel_title',voxelNames[currentVoxel]]);
 }
 function checkIntersections(){
   //checking for hits
