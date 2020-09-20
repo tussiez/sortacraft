@@ -123,6 +123,11 @@ self.onmessage = function(e){//onmessage
       }else{
           caveBlks[x+","+y+","+z]=0;
       }
+
+      if(y==0){
+        localWorld.setVoxel(x,y,z,16);
+        postMessage(['voxel',x,y,z,16])
+      }
     }
   }
 }

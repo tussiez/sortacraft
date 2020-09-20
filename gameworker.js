@@ -542,8 +542,9 @@ function convInt(x,y,z){
 }
 
 function AABBCollision(point,box){
-  return (point.x >= box.minX && point.x <= box.maxX) &&
-         (point.z >= box.minZ && point.z <= box.maxZ);
+  return (point.x >= box.min.x && point.x <= box.max.x) &&
+         (point.z >= box.min.z && point.z <= box.max.z) &&
+         (point.y >= box.min.x && point.y <= box.max.y);
 }
 function compareVec(vec,vec2){
   return vec.x==vec2.x&&vec.y==vec2.y&&vec.z==vec2.z;
@@ -619,6 +620,20 @@ function mousedown(eventData){
 }
 
 var renderDist = 32;//chunks*16
+function voxelInSelf(voxel){
+  return AABBCollision(camera.position,{
+    min:{
+      x:voxel.x,
+      y:voxel.y,
+      z:voxel.z,
+    },
+    max:{
+      x:voxel.x+1,
+      y:voxel.y+1,
+      z:voxel.z+1,//voxel size
+    },
+  });//aabb
+}
 function modifyChunk2(voxel1){
   const start = new THREE.Vector3();
   const end = new THREE.Vector3();
@@ -659,6 +674,7 @@ function modifyChunk2(voxel1){
     selectedChunk = Chunks[stringifyVec(chunkPosition)];//stringify the vector to get chunk picked
 
     if(selectedChunk){
+      if(voxelInSelf(intersectionVector)==false&&intersectionVector.y>1){
 
       //the chunk exists
 
@@ -674,9 +690,11 @@ function modifyChunk2(voxel1){
 
       geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,correctedPos]);
     }
+  }
 
     if(pos[1]>64&&selectedChunk==undefined){
       //vertical chunk non-existent
+      if(voxelInSelf(intersectionVector)==false){
       console.log('Needing a new vertical chunk')
 
      selectedChunk= createEmptyChunk(chunkPosition);//create new vertical chunk @ pos
@@ -688,6 +706,7 @@ function modifyChunk2(voxel1){
      geometryDataWorker2.postMessage(['voxel',intersectionVector.x,intersectionVector.y,intersectionVector.z,voxel1]);
      geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,correctedPos])
     }
+  }
 
   }
 }
