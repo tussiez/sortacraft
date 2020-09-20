@@ -487,6 +487,7 @@ controls.moveForward(.13);
       camera.fov = 65;
       camera.updateProjectionMatrix();
     }
+    camera.position.y-=.1;
   }else{
     if(camera.fov!=70){
       camera.fov=70;
@@ -651,22 +652,31 @@ function mousedown(eventData){
 }
 
 var renderDist = 32;//chunks*16
-function voxelInSelf(voxel){
-  var camPos = new THREE.Vector3().copy(camera.position)
+function roundToFixed(vec,amt){
+  return new THREE.Vector3(vec.x.toFixed(amt),vec.y.toFixed(amt),vec.z.toFixed(amt));
+}
+function numberizeVec(vec){
+  return new THREE.Vector3(Number(vec.x),Number(vec.y),Number(vec.z));
+}
+function isColliding(voxel){
+  var camPos = new THREE.Vector3().copy(camera.position);
+  camPos = roundToFixed(camPos,1);
+  camPos = numberizeVec(camPos);
   camPos.y -=1;
-  var voxelBounds = {
-    min:{
-      x:voxel.x,
-      y:voxel.y,
-      z:voxel.z,
-    },
-    max:{
-      x:voxel.x+1,
-      y:voxel.y+1,
-      z:voxel.z+1,//voxel size
-    }
-  };
-  return AABBCollision(camPos,voxelBounds);//aabb
+  voxel = roundToFixed(voxel,1);//round again
+  voxel = numberizeVec(voxel);//fix
+
+for(var y = -5;y<5;y++){
+
+  var vec = new THREE.Vector3().copy(camPos);
+  vec.y+= y/10;
+  vec.y = vec.y.toFixed(1)
+  vec.y = Number(vec.y);
+  if(compareVec(voxel,vec)==true){
+    return true;
+  }
+}
+
 }
 function modifyChunk2(voxel1){
   const start = new THREE.Vector3();
@@ -706,9 +716,8 @@ function modifyChunk2(voxel1){
     chunkPosition = negativeChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
 
     selectedChunk = Chunks[stringifyVec(chunkPosition)];//stringify the vector to get chunk picked
-
+if(intersectionVector.y>1&&isColliding(intersectionVector)==undefined){
     if(selectedChunk){
-      if(intersectionVector.y>1){
 
       //the chunk exists
 
@@ -723,12 +732,10 @@ function modifyChunk2(voxel1){
       geometryDataWorker2.postMessage(['voxel',pos[0],pos[1],pos[2],voxel1]);//for chunkupdATE
 
       geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,correctedPos]);
-    }
-  }
 
+}
     if(pos[1]>64&&selectedChunk==undefined){
       //vertical chunk non-existent
-      if(voxelInSelf(intersectionVector)==false){
       console.log('Needing a new vertical chunk')
 
      selectedChunk= createEmptyChunk(chunkPosition);//create new vertical chunk @ pos
@@ -741,9 +748,9 @@ function modifyChunk2(voxel1){
      geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,correctedPos])
     }
   }
+}
 
   }
-}
 function modifyChunk(voxel1){//modify a chunk
 
 
