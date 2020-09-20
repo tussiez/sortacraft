@@ -708,7 +708,7 @@ function modifyChunk2(voxel1){
     selectedChunk = Chunks[stringifyVec(chunkPosition)];//stringify the vector to get chunk picked
 
     if(selectedChunk){
-      if(voxelInSelf(intersectionVector)==false&&intersectionVector.y>1){
+      if(intersectionVector.y>1){
 
       //the chunk exists
 
