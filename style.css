@@ -35,18 +35,21 @@ canvas{
   left:1%;
   color:black;
 }
-#voxelName{
+#voxelNameOuter{
   z-index:999;
   position:absolute;
-  height:200px;
-  width:40px;
+  height:40px;
+  width:300px;
   font-size:24px;
   background-color:rgba(0,0,0,.7);
   color:white;
-  border-radius:20px;
-  top:20%;
-  left:20%;
+  border-radius:10px;
+  top:calc(70% - 20px);
+  left:calc(50% - 150px);
   display:none;
+}
+#voxelName{
+  text-align:center;
 }
 #worldgen{
   z-index:999;

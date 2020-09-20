@@ -19,10 +19,10 @@ gameWorker.onmessage = function(e){
     download('my_world.dat',JSON.stringify(e.data[1]))
   }
   if(e.data[0]=='voxel_title'){
-    document.getElementById('voxelName').style.display='block';
+    document.getElementById('voxelNameOuter').style.display='block';
     document.getElementById('voxelName').innerText = e.data[1];
     setTimeout(function(){
-      document.getElementById('voxelName').style.display='none';
+      document.getElementById('voxelNameOuter').style.display='none';
       document.getElementById('voxelName').innerText = '';
     },1500);
   }
