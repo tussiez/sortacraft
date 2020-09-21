@@ -390,9 +390,9 @@ for(var i = 0;i<CullChunkIndex.length;i++){
   ];
 
   //get neighbors for chunks
-  var allThere = false;
+  var allThere = true;
   for(var lp = 0;lp<4;lp++){
-    if(fourNeighbors[lp]) allThere=true;
+    if(fourNeighbors[lp]==undefined) allThere=false;
   }//check if all chunks there yet to clear out
   if(allThere==true){
     //because all chunks there , you can regenerated geometry data
