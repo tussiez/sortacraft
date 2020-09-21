@@ -157,7 +157,7 @@ self.onmessage = function(e){//onmessage
         if(y<hm){
         if(density>attenuatedCaveSize){
           localWorld.setVoxel(x,y,z,type);
-          postMessage(['voxel',x,y,z,type]); not yet
+          postMessage(['voxel',x,y,z,type]);
             caveBlks[x+","+y+","+z]=1;
         }else{
 
