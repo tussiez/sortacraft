@@ -651,7 +651,7 @@ function mousedown(eventData){
   }
 }
 
-var renderDist = 128;//chunks*16
+var renderDist = 32;//chunks*16
 function roundToFixed(vec,amt){
   return new THREE.Vector3(vec.x.toFixed(amt),vec.y.toFixed(amt),vec.z.toFixed(amt));
 }
