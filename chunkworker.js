@@ -203,7 +203,9 @@ self.onmessage = function(e){//onmessage
 
               for(var x = 0; x< cellSize; x++){
                 var hm = levels[x+","+z];
-                var type = 2
+                var biomeNoise = perlin.noise((x+x1)/200,(z+z1)/200,0);
+
+                var type = biomeNoise > .4 ? 2 : 3;
                 if(localWorld.getVoxel(x,hm,z)==0&&caveBlks[x+","+(hm-1)+","+z]==1){
                 localWorld.setVoxel(x,hm,z,type);
                 postMessage(['voxel',x,hm,z,type]);

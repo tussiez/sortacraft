@@ -242,6 +242,7 @@ geometryDataWorker2.onmessage = function(e){
     //now you can remove
   CullChunks[e.data[6].x+","+e.data[6].y+","+e.data[6].z] = undefined;
     //remove for optimize
+    console.log('Optimized ')
   }
   }
 }
