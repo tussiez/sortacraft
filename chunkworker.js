@@ -86,7 +86,7 @@ self.onmessage = function(e){//onmessage
     var caveSize = .35;
     var oreSize = .22;
     var oreBias = .01;
-    var caveBias = .10
+    var caveBias = .10;
 
     var total = (cellSize*cellSize*64)*2;//dupe
     var levels = {};
@@ -111,7 +111,7 @@ self.onmessage = function(e){//onmessage
         if(y<hm){
         if(density>attenuatedCaveSize){
           localWorld.setVoxel(x,y,z,type);
-          postMessage(['voxel',x,y,z,type]);
+        //  postMessage(['voxel',x,y,z,type]); not yet
             caveBlks[x+","+y+","+z]=1;
         }else{
 
@@ -138,7 +138,7 @@ self.onmessage = function(e){//onmessage
     }
   }
 }
-
+/*
             for(var z = 0; z< cellSize; z++){
 
               for(var x = 0; x< cellSize; x++){
@@ -154,6 +154,8 @@ self.onmessage = function(e){//onmessage
               }
 
             }
+            disabled 4 test ores
+            */
 
         /*
         var below = localWorld.getVoxel(x,y-1,z);
