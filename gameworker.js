@@ -382,21 +382,22 @@ function checkCullChunks(){
 for(var i = 0;i<CullChunkIndex.length;i++){
   var chunk = CullChunks[CullChunkIndex[i]];
   var pos = vecFromString(CullChunkIndex[i]);
+  pos = numberizeVec(pos);//fix
   var fourNeighbors = [
-    CullChunks[stringifyVec2(pos.x+16,pos.y,pos.z)],
-    CullChunks[stringifyVec2(pos.x-16,pos.y,pos.z)],
-    CullChunks[stringifyVec2(pos.x,pos.y,pos.z+16)],
-    CullChunks[stringifyVec2(pos.x,pos.y,pos.z-16)]
+    Chunks[stringifyVec2(pos.x+16,pos.y,pos.z)],
+    Chunks[stringifyVec2(pos.x-16,pos.y,pos.z)],
+    Chunks[stringifyVec2(pos.x,pos.y,pos.z+16)],
+    Chunks[stringifyVec2(pos.x,pos.y,pos.z-16)]
   ];
 
   //get neighbors for chunks
   var allThere = true;
   for(var lp = 0;lp<4;lp++){
-    if(fourNeighbors[lp]==undefined) allThere=false;
+    if(fourNeighbors[lp]==undefined){ allThere=false};
   }//check if all chunks there yet to clear out
   if(allThere==true){
     //because all chunks there , you can regenerated geometry data
-
+console.log('can cull')
     //custom method: cull_faces [with extra var for idx] (when complete, strip this chunk from culling list)
     geometryDataWorker2.postMessage(['geometrydata',pos.x,pos.y,pos.z,'cull_faces',pos,pos,i]);//why is there so many times?so ineff
     CullChunkIndex.splice(i,1);//Clear so its doesnt repeat
