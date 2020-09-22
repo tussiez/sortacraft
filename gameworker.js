@@ -101,6 +101,7 @@ voxelNames = [
   'Oak Planks',
   'Dark Oak Planks',
   'Spruce Planks',
+  'Birch Planks',
   'Acacia Planks',
   'Acacia Log',
   'Birch Log',
