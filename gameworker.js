@@ -506,7 +506,7 @@ controls.moveForward(.13);
 
     camera.position.y-=.5;
     if(checkIntersections()==true){
-      camera.position.y=+0.5;//pre check so you cant see inside the ceiling
+      camera.position.y+=0.5;//pre check so you cant see inside the ceiling
     }else{
     camera.position.y+=0.4;
   }
