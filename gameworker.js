@@ -449,7 +449,7 @@ function playerMovement(){//move plyr
   moved[4] = 0;
   moved[5] = 0;;
   var preMovement = new THREE.Vector3().copy(camera.position)
-  if(keys['w']){
+  if(keys['w']||keys['W']){
     controls.moveForward(.2);
   moved[0]=1;
   if(checkIntersections()==true){
@@ -459,7 +459,7 @@ function playerMovement(){//move plyr
   }
 
   }
-  if(keys['a']){
+  if(keys['a']||keys['A']){
     controls.moveRight(-.2);
   moved[1]=1;
   if(checkIntersections()==true){
@@ -469,7 +469,7 @@ function playerMovement(){//move plyr
   }
   }
 
-  if(keys['s']){
+  if(keys['s']||keys['D']){
     controls.moveForward(-.2);
 moved[3]=1;
 if(checkIntersections()==true){
@@ -478,7 +478,7 @@ controls.moveForward(.2)//pre check so you cant see inside
 controls.moveForward(.13);
 }
   }
-  if(keys['d']){
+  if(keys['d']||keys['D']){
     controls.moveRight(.2);
     moved[4]=1;
     if(checkIntersections()==true){
