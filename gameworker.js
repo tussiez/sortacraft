@@ -500,7 +500,7 @@ controls.moveForward(.13);
 
 
   }else{
-    jumping=false;
+  //  jumping=false;
   }
   if(keys['Shift']){
     if(camera.fov!=65){
