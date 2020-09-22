@@ -284,7 +284,7 @@ VoxelWorld.faces = [
 const voxelWorld = new VoxelWorld({
   cellSize:64,
   tileSize:16,
-  tileTextureWidth:671,
+  tileTextureWidth:704,
   tileTextureHeight:48,
   calculateFaces:true
 });//prep voxelwordl
