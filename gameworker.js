@@ -104,7 +104,7 @@ voxelNames = [
   'Acacia Planks',
   'Acacia Log',
   'Birch Log',
-  'Spruce Log',
+  'Spruce Log'
 ],//voxe names (by idx)
 lazyVoxelData = {
   current:0,//kindof like i
