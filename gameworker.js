@@ -98,7 +98,7 @@ voxelNames = [
   'Granite',
   'Snowy Grass Block',
   'Ice',
-  'Oak Planks'.
+  'Oak Planks',
   'Dark Oak Planks',
   'Spruce Planks',
   'Acacia Planks',
