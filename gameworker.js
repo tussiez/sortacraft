@@ -61,14 +61,14 @@ bumping=false,
 maxReach = 6,//max player reach
 pointerBlock,
 moved = [],
-amountOfVoxels = 29,
+amountOfVoxels = 42,
 chunkWorker,
 voxelNames = [
   'Stone',
   'Grass Block',
   'Sand',
   'Water',
-  'Log',
+  'Oak Log',
   'Soil',
   'Leaves',
   'Light Block',
@@ -92,7 +92,19 @@ voxelNames = [
   'Black Block',
   'Brown Block',
   'Copper Ore',
-  'Silver Ore'
+  'Silver Ore',
+  'Cobblestone',
+  'Diorite',
+  'Granite',
+  'Snowy Grass Block',
+  'Ice',
+  'Oak Planks'.
+  'Dark Oak Planks',
+  'Spruce Planks',
+  'Acacia Planks',
+  'Acacia Log',
+  'Birch Log',
+  'Spruce Log',
 ],//voxe names (by idx)
 lazyVoxelData = {
   current:0,//kindof like i
