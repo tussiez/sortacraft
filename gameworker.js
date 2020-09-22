@@ -61,7 +61,7 @@ bumping=false,
 maxReach = 6,//max player reach
 pointerBlock,
 moved = [],
-amountOfVoxels = 43,
+amountOfVoxels = 44,
 chunkWorker,
 voxelNames = [
   'Stone',
@@ -449,9 +449,7 @@ function playerMovement(){//move plyr
   moved[4] = 0;
   moved[5] = 0;;
   var preMovement = new THREE.Vector3().copy(camera.position)
-  if(keys['w']||keys['W']){
-    if(keys['W']){keys['w']=false}
-    if(keys['w']){keys['W']=false};
+  if(keys['w']){
     controls.moveForward(.2);
   moved[0]=1;
   if(checkIntersections()==true){
@@ -461,9 +459,7 @@ function playerMovement(){//move plyr
   }
 
   }
-  if(keys['a']||keys['A']){
-    if(keys['A']){keys['A']=false}
-    if(keys['a']){keys['a']=false};
+  if(keys['a']){
     controls.moveRight(-.2);
   moved[1]=1;
   if(checkIntersections()==true){
@@ -473,9 +469,7 @@ function playerMovement(){//move plyr
   }
   }
 
-  if(keys['s']||keys['S']){
-    if(keys['S']){keys['s']=false}
-    if(keys['s']){keys['S']=false};
+  if(keys['s']){
     controls.moveForward(-.2);
 moved[3]=1;
 if(checkIntersections()==true){
@@ -484,9 +478,7 @@ controls.moveForward(.2)//pre check so you cant see inside
 controls.moveForward(.13);
 }
   }
-  if(keys['d']||keys['D']){
-    if(keys['D']){keys['d']=false}
-    if(keys['d']){keys['D']=false};
+  if(keys['d']){
     controls.moveRight(.2);
     moved[4]=1;
     if(checkIntersections()==true){
@@ -508,17 +500,19 @@ controls.moveForward(.13);
 
 
   }else{
-  //  jumping=false;
+    jumping=false;
   }
   if(keys['Shift']){
-
-    camera.position.y-=.5;
-    if(checkIntersections()==true){
-      camera.position.y+=0.5;//pre check so you cant see inside the ceiling
-    }else{
-    camera.position.y+=0.4;
-  }
-
+    if(camera.fov!=65){
+      camera.fov = 65;
+      camera.updateProjectionMatrix();
+    }
+    camera.position.y-=.1;
+  }else{
+    if(camera.fov!=70){
+      camera.fov=70;
+      camera.updateProjectionMatrix();
+    }
   }
 
 
