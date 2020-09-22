@@ -130,6 +130,13 @@ self.onmessage = function(e){//onmessage
         randomness:3.5,
         maxHeight:26,
         uv:28
+      },
+      {
+        type:'coal',
+        oreChance:.83,
+        randomness:4,
+        maxHeight:64,
+        uv:44
       }
 
 
@@ -156,9 +163,11 @@ self.onmessage = function(e){//onmessage
         levels[x+","+z]=hm;
         if(y<hm){
         if(density>attenuatedCaveSize){
+
           localWorld.setVoxel(x,y,z,type);
           postMessage(['voxel',x,y,z,type]);
             caveBlks[x+","+y+","+z]=1;
+            
         }else{
 
           //ORES
