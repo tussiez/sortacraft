@@ -229,7 +229,28 @@ geometryDataWorker2.onmessage = function(e){
     if(e.data[5]=='regular'){
     lazyVoxelData.geometryData = [e.data[1],e.data[2],e.data[3],e.data[4]];//pos,norm,uv,ind
     lazyVoxelData.realFinish();//real finish
-  } if(e.data[5]=='geometrydata'){
+  }
+  if(e.data[5]=='update_neighbors'){
+  //update neighbors afer this
+  var chunk = ChunksMesh[e.data[6].x+','+e.data[6].y+","+e.data[6].z];
+  var geometry = chunk.geometry;
+
+  //call update on other geometry too (for neighbor issue)
+  geometryDataWorker2.postMessage(['geometrydata',e.data[7].x,e.data[7].y,e.data[7].z,'chunk_update',e.data[7],e.data[7]]);
+  //end call
+  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(e.data[1]), 3));
+
+  geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(e.data[2]), 3));
+
+  geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(e.data[3]), 2));
+
+  geometry.setIndex(e.data[4]);//update geometry
+  geometry.computeBoundingSphere();
+
+
+  }
+
+  if(e.data[5]=='geometrydata'){
     //update geometry based on chunk
     var chunk = ChunksMesh[e.data[6].x+','+e.data[6].y+","+e.data[6].z];
     var geometry = chunk.geometry;
@@ -258,7 +279,7 @@ geometryDataWorker2.onmessage = function(e){
     //now you can remove
   CullChunks[e.data[6].x+","+e.data[6].y+","+e.data[6].z] = undefined;
     //remove for optimize
-    console.log('Optimized ')
+
   }
   }
 }
@@ -415,7 +436,7 @@ for(var i = 0;i<CullChunkIndex.length;i++){
   */
   if(allThere==true){
     //because all chunks there , you can regenerated geometry data
-console.log('can cull')
+
     //custom method: cull_faces [with extra var for idx] (when complete, strip this chunk from culling list)
     geometryDataWorker2.postMessage(['geometrydata',pos.x,pos.y,pos.z,'cull_faces',pos,pos,i]);//why is there so many times?so ineff
     CullChunkIndex.splice(i,1);//Clear so its doesnt repeat
@@ -698,6 +719,25 @@ for(var y = -5;y<5;y++){
 }
 
 }
+function calculateEdgeDir(vec,addr){
+  var addr2 = new THREE.Vector3().copy(addr)
+  if(vec.x === 0||vec.x==1){
+    addr2.x -= 16;
+  }
+  if(vec.x === 16||vec.x==15){
+    addr2.x+=16;
+  }
+  if(vec.z === 0||vec.z==1){
+    addr2.z-=16;
+  }
+  if(vec.z === 16||vec.z===15){
+    addr2.z += 16;
+  }
+  return addr2;
+}
+function truncateVec(vec){
+return new THREE.Vector3(Math.trunc(vec.x),Math.trunc(vec.y),Math.trunc(vec.z));
+}
 function modifyChunk2(voxel1){
   const start = new THREE.Vector3();
   const end = new THREE.Vector3();
@@ -739,9 +779,14 @@ function modifyChunk2(voxel1){
 if(intersectionVector.y>1&&isColliding(intersectionVector)==undefined){
     if(selectedChunk){
 
+
+
       //the chunk exists
 
      var correctedPos = chunkClamp(intersectionVector,true);
+
+     var relativeBlockPosition = roundVec(new THREE.Vector3(pos[0]-correctedPos.x,pos[1]-correctedPos.y,pos[2]-correctedPos.z));//realtive
+     relativeBlockPosition = truncateVec(relativeBlockPosition)//truncate
   //  var correctedPos = chunkPosition
       selectedChunk.setVoxel(pos[0]-correctedPos.x,pos[1]-correctedPos.y,pos[2]-correctedPos.z,voxel1);//set voxel @ chunk
 
@@ -751,13 +796,23 @@ if(intersectionVector.y>1&&isColliding(intersectionVector)==undefined){
 
       geometryDataWorker2.postMessage(['voxel',pos[0],pos[1],pos[2],voxel1]);//for chunkupdATE
 
-      geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,correctedPos]);
+      //
+
+      if(relativeBlockPosition.x == 0 || relativeBlockPosition.x == 16 ||relativeBlockPosition.x==1||relativeBlockPosition.x==15||relativeBlockPosition.z==1||relativeBlockPosition.z==15|| relativeBlockPosition.z == 0 || relativeBlockPosition.z == 16){
+        //on edge of chunk, must call of geometry data so you can't see through chunks
+        var edgeChunkPos = calculateEdgeDir(relativeBlockPosition,correctedPos);
+
+        geometryDataWorker.postMessage(['geometrydata',edgeChunkPos.x,edgeChunkPos.y,edgeChunkPos.z,'chunk_update',edgeChunkPos,edgeChunkPos]);
+          geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,correctedPos]);
+          //neighbor first,prevent flickering
+
+      }else{
+        geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,correctedPos]);
+      }
 
 }
     if(pos[1]>64&&selectedChunk==undefined){
-      //vertical chunk non-existent
-      console.log('Needing a new vertical chunk')
-
+      //vertical chunk non-existen
      selectedChunk= createEmptyChunk(chunkPosition);//create new vertical chunk @ pos
 
      var correctedPos = chunkPosition;
@@ -812,7 +867,7 @@ var correctedPos;
     geometryDataWorker.postMessage(['voxel',pos[0],pos[1],pos[2],voxel1]);//pass to intersectworker (nolag)
     geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,{x:pos[0],y:pos[1],z:pos[2]}]);
   }else{
-    console.log('no chunkdetected')
+
 
 }
 
@@ -963,12 +1018,8 @@ class VoxelWorld {
     return cell[voxelOffset];
   }
 	getTransparentVoxel(x,y,z){
-		const voxel = this.getVoxel(x,y,z);
-		if(voxel===4||voxel===7){
-			return true;
-		}else{
 			return false;
-		}
+
 	}
 
   generateGeometryDataForCell(cellX, cellY, cellZ,rx,ry,rz) {
