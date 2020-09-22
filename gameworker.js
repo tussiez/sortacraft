@@ -61,7 +61,7 @@ bumping=false,
 maxReach = 6,//max player reach
 pointerBlock,
 moved = [],
-amountOfVoxels = 42,
+amountOfVoxels = 43,
 chunkWorker,
 voxelNames = [
   'Stone',
