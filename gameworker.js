@@ -61,7 +61,7 @@ bumping=false,
 maxReach = 6,//max player reach
 pointerBlock,
 moved = [],
-amountOfVoxels = 28,
+amountOfVoxels = 29,
 chunkWorker,
 voxelNames = [
   'Stone',
@@ -86,12 +86,13 @@ voxelNames = [
   'Bookshelf',
   'End Stone',
   'Yellow Block',
-  'Green Block',
+  'Emerald Block',
   'Red Block',
   'Light Blue Block',
   'Black Block',
   'Brown Block',
-  'Copper Ore'
+  'Copper Ore',
+  'Silver Ore'
 ],//voxe names (by idx)
 lazyVoxelData = {
   current:0,//kindof like i
