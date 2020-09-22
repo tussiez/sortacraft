@@ -469,7 +469,7 @@ function playerMovement(){//move plyr
   }
   }
 
-  if(keys['s']||keys['D']){
+  if(keys['s']||keys['S']){
     controls.moveForward(-.2);
 moved[3]=1;
 if(checkIntersections()==true){
