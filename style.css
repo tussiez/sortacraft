@@ -35,6 +35,19 @@ canvas{
   left:1%;
   color:black;
 }
+#handItem {
+  position:absolute;
+  z-index:999;
+  top:60%;
+  left:70%;
+  width:40%;
+  height:40%;
+  background-image:url(items/silversword.gif);
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+  image-rendering:pixelated;
+  transform:rotateY(-60deg) rotateZ(50deg);
+}
 #voxelNameOuter{
   z-index:999;
   position:absolute;

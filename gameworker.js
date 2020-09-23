@@ -1,7 +1,6 @@
 //main thread for Threejs
 import * as THREE from 'https://threejs.org/build/three.module.js'
 import {CSM} from 'https://threejs.org/examples/jsm/csm/CSM.js'//csm
-
 //import {PointerLockControls} from 'modified_pointerlock.js'//modified pointerlock
 const handlers = {
   main,
@@ -342,7 +341,7 @@ function checkIntersections(){
 //end
 }
 
-
+var playerHand;
 function keydown(e){keys[e.key]=true};
 function keyup(e){keys[e.key]=false};//key updates.. hah.."KEY" updates? eh? getit? no?nvm
 
@@ -371,7 +370,9 @@ function main(dat){
     camera:camera,
     lightIntensity:0.01,
   });
-
+  playerHand = new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:"green"}));
+  scene.add(playerHand);
+  playerHand.scale.set(.1,.1,.1)
   pointerBlock = new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({wireframe:true,color:"white"}));
   pointerBlock.scale.set(1.01,1.01,1.01);//to fix outlines not showing
   scene.add(pointerBlock)
@@ -395,6 +396,7 @@ function render(){
 
   playerMovement();
 
+
   blockPointer();//block outline
 
   camera.updateMatrixWorld();//req.for shadows
@@ -410,6 +412,9 @@ function render(){
   lazyLoadChunks();//init lazy loadin g
 
   checkCullChunks();//check chunks that can be culled and cull them
+
+}
+function moveHand(){
 
 }
 function stringifyVec2(x,y,z){
@@ -542,7 +547,7 @@ controls.moveForward(.13);
     bumping=true;
     goBack(moved);
 
-
+    moveHand();
     renderer.render(scene,camera)
   }else{
     bumping=false;
@@ -558,6 +563,7 @@ controls.moveForward(.13);
         camera.position.y+=.1;
       }
     }
+    moveHand();
     renderer.render(scene,camera);
   }
   PlayerChunk = chunkClamp(camera.position,true)
