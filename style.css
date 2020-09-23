@@ -42,9 +42,9 @@ canvas{
   left:70%;
   width:40%;
   height:40%;
-  background-image:url(items/silversword.gif);
-  background-size:100% 100%;
   background-repeat:no-repeat;
+  background-image:url(items/silversword.gif);
+
   image-rendering:pixelated;
   transform:rotateY(-60deg) rotateZ(50deg);
 }

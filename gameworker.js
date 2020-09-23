@@ -314,6 +314,7 @@ function wheel(dat){
       currentVoxel = amountOfVoxels;
     }
   }
+  postMessage(['hand_uv',currentVoxel]);//pass hand uv
   postMessage(['voxel_title',voxelNames[currentVoxel-1]]);
 }
 function checkIntersections(){
@@ -476,41 +477,41 @@ function playerMovement(){//move plyr
   moved[5] = 0;;
   var preMovement = new THREE.Vector3().copy(camera.position)
   if(keys['w']){
-    controls.moveForward(.2);
+    controls.moveForward(.3);
   moved[0]=1;
   if(checkIntersections()==true){
-  controls.moveForward(-.2)//pre check so you cant see inside
+  controls.moveForward(-.3)//pre check so you cant see inside
   }else{
-  controls.moveForward(-.13);
+  controls.moveForward(-.23);
   }
 
   }
   if(keys['a']){
-    controls.moveRight(-.2);
+    controls.moveRight(-.3);
   moved[1]=1;
   if(checkIntersections()==true){
-  controls.moveRight(.2)//pre check so you cant see inside
+  controls.moveRight(.3)//pre check so you cant see inside
   }else{
-  controls.moveRight(.13);
+  controls.moveRight(.23);
   }
   }
 
   if(keys['s']){
-    controls.moveForward(-.2);
+    controls.moveForward(-.3);
 moved[3]=1;
 if(checkIntersections()==true){
-controls.moveForward(.2)//pre check so you cant see inside
+controls.moveForward(.3)//pre check so you cant see inside
 }else{
-controls.moveForward(.13);
+controls.moveForward(.23);
 }
   }
   if(keys['d']){
-    controls.moveRight(.2);
+    controls.moveRight(.3);
     moved[4]=1;
     if(checkIntersections()==true){
-    controls.moveRight(-.2)//pre check so you cant see inside
+    controls.moveRight(-.3)//pre check so you cant see inside
     }else{
-    controls.moveRight(-.13);
+    controls.moveRight(-.23);
   }
 
   }
@@ -692,9 +693,11 @@ function mousedown(eventData){
   var buttonPressed = eventData.buttonPressed;
   if(buttonPressed==2){
     modifyChunk2(currentVoxel);
+
   }
   if(buttonPressed==0){
     modifyChunk2(0);//break
+    postMessage(['break_animation'])
   }
 }
 
