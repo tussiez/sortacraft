@@ -80,6 +80,9 @@ self.onmessage = function(e){//onmessage
       var det = perlin.noise(x2a*16,z2a*16,y);
       return Math.round(((ele + (rough*det)*4)*cellSize)+12);
     }
+    function ampedMineHeight(x,z,y){
+      return mineHeight(x,z,y)
+    }
 
 
     var progress = 0;
@@ -145,7 +148,7 @@ self.onmessage = function(e){//onmessage
     var total = (cellSize*cellSize*64)*2;//dupe
     var levels = {};
     var caveBlks = {};
-
+    var biomeLevel = {};
 
   const setV2 = function(x,y,z){setV(x,y,z,7)};//leaves fn
 
@@ -157,17 +160,26 @@ self.onmessage = function(e){//onmessage
         var type = 1;
 
         var attenuatedCaveSize = caveSize - ((y/170)-caveBias);
+        if(y==0){
+          var biomeNoise = perlin.noise((x+x1)/100,(z+z1)/100,0);
+          biomeLevel[x+","+z]= biomeNoise;
+        }else{
+          var biomeNoise = biomeLevel[x+","+z]
+        }
+          var currentBiome = getCurrentBiome(biomeNoise);
+
         var density = perlin.noise((x+x1)/12,(z+z1)/12,(y+y1)/12);
         //var oreNoise = perlin.noise((x+x1)/6,(z+z1)/6,(y+y1)/6);
         var hm = mineHeight(x,z);
         levels[x+","+z]=hm;
         if(y<hm){
+
         if(density>attenuatedCaveSize){
 
           localWorld.setVoxel(x,y,z,type);
           postMessage(['voxel',x,y,z,type]);
             caveBlks[x+","+y+","+z]=1;
-            
+
         }else{
 
           //ORES
@@ -194,6 +206,7 @@ self.onmessage = function(e){//onmessage
         */
       }else{
           caveBlks[x+","+y+","+z]=0;
+          //y > hm
       }
 
       if(y==0){
@@ -212,9 +225,10 @@ self.onmessage = function(e){//onmessage
 
               for(var x = 0; x< cellSize; x++){
                 var hm = levels[x+","+z];
-                var biomeNoise = perlin.noise((x+x1)/200,(z+z1)/200,0);
+                var biomeNoise = biomeLevel[x+","+z];
 
-                var type = biomeNoise > .4 ? 2 : 3;
+
+                var type = getCurrentBiome(biomeNoise)
                 if(localWorld.getVoxel(x,hm,z)==0&&caveBlks[x+","+(hm-1)+","+z]==1){
                 localWorld.setVoxel(x,hm,z,type);
                 postMessage(['voxel',x,hm,z,type]);
@@ -225,7 +239,17 @@ self.onmessage = function(e){//onmessage
               }
 
             }
-
+            function getCurrentBiome(g){
+              if(g > .4 && g < .6){
+                return 2;
+              }
+              if(g >= .6 && g <= .8){
+                return 3;
+              }
+              if(g <= .4){
+                return 33;
+              }
+            }
 
         /*
         var below = localWorld.getVoxel(x,y-1,z);
