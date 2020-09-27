@@ -232,12 +232,103 @@ self.onmessage = function(e){//onmessage
                 if(localWorld.getVoxel(x,hm,z)==0&&caveBlks[x+","+(hm-1)+","+z]==1){
                 localWorld.setVoxel(x,hm,z,type);
                 postMessage(['voxel',x,hm,z,type]);
+                var noisytree = (perlin.noise(((x+x1)*20.1),(z+z1)*20.1,0)*10)-5;
+                var above = localWorld.getVoxel(x,hm+1,z);
+                var below = localWorld.getVoxel(x,hm-1,z)
+                if(noisytree>3){
+                  var treeType = getTreeType(noisytree);
+                  setV(x,y,z,5);
+                  let tr = 6;
+                  for(var i = 0;i<tr;i++){
+                    setV(x,hm+i,z,treeType);
+                  }
+                  tr+=hm;//adj
+                  //TOP
+                  setV2(x,tr,z);
+                  setV2(x,tr+1,z);
+                  //FRONT
+                  setV2(x-1,tr-2,z);//set leaves
+                  setV2(x-1,tr-1,z);
+                  setV2(x-1,tr,z);
+                  //FRONT
+                  setV2(x-2,tr-2,z);
+                  setV2(x-2,tr-1,z);
+                  //setV(x-2,tr,z); trim?
+                  //BACK
+                  setV2(x+1,tr-2,z);
+                  setV2(x+1,tr-1,z);
+                  setV2(x+1,tr,z);
+                  //BACK
+                  setV2(x+2,tr-2,z);
+                  setV2(x+2,tr-1,z);
+                 // setV(x+2,tr,z);trim???
+                  //LEFT
+                  setV2(x,tr-2,z-1);
+                  setV2(x,tr-1,z-1);
+                  setV2(x,tr,z-1);
+                  //LEFT
+                  setV2(x,tr-2,z-2);
+                  setV2(x,tr-1,z-2);
+                  //RIGHT
+                  setV2(x,tr-2,z+1);
+                  setV2(x,tr-1,z+1);
+                  setV2(x,tr,z+1);
+                  //RIGHT
+                  setV2(x,tr-2,z+2);
+                  setV2(x,tr-1,z+2);
+                  //setV(x,tr,z+2); trim?
+                  //FILL(L+R)
+                  setV2(x-1,tr-2,z+1);
+                  setV2(x+1,tr-2,z+1);
+                  setV2(x-1,tr-1,z+1);
+                  setV2(x+1,tr-1,z+1);
+                  setV2(x-1,tr,z+1);
+                  setV2(x+1,tr,z+1);
+                  //FILL (F&B)
+                  setV2(x-1,tr-2,z-1);
+                  setV2(x+1,tr-2,z-1);
+                  setV2(x-1,tr-1,z-1);
+                  setV2(x+1,tr-1,z-1);
+                  setV2(x-1,tr,z-1);
+                  setV2(x+1,tr,z-1);
+                  //FILL CORNERS (1)
+                  setV2(x-2,tr-2,z+2);
+                  setV2(x-2,tr-2,z-2);
+                  setV2(x-1,tr-2,z+2);
+                  setV2(x-1,tr-2,z-2);
+                  setV2(x-2,tr-2,z+1);
+                  setV2(x-2,tr-2,z-1);
+                  //FILL CORNERS (2)
+                  setV2(x+2,tr-2,z+2);//one side
+                  setV2(x+2,tr-2,z-2);//other
+                  setV2(x+1,tr-2,z+2);//one
+                  setV2(x+1,tr-2,z-2);//other
+                  setV2(x+2,tr-2,z+1);//one
+                  setV2(x+2,tr-2,z-1);//other
+                }
               }
 
 
 
               }
 
+            }
+            function getTreeType(t){
+              if(t > 3 && t < 3.5){
+                return 5;
+              }
+              if(t >= 3.5 && t <3.6){
+                return 43;
+              }
+              if(t >= 3.6 && t < 3.7){
+                return 42;
+              }
+              if(t >= 3.7 && t <3.8){
+                return 41;
+              }
+              if(t >= 3.8){
+                return 40;
+              }
             }
             function getCurrentBiome(g){
               if(g > .4 && g < .6){
@@ -268,79 +359,9 @@ self.onmessage = function(e){//onmessage
         }
         */
 
-        /*
-        var noisytree = (perlin.noise(((x+x1)*20.1),((y+y1)*20.1),((z+z1)*20.1))*10)-5;
-        if(noisytree>3&&above==0&&below!=0&&y>hm&&x<12&&x>4&&z<12&&z>4){
-          setV(x,y,z,5);
-          let tr = 6;
-          for(var i = 0;i<tr;i++){
-            setV(x,y+i,z,5);
-          }
-          tr+=y;//adj
-          //TOP
-          setV2(x,tr,z);
-          setV2(x,tr+1,z);
-          //FRONT
-          setV2(x-1,tr-2,z);//set leaves
-          setV2(x-1,tr-1,z);
-          setV2(x-1,tr,z);
-          //FRONT
-          setV2(x-2,tr-2,z);
-          setV2(x-2,tr-1,z);
-          //setV(x-2,tr,z); trim?
-          //BACK
-          setV2(x+1,tr-2,z);
-          setV2(x+1,tr-1,z);
-          setV2(x+1,tr,z);
-          //BACK
-          setV2(x+2,tr-2,z);
-          setV2(x+2,tr-1,z);
-         // setV(x+2,tr,z);trim???
-          //LEFT
-          setV2(x,tr-2,z-1);
-          setV2(x,tr-1,z-1);
-          setV2(x,tr,z-1);
-          //LEFT
-          setV2(x,tr-2,z-2);
-          setV2(x,tr-1,z-2);
-          //RIGHT
-          setV2(x,tr-2,z+1);
-          setV2(x,tr-1,z+1);
-          setV2(x,tr,z+1);
-          //RIGHT
-          setV2(x,tr-2,z+2);
-          setV2(x,tr-1,z+2);
-          //setV(x,tr,z+2); trim?
-          //FILL(L+R)
-          setV2(x-1,tr-2,z+1);
-          setV2(x+1,tr-2,z+1);
-          setV2(x-1,tr-1,z+1);
-          setV2(x+1,tr-1,z+1);
-          setV2(x-1,tr,z+1);
-          setV2(x+1,tr,z+1);
-          //FILL (F&B)
-          setV2(x-1,tr-2,z-1);
-          setV2(x+1,tr-2,z-1);
-          setV2(x-1,tr-1,z-1);
-          setV2(x+1,tr-1,z-1);
-          setV2(x-1,tr,z-1);
-          setV2(x+1,tr,z-1);
-          //FILL CORNERS (1)
-          setV2(x-2,tr-2,z+2);
-          setV2(x-2,tr-2,z-2);
-          setV2(x-1,tr-2,z+2);
-          setV2(x-1,tr-2,z-2);
-          setV2(x-2,tr-2,z+1);
-          setV2(x-2,tr-2,z-1);
-          //FILL CORNERS (2)
-          setV2(x+2,tr-2,z+2);//one side
-          setV2(x+2,tr-2,z-2);//other
-          setV2(x+1,tr-2,z+2);//one
-          setV2(x+1,tr-2,z-2);//other
-          setV2(x+2,tr-2,z+1);//one
-          setV2(x+2,tr-2,z-1);//other
-        }
-        */
+
+
+
 
       }
 
