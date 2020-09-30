@@ -9,6 +9,10 @@ var tweenRunning = false;
 window["downloadWorld"] = function(){
   gameWorker.postMessage({type:'downloadGame'});
 }
+function updateTime(){
+  requestAnimationFrame(updateTime);
+  gameWorker.postMessage({type:'time_update',time:performance.now()})
+}
 function prepCanvas(){
   let canvas = document.createElement('canvas');
   canvas.height = window.innerHeight;
@@ -16,7 +20,9 @@ function prepCanvas(){
   document.body.appendChild(canvas);
   const offscreen = canvas.transferControlToOffscreen();
   gameWorker.postMessage({type:'main',canvas:offscreen,width:window.innerWidth,height:window.innerHeight},[offscreen]);//send canvas and init
+  updateTime();
 }
+
 gameWorker.onmessage = function(e){
   if(e.data[0]=='fps'){
     document.getElementById('fpsEle').innerText = 'FPS: '+e.data[1];

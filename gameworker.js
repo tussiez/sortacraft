@@ -10,7 +10,8 @@ const handlers = {
   keyup,
   downloadGame,
   mousedown,
-  wheel
+  wheel,
+  time_update,
 }
 //hello there
 //variables
@@ -55,6 +56,7 @@ worldTextureBitmap,
 positionNumComponents = 3,
 normalNumComponents = 3,
 lazyVoxelWorld,
+currentTime=0,
 jumping=false,
 bumping=false,
 maxReach = 6,//max player reach
@@ -108,8 +110,12 @@ voxelNames = [
   'Dark Oak Log',
   'Coal Ore',
 ],//voxe names (by idx)
+voxelDrops = [
+
+],//what voxel drops
 lazyVoxelData = {
   current:0,//kindof like i
+  startTime:currentTime,
   needsClear:true,//needs to clear
   done:true,//not done
   finishedPosting: false,
@@ -158,6 +164,7 @@ lazyVoxelData = {
 finish:function(){
   const posVec = this.getVoxelData(0).intersect,x=posVec.x,y=posVec.y,z=posVec.z;
   geometryDataWorker.postMessage(['geometrydata',posVec.x,posVec.y,posVec.z,'regular',posVec]);//reg
+  console.log('Time to run: '+((currentTime-this.startTime)/1000).toFixed(2))
 },
 realFinish:function(){
   var posVec = this.getVoxelData(0).intersect;
@@ -296,6 +303,9 @@ onmessage = function(e) {
 }
 
 };
+function time_update(dat){
+  currentTime = dat.time;
+}
 function downloadGame(){
   postMessage(['chunks',Chunks]);//post chunks
 }
@@ -1254,6 +1264,7 @@ function manageVoxelLoading(){
     //clear for new voxelworld
     lazyVoxelData.finishedPosting = false;//not finished
     lazyVoxelData.needsClear=false;//no clear again
+    lazyVoxelData.startTime = currentTime//time counter reset
     lazyVoxelData.current = 0;//set back to 0
     lazyVoxelData.geometryData = undefined;//geodata
     lazyVoxelData.lazyArrayTotal = 0;//reset
@@ -1270,11 +1281,17 @@ function manageVoxelLoading(){
     if(lazyVoxelData.lazyArrayTotal===NaN){
       lazyVoxelData.lazyArrayTotal = 0;
     }
-    for(var i = 0;i<240;i++){//load speed
+    function lazyLoad(){
+      for(var e =0;e<300;e++){
       if(lazyVoxelData.current<lazyVoxelData.lazyArrayTotal){
+
       lazyVoxelData.lazyLoad();
     }
+    //requestAnimationFrame(lazyLoad)
     }
+  }
+    lazyLoad();
+
 
   }
 }
