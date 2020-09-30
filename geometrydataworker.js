@@ -67,6 +67,21 @@ class VoxelWorld {
 			return false;
 		}
 	}
+  getCustomBlockType(voxel,typ){
+    if(typ==undefined||typ==true){
+    if(voxel!=3){
+      return typ == undefined ? VoxelWorld.faces : false;
+    }else{
+      return typ == undefined ? VoxelWorld.faces_half : true;
+    }
+  }else{
+    if(voxel!=3){
+      return false;
+  }else{
+    return true;
+  }
+  }
+  }
   generateGeometryDataForCell(cellX, cellY, cellZ,rx,ry,rz) {
     const {cellSize, tileSize, tileTextureWidth, tileTextureHeight} = this;
     const positions = [];
@@ -91,18 +106,17 @@ class VoxelWorld {
             // voxel 0 is sky (empty) so for UVs we start at 0
             const uvVoxel = voxel - 1;
             // There is a voxel here but do we need faces for it?
-            for (const {dir, corners, uvRow} of VoxelWorld.faces) {
+            const custom_blockType = this.getCustomBlockType(voxel);
+            const notHalfSelf = this.getCustomBlockType(voxel,true)
+            for (const {dir, corners, uvRow} of custom_blockType) {
               const neighbor = this.getVoxel(
                   voxelX + dir[0],
                   voxelY + dir[1],
                   voxelZ + dir[2]);
-                  const transparentVoxel = this.getTransparentVoxel(
-                    voxelX+dir[0],
-                    voxelY+dir[1],
-                    voxelZ+dir[2],
-                  )
+
                   //handle voxels
-                  if(!neighbor||transparentVoxel&&!isTransparent){
+
+                  if(!neighbor||this.getCustomBlockType(neighbor,true)&&!notHalfSelf){
                     addFace(corners,dir,uvRow);
                   }
             }
@@ -280,6 +294,69 @@ VoxelWorld.faces = [
     ],
   },
 ];
+VoxelWorld.faces_half = [//half block
+  { // left
+    uvRow: 0,
+    dir: [ -1,  0,  0, ],
+    corners: [
+      { pos: [ 0, .5, 0 ], uv: [ 0, 1 ], },
+      { pos: [ 0, 0, 0 ], uv: [ 0, 0 ], },
+      { pos: [ 0, .5, 1 ], uv: [ 1, 1 ], },
+      { pos: [ 0, 0, 1 ], uv: [ 1, 0 ], },
+    ],
+  },
+  { // right
+    uvRow: 0,
+    dir: [  1,  0,  0, ],
+    corners: [
+      { pos: [ 1, .5, 1 ], uv: [ 0, 1 ], },
+      { pos: [ 1, 0, 1 ], uv: [ 0, 0 ], },
+      { pos: [ 1, .5, 0 ], uv: [ 1, 1 ], },
+      { pos: [ 1, 0, 0 ], uv: [ 1, 0 ], },
+    ],
+  },
+  { // bottom
+    uvRow: 1,
+    dir: [  0, -1,  0, ],
+    corners: [
+      { pos: [ 1, 0, 1 ], uv: [ 1, 0 ], },
+      { pos: [ 0, 0, 1 ], uv: [ 0, 0 ], },
+      { pos: [ 1, 0, 0 ], uv: [ 1, 1 ], },
+      { pos: [ 0, 0, 0 ], uv: [ 0, 1 ], },
+    ],
+  },
+  { // top
+    uvRow: 2,
+    dir: [  0,  1,  0, ],
+    corners: [
+      { pos: [ 0, .5, 1 ], uv: [ 1, 1 ], },
+      { pos: [ 1, .5,1 ], uv: [ 0, 1 ], },
+      { pos: [ 0, .5, 0 ], uv: [ 1, 0 ], },
+      { pos: [ 1, .5, 0 ], uv: [ 0, 0 ], },
+    ],
+  },
+  { // back
+    uvRow: 0,
+    dir: [  0,  0, -1, ],
+    corners: [
+      { pos: [ 1, 0, 0 ], uv: [ 0, 0 ], },
+      { pos: [ 0, 0, 0 ], uv: [ 1, 0 ], },
+      { pos: [ 1, .5, 0 ], uv: [ 0, 1 ], },
+      { pos: [ 0, .5, 0 ], uv: [ 1, 1 ], },
+    ],
+  },
+  { // front
+    uvRow: 0,
+    dir: [  0,  0,  1, ],
+    corners: [
+      { pos: [ 0, 0, 1 ], uv: [ 0, 0 ], },
+      { pos: [ 1, 0, 1 ], uv: [ 1, 0 ], },
+      { pos: [ 0, .5, 1 ], uv: [ 0, 1 ], },
+      { pos: [ 1, .5, 1 ], uv: [ 1, 1 ], },
+    ],
+  },
+];
+
 
 const voxelWorld = new VoxelWorld({
   cellSize:64,

@@ -236,7 +236,9 @@ self.onmessage = function(e){//onmessage
                 var above = localWorld.getVoxel(x,hm+1,z);
                 var below = localWorld.getVoxel(x,hm-1,z)
                 if(noisytree>3){
+
                   var treeType = getTreeType(noisytree);
+                  if(type!=3){
                   setV(x,y,z,5);
                   let tr = 6;
                   for(var i = 0;i<tr;i++){
@@ -307,6 +309,7 @@ self.onmessage = function(e){//onmessage
                   setV2(x+2,tr-2,z-1);//other
                 }
               }
+            }
 
 
 
@@ -332,12 +335,12 @@ self.onmessage = function(e){//onmessage
             }
             function getCurrentBiome(g){
               if(g > .4 && g < .6){
-                return 2;
+                return 2;//GRass
               }
               if(g >= .6 && g <= .8){
-                return 3;
+                return 3;//sand
               }
-              if(g <= .4){
+              if(g <= .4){//snow
                 return 33;
               }
             }

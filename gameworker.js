@@ -795,6 +795,12 @@ function modifyChunk2(voxel1){
     chunkPosition = negativeChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
 
     selectedChunk = Chunks[stringifyVec(chunkPosition)];//stringify the vector to get chunk picked
+    if(intersectWorld.getCustomBlockType(intersectWorld.getVoxel(pos[0],pos[1]-1,pos[2]),false)==true&&voxel1!=0){
+      console.log('Is half')
+      intersectionVector.y -= 1;
+      pos[1] -= 1;//reduce
+      voxel1 = 4;
+    }
 if(intersectionVector.y>1&&isColliding(intersectionVector)==undefined){
     if(selectedChunk){
 
@@ -959,11 +965,25 @@ function blockPointer(){
     let posHit = intersection.position.map((v, ndx) => {
       return v + intersection.normal[ndx] * -0.5
     });
+    var vox = intersectWorld.getVoxel(posHit[0],posHit[1],posHit[2]);
     //clamp (no in betweens)
     posHit[0] = (Math.floor(posHit[0])+.5)
     posHit[1] = (Math.floor(posHit[1])+.5)
-    posHit[2] = (Math.floor(posHit[2])+.5)
-    pointerBlock.position.set(posHit[0],posHit[1],posHit[2]);//set wireframe @ pos
+    posHit[2] = (Math.floor(posHit[2])+.5);
+    if(intersectWorld.getCustomBlockType(vox,true)==false){
+
+        pointerBlock.scale.set(1,1,1);
+
+      pointerBlock.position.set(posHit[0],posHit[1],posHit[2]);//set wireframe @ pos
+    }else{
+
+      pointerBlock.scale.set(1,.5,1);//set half size outline
+
+
+    pointerBlock.position.set(posHit[0],posHit[1]-.25,posHit[2]);//set wireframe @ pos
+
+    }
+
   }
 }
 
@@ -1036,10 +1056,21 @@ class VoxelWorld {
     const voxelOffset = this.computeVoxelOffset(x, y, z);
     return cell[voxelOffset];
   }
-	getTransparentVoxel(x,y,z){
-			return false;
-
-	}
+  getCustomBlockType(voxel,typ){
+    if(typ==undefined||typ==true){
+    if(voxel!=3){
+      return typ == undefined ? VoxelWorld.faces : false;
+    }else{
+      return typ == undefined ? VoxelWorld.faces_half : true;
+    }
+  }else{
+    if(voxel!=3){
+      return false;
+  }else{
+    return true;
+  }
+  }
+  }
 
   generateGeometryDataForCell(cellX, cellY, cellZ,rx,ry,rz) {
     const {cellSize, tileSize, tileTextureWidth, tileTextureHeight} = this;
