@@ -31,20 +31,20 @@ gameWorker.onmessage = function(e){
     download('my_world.dat',JSON.stringify(e.data[1]))
   }
   if(e.data[0]=='break_animation'){
-    var fromRotation = {z:0};
-    var toRotation = {z:-60};
+    var fromRotation = {z:0,y:0};
+    var toRotation = {z:-60,y:-60};
     var breaktween = new TWEEN.Tween(fromRotation).to(toRotation,125).onUpdate(function(){
-      document.getElementById('handItem').style.transform = 'rotateY(-60deg) rotateZ(50deg) rotateX('+fromRotation.z+'deg)';
+      document.getElementById('handItem').style.transform = 'rotateY('+fromRotation.y+'deg) rotateZ(50deg) rotateX('+fromRotation.z+'deg)';
     }).start();
-    var fromRotation2 = {z:0};
-    var toRotation2 = {z:-60};
+    var fromRotation2 = {z:0,y:-60};
+    var toRotation2 = {z:-60,y:0};
     var breakundo = new TWEEN.Tween(toRotation2).to(fromRotation2,125).onUpdate(function(){
-        document.getElementById('handItem').style.transform = 'rotateY(-60deg) rotateZ(50deg) rotateX('+toRotation2.z+'deg)';
+        document.getElementById('handItem').style.transform = 'rotateY('+fromRotation2.y+'deg) rotateZ(50deg) rotateX('+toRotation2.z+'deg)';
     }).delay(125).start();
   }
   if(e.data[0]=='hand_uv'){
-    document.getElementById('handItem').style.backgroundImage ='url(textures.png)';
-    document.getElementById('handItem').style.backgroundPosition  = -((e.data[1]-1)*16)+"px "+48+"px";//set "uv"
+//    document.getElementById('handItem').style.backgroundImage ='url(textures.png)';
+//    document.getElementById('handItem').style.backgroundPosition  = -((e.data[1]-1)*16)+"px "+48+"px";//set "uv"
     //calculate uv by removing 1 (for 0 min) and multiply by 16 for px position (0 = y pos)
   }
   if(e.data[0]=='voxel_title'){
