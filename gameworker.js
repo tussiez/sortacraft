@@ -164,7 +164,7 @@ lazyVoxelData = {
 finish:function(){
   const posVec = this.getVoxelData(0).intersect,x=posVec.x,y=posVec.y,z=posVec.z;
   geometryDataWorker.postMessage(['geometrydata',posVec.x,posVec.y,posVec.z,'regular',posVec]);//reg
-  console.log('Time to run: '+((currentTime-this.startTime)/1000).toFixed(2))
+//  consEole.log('Time to run: '+((currentTime-this.startTime)/1000).toFixed(2))
 },
 realFinish:function(){
   var posVec = this.getVoxelData(0).intersect;
@@ -424,6 +424,33 @@ function render(){
 
   checkCullChunks();//check chunks that can be culled and cull them
 
+  hideOldChunks();
+
+}
+function hideOldChunks(){
+  var camPos = realRoundVec(camera.position)
+  var camPosBox = {
+    min:{
+      x:camPos.x - renderDist,
+      y:0,
+      z:camPos.z - renderDist,
+    },
+    max:{
+      x:camPos.x + renderDist,
+      y:Infinity,
+      z:camPos.z + renderDist,
+    }
+  };//no need to recalculate
+  for(var i = 0;i<chunkIndex.length;i++){
+    var chunk = ChunksMesh[chunkIndex[i]];
+    var pos = vecFromString(chunkIndex[i]);//get position
+    if(!AABBCollision(pos,camPosBox)){
+      chunkIndex.splice(i,1);//remove from list
+      scene.remove(chunk);
+      chunk.geometry.dispose();
+      chunk.material.dispose();
+    }
+  }
 }
 function moveHand(){
 
@@ -718,6 +745,9 @@ function roundToFixed(vec,amt){
 function numberizeVec(vec){
   return new THREE.Vector3(Number(vec.x),Number(vec.y),Number(vec.z));
 }
+function realRoundVec(vec){
+  return new THREE.Vector3(Math.round(vec.x),Math.round(vec.y),Math.round(vec.z))
+}
 function isColliding(voxel){
   var camPos = new THREE.Vector3().copy(camera.position);
   camPos = roundToFixed(camPos,1);
@@ -796,7 +826,6 @@ function modifyChunk2(voxel1){
 
     selectedChunk = Chunks[stringifyVec(chunkPosition)];//stringify the vector to get chunk picked
     if(intersectWorld.getCustomBlockType(intersectWorld.getVoxel(pos[0],pos[1]-1,pos[2]),false)==true&&voxel1!=0){
-      console.log('Is half')
       intersectionVector.y -= 1;
       pos[1] -= 1;//reduce
       voxel1 = 4;
@@ -906,6 +935,13 @@ function lazyLoadChunks(){
   for(var x = clampMin.x;x<clampMax.x;x+=16){
     for(var z =clampMin.z;z<clampMax.z;z+=16){
       var chunk = Chunks[x+",0,"+z];
+      if(chunkIndex.indexOf(x+",0,"+z)== -1&&chunk!=undefined){
+    //    chunkIndex.push(x+",0,"+z);//stop infinitely doing thes same thing
+      //  var {positions,normals,uvs,indices} = intersectWorld.generateGeometryDataForCell(x,0,z);
+      //  loadChunk(x,0,z,chunk,[positions,normals,uvs,indices]);
+
+
+      }
       if(chunk==undefined&&lazyVoxelData.done==true){
         lazyVoxelData.done = false;
         createChunk(x,0,z);
@@ -1103,16 +1139,12 @@ class VoxelWorld {
                   voxelZ + dir[2]);
                   //||neighbor===4&&voxel!=4||neighbor===7&&voxel!=7
 									//transparent voxel handling
-									if(this.getTransparentVoxel(voxelX,voxelY,voxelZ)===true){//this is a transparent voxel
-										if(neighbor!=voxel){
-											//neighbor is not self (transparent) so add
-											addFace();
-										}
-									}else{
-										if(!neighbor||this.getTransparentVoxel(voxelX+dir[0],voxelY+dir[1],voxelZ+dir[2])===true){//no neighbor OR neighbor is transparent
+
+										if(!neighbor){//no neighbor OR neighbor is transparent
 											addFace();//face add
 										}
-									}
+                  }
+
 							function addFace(){
 								const ndx = positions.length / 3;
                 for (const {pos, uv} of corners) {
@@ -1127,7 +1159,7 @@ class VoxelWorld {
                   ndx + 2, ndx + 1, ndx + 3,
                 );
 							}
-            }
+
           }
         }
       }
@@ -1140,6 +1172,7 @@ class VoxelWorld {
       faceIndexGroup,
     };
   }
+
    intersectRay(start, end) { //this not by me, it strange physics :3
     let dx = end.x - start.x;
     let dy = end.y - start.y;
