@@ -1,7 +1,7 @@
 var gameWorker = new Worker('gameworker.js',{type:"module"});//enable modules
 //setup dom
 
-import TWEEN from '/tween.js'
+import TWEEN from 'sortacraft/tween.js'
 var fromTween = {op:1,reset:false};
 var toTween = {op:0,reset:false};//invisible
 var tween;
