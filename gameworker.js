@@ -424,7 +424,7 @@ function render(){
 
   checkCullChunks();//check chunks that can be culled and cull them
 
-  hideOldChunks();
+//  hideOldChunks();
 
 }
 function hideOldChunks(){
