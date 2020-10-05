@@ -707,11 +707,13 @@ function newChunkClamp(vec){//clamp position for new chunk
   var remainedX  =x% 16;
   var remainedZ = z % 16;
   var remainedY = y % 64;//chunks are 16x 64 x16
-if(remainedX <0){
-  remainedX = Math.abs(remainedX);
+if(vec.x <0){
+
+  //remainedX = Math.abs(remainedX);
+
 }
-if(remainedZ < 0){
-  remainedZ = Math.abs(remainedZ);
+if(vec.z < 0){
+  //remainedZ = Math.abs(remainedZ);
 }
   var clampX = x-remainedX;
   var clampZ = z-remainedZ;
@@ -1013,12 +1015,12 @@ function blockPointer(){
     posHit[2] = (Math.floor(posHit[2])+.5);
     if(intersectWorld.getCustomBlockType(vox,true)==false){
 
-        pointerBlock.scale.set(1,1,1);
+        pointerBlock.scale.set(1.01,1.01,1.01);
 
       pointerBlock.position.set(posHit[0],posHit[1],posHit[2]);//set wireframe @ pos
     }else{
 
-      pointerBlock.scale.set(1,.5,1);//set half size outline
+      pointerBlock.scale.set(1.01,.51,1.01);//set half size outline
 
 
     pointerBlock.position.set(posHit[0],posHit[1]-.25,posHit[2]);//set wireframe @ pos
