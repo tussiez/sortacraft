@@ -111,7 +111,50 @@ voxelNames = [
   'Coal Ore',
 ],//voxe names (by idx)
 voxelDrops = [
-
+'Cobblestone',
+'Soil',
+'Sand',
+'Water',
+'Oak Log',
+'Soil',
+'Leaves',
+'Light Block',
+'Furnace[Unlit]',
+'Diamond',
+'Redstone',
+'Lapis Lazuli',
+'Emerald',
+'Workbench',
+'Furnace[Unlit]',
+'Obsidian',
+'Brick Block',
+'Redstone Block',
+'Prismarine',
+'Bookshelf',
+'End Stone',
+'Yellow Block',
+'Emerald Block',
+'Red Block',
+'Light Blue Block',
+'Black Block',
+'Brown Block',
+'Copper Ingot',
+'Silver Ingot',
+'Cobblestone',
+'Diorite',
+'Granite',
+'Soil',
+'Water',
+'Oak Planks',
+'Dark Oak Planks',
+'Spruce Planks',
+'Birch Planks',
+'Acacia Planks',
+'Acacia Log',
+'Birch Log',
+'Spruce Log',
+'Dark Oak Log',
+'Coal'
 ],//what voxel drops
 lazyVoxelData = {
   current:0,//kindof like i
@@ -827,7 +870,10 @@ function modifyChunk2(voxel1){
     });
 
     var intersectionVector = vecFromArray(pos);//vec from array
-
+    if(voxel1==0){
+      console.log(voxelDrops[intersectWorld.getVoxel(pos[0],pos[1],pos[2])-1])
+      postMessage(['debug',voxelDrops[intersectWorld.getVoxel(pos[0],pos[1],pos[2])-1]]);
+    }
 
     chunkPosition = negativeChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
 
@@ -837,6 +883,7 @@ function modifyChunk2(voxel1){
       pos[1] -= 1;//reduce
       voxel1 = 4;
     }
+
 if(intersectionVector.y>1&&isColliding(intersectionVector)==undefined){
     if(selectedChunk){
 

@@ -27,6 +27,9 @@ gameWorker.onmessage = function(e){
   if(e.data[0]=='fps'){
     document.getElementById('fpsEle').innerText = 'FPS: '+e.data[1];
   }
+  if(e.data[0]=='debug'){
+    document.getElementById('debug').innerText = e.data[1];
+  }
   if(e.data[0]=='chunks'){
     download('my_world.dat',JSON.stringify(e.data[1]))
   }
