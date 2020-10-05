@@ -424,7 +424,7 @@ function render(){
 
   checkCullChunks();//check chunks that can be culled and cull them
 
-  hideOldChunks();
+  //hideOldChunks();
 
 }
 function hideOldChunks(){
@@ -704,10 +704,15 @@ function newChunkClamp(vec){//clamp position for new chunk
   var x = vec.x;
   var z = vec.z;
   var y = vec.y || 0;
-  var remainedX  = Math.sign(x) > -1 ? x % -16 : x % 16;
-  var remainedZ = Math.sign(z) > -1 ? z % -16 : z % 16;
+  var remainedX  =x% 16;
+  var remainedZ = z % 16;
   var remainedY = y % 64;//chunks are 16x 64 x16
-
+if(remainedX <0){
+  remainedX = Math.abs(remainedX);
+}
+if(remainedZ < 0){
+  remainedZ = Math.abs(remainedZ);
+}
   var clampX = x-remainedX;
   var clampZ = z-remainedZ;
   var clampY = y-remainedY;
