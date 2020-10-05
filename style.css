@@ -48,7 +48,7 @@ background-size:100% 100%;
   image-rendering:pixelated;
   transform:rotateY(-60deg) rotateZ(50deg);
 }
-#voxelNameOuter{
+.voxelNameOuter{
   z-index:999;
   position:absolute;
   height:40px;
@@ -62,7 +62,7 @@ background-size:100% 100%;
   opacity:1;
   display:none;
 }
-#voxelName{
+.voxelName{
   text-align:center;
 }
 #worldgen{

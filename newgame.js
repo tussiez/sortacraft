@@ -48,6 +48,7 @@ gameWorker.onmessage = function(e){
     //calculate uv by removing 1 (for 0 min) and multiply by 16 for px position (0 = y pos)
   }
   if(e.data[0]=='voxel_title'){
+    /*
     document.getElementById('voxelNameOuter').style.display='block';
     fromTween.op = 1;//reset
     document.getElementById('voxelName').innerText = e.data[1];
@@ -61,7 +62,34 @@ gameWorker.onmessage = function(e){
         document.getElementById('voxelNameOuter').style.opacity =fromTween.op;
         tweenRunning=true;
       }).delay(1000).start();//start tween
+*/
+var cele = document.getElementsByClassName('voxelNameOuter');
+for(var i = 0;i<cele.length;i++){
 
+  document.body.removeChild(cele[i]);//clear out
+}
+var ele = document.createElement('div');
+var eleInner = document.createElement('div');
+eleInner.setAttribute('class','voxelName');
+ele.setAttribute('class','voxelNameOuter');
+ele.style.display='block';
+ele.appendChild(eleInner);
+eleInner.innerText = e.data[1];//block name
+document.body.appendChild(ele);
+var fromTween = {op:1};
+var toTween = {op:0}
+var tween = new TWEEN.Tween(fromTween).to(toTween,1000).onUpdate(function(){
+  ele.style.opacity = fromTween.op;
+}).delay(1000).onComplete(function(){
+  try{
+    document.body.removeChild(ele)
+  }catch(err){}
+}).start();
+/*
+setTimeout(function(){
+  document.body.removeChild(ele);
+},1000)
+*/
   }
 }
 
