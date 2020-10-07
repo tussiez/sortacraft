@@ -610,18 +610,7 @@ controls.moveForward(.23);
   }else{
     jumping=false;
   }
-  if(keys['Shift']){
-    if(camera.fov!=65){
-      camera.fov = 65;
-      camera.updateProjectionMatrix();
-    }
-    camera.position.y-=.1;
-  }else{
-    if(camera.fov!=70){
-      camera.fov=70;
-      camera.updateProjectionMatrix();
-    }
-  }
+
 
 
   if(checkIntersections()===true){
