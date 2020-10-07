@@ -807,17 +807,22 @@ function isColliding(voxel){
   voxel = roundToFixed(voxel,1);//round again
   voxel = numberizeVec(voxel);//fix
 
+  if(voxel.x>=camPos.x-.5&&voxel.x<=camPos.x+.5&&voxel.z>=camPos.z-.5&&voxel.z<=camPos.z+.5&&voxel.y>=camPos.y-1.5&&voxel.y<=camPos.y){
+    return true;
+  }
+/*
 for(var y = -5;y<5;y++){
 
   var vec = new THREE.Vector3().copy(camPos);
   vec.y+= y/10;
   vec.y = vec.y.toFixed(1)
   vec.y = Number(vec.y);
+
   if(compareVec(voxel,vec)==true){
     return true;
   }
 }
-
+*/
 }
 function calculateEdgeDir(vec,addr){
   var addr2 = new THREE.Vector3().copy(addr)
@@ -879,13 +884,14 @@ function modifyChunk2(voxel1){
     chunkPosition =newChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
 
     selectedChunk = Chunks[stringifyVec(chunkPosition)];//stringify the vector to get chunk picked
-    if(intersectWorld.getCustomBlockType(intersectWorld.getVoxel(pos[0],pos[1]-1,pos[2]),false)==true&&voxel1==3){
+    if(intersectWorld.getCustomBlockType(intersectWorld.getVoxel(pos[0],pos[1]-1,pos[2]),false)==true&&voxelsi==3){
       intersectionVector.y -= 1;
       pos[1] -= 1;//reduce
       voxel1 = 4;
     }
 
-if(intersectionVector.y>1&&isColliding(intersectionVector)==undefined){
+if(intersectionVector.y>1){
+  if(voxel1==0||isColliding(intersectionVector)==undefined){
     if(selectedChunk){
 
 
@@ -919,6 +925,7 @@ if(intersectionVector.y>1&&isColliding(intersectionVector)==undefined){
         geometryDataWorker.postMessage(['geometrydata',correctedPos.x,correctedPos.y,correctedPos.z,'chunk_update',correctedPos,correctedPos]);
       }
 
+}
 }
     if(pos[1]>64&&selectedChunk==undefined){
       //vertical chunk non-existen
