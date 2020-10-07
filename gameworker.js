@@ -17,6 +17,7 @@ const handlers = {
 //variables
 var camera,
 scene,
+fallen = false,
 renderer,
 globalSeed = Math.floor(Math.random()*65535),
 controls,
@@ -648,8 +649,9 @@ controls.moveForward(.23);
     renderer.render(scene,camera);
   }
   PlayerChunk = chunkClamp(camera.position,true)
-  if(PlayerChunk == undefined&&camera.position.y<64){
-  //  goBack(moved)
+  if(PlayerChunk!=undefined&&fallen==false){
+  fallen = true;
+  dropPlayerToGround();
   }
 }
 function goBack(arr){
@@ -658,10 +660,6 @@ function goBack(arr){
     }
     if(arr[1]){
       controls.moveRight(.07);
-    }
-    if(arr[2]){
-
-    camera.position.y-=.1;
     }
     if(arr[3]){
       controls.moveForward(.07);
@@ -673,6 +671,20 @@ function goBack(arr){
     //  camera.position.y+=.1;
     }
 
+}
+function dropPlayerToGround(){
+  let start = new THREE.Vector3(camera.position.x+0.05,camera.position.y,camera.position.z+0.05);
+  let end = new THREE.Vector3(camera.position.x+0.05,camera.position.y-64,camera.position.z+0.05);
+  const intersect = intersectWorld.intersectRay(start,end);
+  if(intersect){
+    //get posy
+    let voxelId = 1;//so you end up ontop
+    const pos = intersect.position.map((v, ndx) => {
+      return v + intersect.normal[ndx] * (voxelId > 0 ? 0.5 : -0.5);
+    });
+    camera.position.set(...pos);
+    camera.position.y+=1.5
+  }
 }
 function resize(dat){
   if(renderer){
