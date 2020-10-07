@@ -872,14 +872,14 @@ function modifyChunk2(voxel1){
 
     var intersectionVector = vecFromArray(pos);//vec from array
     if(voxel1==0){
-      console.log(voxelDrops[intersectWorld.getVoxel(pos[0],pos[1],pos[2])-1])
+
       postMessage(['debug',voxelDrops[intersectWorld.getVoxel(pos[0],pos[1],pos[2])-1]]);
     }
 
-    chunkPosition = negativeChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
+    chunkPosition =newChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
 
     selectedChunk = Chunks[stringifyVec(chunkPosition)];//stringify the vector to get chunk picked
-    if(intersectWorld.getCustomBlockType(intersectWorld.getVoxel(pos[0],pos[1]-1,pos[2]),false)==true&&voxel1!=0){
+    if(intersectWorld.getCustomBlockType(intersectWorld.getVoxel(pos[0],pos[1]-1,pos[2]),false)==true&&voxel1==3){
       intersectionVector.y -= 1;
       pos[1] -= 1;//reduce
       voxel1 = 4;
