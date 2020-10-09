@@ -3,6 +3,7 @@ var gameWorker = new Worker('gameworker.js',{type:"module"});//enable modules
 
 import TWEEN from '/sortacraft/tween.js'
 var fromTween = {op:1,reset:false};
+var canvas;
 var toTween = {op:0,reset:false};//invisible
 var tween;
 var tweenRunning = false;
@@ -14,7 +15,8 @@ function updateTime(){
   gameWorker.postMessage({type:'time_update',time:performance.now()})
 }
 function prepCanvas(){
-  let canvas = document.createElement('canvas');
+  canvas = document.createElement('canvas');
+  canvas.style.display = 'none';
   canvas.height = window.innerHeight;
   canvas.width = window.innerWidth;
   document.body.appendChild(canvas);
@@ -32,6 +34,18 @@ gameWorker.onmessage = function(e){
   }
   if(e.data[0]=='chunks'){
     download('my_world.dat',JSON.stringify(e.data[1]))
+  }
+  if(e.data[0]=='progress'){
+    document.getElementById('loader').style.width = (e.data[1]+1)+'%';
+  }
+  if(e.data[0]=='done'){
+    document.getElementById('overlay').style.display='none';
+  //  document.getElementById('loader_outer').style.display='none';
+  var outr = document.getElementById('loader_outer');
+  outr.style.left = '-5%';
+  outr.style.top = '0%';
+  document.getElementById('loader_title').style.display= 'none'
+    canvas.style.display='block';
   }
   if(e.data[0]=='break_animation'){
     var fromRotation = {z:0,y:0};

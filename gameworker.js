@@ -38,6 +38,7 @@ done = true,
 light,
 shadows,
 material,
+chunkTotal =16640,//for progress
 loader,
 texture,
 sunAngle = -1/6*Math.PI*10,
@@ -410,8 +411,7 @@ function main(dat){
   renderer.setSize(dat.width,dat.height,false);//req.false
   controls = new PointerLockControls(camera);
   clock = new THREE.Clock();
-  camera.position.z = 3;
-  camera.position.y = 128;
+  camera.position.set(1,128,1);//1 for inner chunk
   var ambient = new THREE.AmbientLight(0xffffff,0.3);
   scene.add(ambient);//ambient light
   shadows = new CSM({
@@ -1419,6 +1419,12 @@ function manageVoxelLoading(){
     lazyLoad();
 
 
+  }else{
+    setTimeout(function(){
+      if(lazyVoxelData.done===true){
+        postMessage(['done'])
+      }
+    },1000)
   }
 }
 
@@ -1442,6 +1448,9 @@ chunkWorker.onmessage = function(e){
   if(e.data[0]==='voxel'){
     lazyVoxelData.lazyArray.push({type:e.data[4],intersect:[x,y,z],position:[e.data[1],e.data[2],e.data[3]]});
     startCount+=1;
+  }
+  if(e.data[0]=='progress'){
+    postMessage(['progress',((e.data[1]*100)/chunkTotal)+1])
   }
   if(e.data[0]==='complete'){
     lazyVoxelData.finishedPosting = true;

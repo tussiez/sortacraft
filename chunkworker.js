@@ -145,10 +145,12 @@ self.onmessage = function(e){//onmessage
 
     ]
 
-    var total = (cellSize*cellSize*64)*2;//dupe
+  
     var levels = {};
     var caveBlks = {};
     var biomeLevel = {};
+    var progress = 0;
+
 
   const setV2 = function(x,y,z){setV(x,y,z,7)};//leaves fn
 
@@ -216,6 +218,10 @@ self.onmessage = function(e){//onmessage
       if(y==1){
         localWorld.setVoxel(x,y,z,type);
         postMessage(['voxel',x,y,z,type])
+      }
+      progress += 1;
+      if(progress % 10 == 0){
+        postMessage(['progress',progress]);
       }
     }
   }
@@ -310,7 +316,10 @@ self.onmessage = function(e){//onmessage
                 }
               }
             }
-
+            progress += 1;
+            if(10 % progress== 0){
+              postMessage(['progress',progress]);
+            }
 
 
               }
