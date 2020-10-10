@@ -37,6 +37,7 @@ gameWorker.onmessage = function(e){
   }
   if(e.data[0]=='progress'){
     document.getElementById('loader').style.width = (e.data[1]+1)+'%';
+    document.getElementById('loader_outer').style.display='block';
   }
   if(e.data[0]=='done'){
     document.getElementById('overlay').style.display='none';
@@ -44,6 +45,7 @@ gameWorker.onmessage = function(e){
   var outr = document.getElementById('loader_outer');
   outr.style.left = '-5%';
   outr.style.top = '0%';
+  outr.style.display = 'none';
   document.getElementById('loader_title').style.display= 'none'
     canvas.style.display='block';
   }
