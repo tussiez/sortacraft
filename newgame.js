@@ -1,9 +1,10 @@
 var gameWorker = new Worker('gameworker.js',{type:"module"});//enable modules
 //setup dom
 
-import TWEEN from '/sortacraft/tween.js'
+import TWEEN from '/tween.js'
 var fromTween = {op:1,reset:false};
 var canvas;
+var canLock = true;
 var toTween = {op:0,reset:false};//invisible
 var tween;
 var tweenRunning = false;
@@ -138,44 +139,53 @@ window.addEventListener('resize',function(e){
   updateCrosshair();
 });
 document.body.addEventListener('keydown',function(e){
+  if(canLock==true){
   gameWorker.postMessage({type:'keydown',key:e.key});
+  }
 });
 document.body.addEventListener('keyup',function(e){
+    if(e.key=='e'){
+    //open inv
+    var iv = document.getElementById('inventory')
+    if(iv.style.display==='none'){
+      iv.style.display='block';
+      canLock = false;
+      document.exitPointerLock();
+  
+    }else{
+      iv.style.display='none';
+      canLock = true;
+  document.body.requestPointerLock();
+    }
+
+  }
+
   gameWorker.postMessage({type:'keyup',key:e.key});
+  
 });
-document.body.addEventListener('touchstart',function(e){
-  var y = e.changedTouches[0].pageY || 0,x = e.changedTouches[0].pageX || 0;
-  touchPosition.x =x;
-  touchPosition.y = y;
-  lastTouchPos = touchPosition;//reset
-  touchMove = true;
-});
-document.body.addEventListener('touchend',function(e){
-  touchMove = false;
-});
-document.body.addEventListener('touchmove',function(e){
-  var y = e.changedTouches[0].pageY || 0,x = e.changedTouches[0].pageX || 0;
-  var posX =x - lastTouchPos.x;
-  var posY =y - lastTouchPos.y;
-  gameWorker.postMessage({type:'mousemove',type2:'touch',moveX:posX,moveY:posY});//simulate a mouse move
-  lastTouchPos.x = e.clientX;
-  lastTouchPos.y = e.clientY;
-});
+
 //key updates
 document.body.addEventListener('mousedown',function(e){
-  if(e.button==0){
+  if(e.button==0&&canLock==true){
+
   document.body.requestPointerLock();//lock pointer
   }
+  if(canLock==true){
   gameWorker.postMessage({type:'mousedown',buttonPressed:e.button});
+  }
 },false);
 document.body.addEventListener('contextmenu',function(e){e.preventDefault();e.stopPropagation();},false);//prevent contextmenu when placing/brekin
 //mouse press
 document.body.addEventListener('mousemove',function(e){
+  if(canLock==true){
   gameWorker.postMessage({type:'mousemove',moveX:e.movementX,moveY:e.movementY});
+  }
 });
 //move mouse
 document.body.addEventListener('wheel',function(e){
+  if(canLock==true){
   gameWorker.postMessage({type:'wheel',deltaY:e.deltaY});
+  }
 });
 //mouse scroll
 

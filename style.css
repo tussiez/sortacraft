@@ -127,3 +127,40 @@ background-size:100% 100%;
   color:white;
   text-align:center;
 }
+
+.box{
+  height:9%;
+  width:9%;
+  border:2px inset white;
+  display:inline-block;
+  background-color:#dcdce3;
+  margin-left:2px;
+  overflow:hidden;
+  position:relative;
+}
+.item{
+  height:80%;
+  width:80%;
+  display:inline-block;
+  background-color:#dcdce3;
+  margin-left:2px;
+  image-rendering:pixelated;
+  max-height:100px;
+  max-width:100px;
+}
+.stackable{
+  height:80%;
+  width:80%;
+  display:inline-block;
+  background-color:#dcdce3;
+  margin-left:2px;
+  image-rendering:pixelated;
+  max-height:100px;
+  max-width:100px;
+}
+.hotbar{
+    position: absolute;
+    image-rendering:pixelated;
+    left:calc(50% - 292.5px);
+    top:calc(95% - 32px);
+}
