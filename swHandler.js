@@ -1,0 +1,1 @@
+/*This handles the service worker (registering it) */
