@@ -1,3 +1,7 @@
+/* UPDATES WHILE YOU WERE GONE: 
+*/
+
+
 /*This is the service worker file. It will be registered as a service worker. Service workers and Web workers both work on seperate threads than the main thread, which is used to handle all other JavaScript files otherwise.*/
 /*In a service worker, it uses the global scope of "self". This is like the window object in main frames. Note that you can't access local storage or session storage, or the window object. You could rewrite self as "this" as well.*/
 
@@ -19,7 +23,8 @@ self.addEventListener("install", function (event) {
   caches.open("cache").then(function (cache) {
 
     /*Adds the necessary files to cache*/
-    cache.addAll(["index.html", "chunkworker.js", "daynight.js", "dirt.png", "gameworker.js", "geometrydataworker.js", "home.js", "inv.js", "newgame.html", "newgame.js", "script.js", "style.css", "textures.png", "tween.js","ico.ico"]);
+    
+    return cache.addAll(["https://threejs.org/examples/jsm/csm/Shader.js","https://threejs.org/examples/jsm/csm/Frustum.js","threejs.js","swHandler.js","items/stonesword.gif","https://minecraftfont.tussiez.repl.co/Minecraft.ttf","https://threejs.org/examples/jsm/csm/CSM.js","items/silversword.gif","https://threejs.org/build/three.module.js","items/hotbar.png","/","index.html", "chunkworker.js", "daynight.js", "dirt.png", "gameworker.js", "geometrydataworker.js", "inv.js", "newgame.html", "newgame.js", "script.js", "style.css", "textures.png", "tween.js","sortacraft.ico"]);
 
   });
 
@@ -35,17 +40,44 @@ daynight.js
 index.html
 dirt.png
 */
+/*Checks the version.*/
+function checkVer(current){
+  fetch("https://sortacraft-1.tussiez.repl.co/VERSION.txt").then(function(res){
+    return res.text();
+  }).then(function(txt){
+    if(Number(txt)){
+      let ver = Number(txt);
+      if(ver>0){
+        //It's actually a number 
+        console.log('Latest version: '+ver);
+        if(ver>current){
+          //Outdated version detected!
+          console.log('Outdated game version detected, old: '+ current);
+          //TODO:Load this
+        }else{
+          console.error('Cached game appears to be in a future state.');
+          //Time machine used
+        }
+      }else{
+        //guess it's not a number, maybe it's an HTML error page from Repl.it when it's down
+        console.warn('strange response')
+      }
+      
+    }
+  }).catch(function(err){
+    //Probably offline
+    console.warn('Unable to establish a connection, offline or website down');
+    //TODO:Notify
+  });
+}
 self.addEventListener("fetch", function (event) {
 
   /*Respond with an immediately invoked function expression (IIFE) (because event.respondWith takes a response, not a function, so compile the function that adds a response)*/
-
   event.respondWith((function () {
 
     /*Use Regex to check if the request matches any files we want to try to serve from cache first.*/
-
-    if (event.request.url.match(/(home\.js)|(newgame\.js)|(style\.css)|(tween\.js)|(daynight\.js)|(index\.html)|(dirt\.png)/)) {
-
-      //We want to serve this from cache
+    if (event.request.url.match(/(home\.js)(style\.css)|(tween\.js)|(daynight\.js)|(index\.html)|(dirt\.png)|(newgame\.js)|/)) {
+      //CACHE!
       return caches.match(event.request).then(function (r) {
 
         if (r) {
@@ -69,14 +101,12 @@ self.addEventListener("fetch", function (event) {
     else {
       /*Otherwise, try fetching the script first, then return it. If the user is offline, then try to serve it from cache. If not, tell them that something went wrong (since the cache doesn't exist or is bad and they aren't online) */
       return fetch(event.request).then(function (res) {
-
         return res;
 
       }).catch(function () {
 
         return caches.match(event.request).then(function (cacheRes) 
         {
-
           if (cacheRes) {
 
             return cacheRes;

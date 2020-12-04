@@ -21,6 +21,18 @@ html{
   margin:0;
   padding:0;
 }
+#gameoptions{
+  height:40%;
+  width:40%;
+  position:absolute;
+  left:30%;
+  top:30%;
+  background-color:ghostwhite;
+  opacity:.9;
+  color:black;
+  display: none;
+  z-index:99999;
+}
 #loader_outer{
   height:200px;
   width:400px;
@@ -34,6 +46,11 @@ html{
   color:white;
   text-align:center;
 }
+#blockCount{
+  color:black;
+  font-size:10px;
+  margin-top:-5px;
+}
 #loader_bg{
   background-color:gray;
   height:10px;
@@ -46,6 +63,7 @@ html{
   width:0;
   height:10px;
   background-color:#83f07f;
+  overflow:hidden;
 }
 #overlay{
   height:100%;

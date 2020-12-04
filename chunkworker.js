@@ -152,7 +152,7 @@ self.onmessage = function(e){//onmessage
     var progress = 0;
 
 
-  const setV2 = function(x,y,z){setV(x,y,z,7)};//leaves fn
+  const setV2 = function(x,y,z,t){setV(x,y,z,t)};//leaves fn
 
   for(var x = 0;x<cellSize;x++){
     for(var z = 0;z<cellSize;z++){
@@ -235,6 +235,7 @@ self.onmessage = function(e){//onmessage
 
 
                 var type = getCurrentBiome(biomeNoise)
+  
                 if(localWorld.getVoxel(x,hm,z)==0&&caveBlks[x+","+(hm-1)+","+z]==1){
                 localWorld.setVoxel(x,hm,z,type);
                 postMessage(['voxel',x,hm,z,type]);
@@ -244,6 +245,7 @@ self.onmessage = function(e){//onmessage
                 if(noisytree>3){
 
                   var treeType = getTreeType(noisytree);
+                  
                   if(type!=3){
                   setV(x,y,z,5);
                   let tr = 6;
@@ -251,68 +253,72 @@ self.onmessage = function(e){//onmessage
                     setV(x,hm+i,z,treeType);
                   }
                   tr+=hm;//adj
+                  var t = 7;
+                  if(type==33){
+                    t=45;
+                  }
                   //TOP
-                  setV2(x,tr,z);
-                  setV2(x,tr+1,z);
+                  setV2(x,tr,z,t);
+                  setV2(x,tr+1,z,t);
                   //FRONT
-                  setV2(x-1,tr-2,z);//set leaves
-                  setV2(x-1,tr-1,z);
-                  setV2(x-1,tr,z);
+                  setV2(x-1,tr-2,z,t);//set leaves
+                  setV2(x-1,tr-1,z,t);
+                  setV2(x-1,tr,z,t);
                   //FRONT
-                  setV2(x-2,tr-2,z);
-                  setV2(x-2,tr-1,z);
+                  setV2(x-2,tr-2,z,t);
+                  setV2(x-2,tr-1,z,t);
                   //setV(x-2,tr,z); trim?
                   //BACK
-                  setV2(x+1,tr-2,z);
-                  setV2(x+1,tr-1,z);
-                  setV2(x+1,tr,z);
+                  setV2(x+1,tr-2,z,t);
+                  setV2(x+1,tr-1,z,t);
+                  setV2(x+1,tr,z,t);
                   //BACK
-                  setV2(x+2,tr-2,z);
-                  setV2(x+2,tr-1,z);
+                  setV2(x+2,tr-2,z,t);
+                  setV2(x+2,tr-1,z,t);
                  // setV(x+2,tr,z);trim???
                   //LEFT
-                  setV2(x,tr-2,z-1);
-                  setV2(x,tr-1,z-1);
-                  setV2(x,tr,z-1);
+                  setV2(x,tr-2,z-1,t);
+                  setV2(x,tr-1,z-1,t);
+                  setV2(x,tr,z-1,t);
                   //LEFT
-                  setV2(x,tr-2,z-2);
-                  setV2(x,tr-1,z-2);
+                  setV2(x,tr-2,z-2,t);
+                  setV2(x,tr-1,z-2,t);
                   //RIGHT
-                  setV2(x,tr-2,z+1);
-                  setV2(x,tr-1,z+1);
-                  setV2(x,tr,z+1);
+                  setV2(x,tr-2,z+1,t);
+                  setV2(x,tr-1,z+1,t);
+                  setV2(x,tr,z+1,t);
                   //RIGHT
-                  setV2(x,tr-2,z+2);
-                  setV2(x,tr-1,z+2);
+                  setV2(x,tr-2,z+2,t);
+                  setV2(x,tr-1,z+2,t);
                   //setV(x,tr,z+2); trim?
                   //FILL(L+R)
-                  setV2(x-1,tr-2,z+1);
-                  setV2(x+1,tr-2,z+1);
-                  setV2(x-1,tr-1,z+1);
-                  setV2(x+1,tr-1,z+1);
-                  setV2(x-1,tr,z+1);
-                  setV2(x+1,tr,z+1);
+                  setV2(x-1,tr-2,z+1,t);
+                  setV2(x+1,tr-2,z+1,t);
+                  setV2(x-1,tr-1,z+1,t);
+                  setV2(x+1,tr-1,z+1,t);
+                  setV2(x-1,tr,z+1,t);
+                  setV2(x+1,tr,z+1,t);
                   //FILL (F&B)
-                  setV2(x-1,tr-2,z-1);
-                  setV2(x+1,tr-2,z-1);
-                  setV2(x-1,tr-1,z-1);
-                  setV2(x+1,tr-1,z-1);
-                  setV2(x-1,tr,z-1);
-                  setV2(x+1,tr,z-1);
+                  setV2(x-1,tr-2,z-1,t);
+                  setV2(x+1,tr-2,z-1,t);
+                  setV2(x-1,tr-1,z-1,t);
+                  setV2(x+1,tr-1,z-1,t);
+                  setV2(x-1,tr,z-1,t);
+                  setV2(x+1,tr,z-1,t);
                   //FILL CORNERS (1)
-                  setV2(x-2,tr-2,z+2);
-                  setV2(x-2,tr-2,z-2);
-                  setV2(x-1,tr-2,z+2);
-                  setV2(x-1,tr-2,z-2);
-                  setV2(x-2,tr-2,z+1);
-                  setV2(x-2,tr-2,z-1);
+                  setV2(x-2,tr-2,z+2,t);
+                  setV2(x-2,tr-2,z-2,t);
+                  setV2(x-1,tr-2,z+2,t);
+                  setV2(x-1,tr-2,z-2,t);
+                  setV2(x-2,tr-2,z+1,t);
+                  setV2(x-2,tr-2,z-1,t);
                   //FILL CORNERS (2)
-                  setV2(x+2,tr-2,z+2);//one side
-                  setV2(x+2,tr-2,z-2);//other
-                  setV2(x+1,tr-2,z+2);//one
-                  setV2(x+1,tr-2,z-2);//other
-                  setV2(x+2,tr-2,z+1);//one
-                  setV2(x+2,tr-2,z-1);//other
+                  setV2(x+2,tr-2,z+2,t);//one side
+                  setV2(x+2,tr-2,z-2,t);//other
+                  setV2(x+1,tr-2,z+2,t);//one
+                  setV2(x+1,tr-2,z-2,t);//other
+                  setV2(x+2,tr-2,z+1,t);//one
+                  setV2(x+2,tr-2,z-1,t);//other
                 }
               }
             }
@@ -370,6 +376,7 @@ self.onmessage = function(e){//onmessage
           setV(x,y-3,z,6);
         }
         */
+  
 
 
 

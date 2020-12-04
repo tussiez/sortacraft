@@ -1,21 +1,31 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script src="swHandler.js"></script><!--moved to head-->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <title>Sortacraft</title>
     <link href="style.css" rel="stylesheet" type="text/css" />
     <link rel="preload" as="worker" href="chunkworker.js" />
-    <link rel="icon" type="image/x-icon" href="ico.ico">
+    <link rel="icon" type="image/x-icon" href="sortacraft.ico">
   </head>
   <body>
     <div id="overlay"></div>
     <div id="fpsEle"></div>
     <div id="debug"></div>
+    <div id="gameoptions">
+      <div id="gameoptionsinner" style="margin:8px;padding:8px;">
+      <span style="text-align:center;font-size:20px;">Game Options</span>
+    <p style="font-size:smaller;font-style:italic;color:gray;">Backtick to close.</p>
+    <hr>
+    <p style="font-size:18px;">Video Settings</p>
+    <p><button onclick="switchGraphicsType(this)">Graphics: Fancy</button></p>
+    </div>
+    </div>
   <div id="handItem"></div>
   <div id="loader_outer">
   <div id="loader_title">Generating world..</div>
-<div id="loader_bg"><div id="loader"></div></div>
+<div id="loader_bg"><div id="loader"><div id="blockCount"></div></div></div>
 
 </div>
 <style>
@@ -38,6 +48,7 @@
   </style>
 <div id="inventory" style="display:none"></div>
 
+
 <div class = "hotbar" id="ack" style="z-index:999">
      <img src ="items/hotbar.png" height="64" width="585">
      </div>
@@ -48,5 +59,6 @@
     <div id="crosshairY" style="position:absolute;height:20px;width:6px;background-color:gray;opacity:.7;z-index:999;left:calc(50% - 3px);top:calc(50% - 10px)"></div>
     <script src="inv.js"></script>
     <script src="newgame.js" type="module"></script>
+
   </body>
 </html>

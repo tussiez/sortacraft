@@ -2,6 +2,7 @@ var gameWorker = new Worker('gameworker.js',{type:"module"});//enable modules
 //setup dom
 
 import TWEEN from '/tween.js'
+var canMove = true;
 var fromTween = {op:1,reset:false};
 var canvas;
 var canLock = true;
@@ -13,8 +14,9 @@ window["downloadWorld"] = function(){
 }
 function updateTime(){
   requestAnimationFrame(updateTime);
-  gameWorker.postMessage({type:'time_update',time:performance.now()})
+  gameWorker.postMessage({type:'time_update',time:performance.now()});//forgot why I needed thislol
 }
+
 function prepCanvas(){
   canvas = document.createElement('canvas');
   canvas.style.display = 'none';
@@ -39,6 +41,9 @@ gameWorker.onmessage = function(e){
   if(e.data[0]=='progress'){
     document.getElementById('loader').style.width = (e.data[1]+1)+'%';
     document.getElementById('loader_outer').style.display='block';
+    if(e.data[2]){
+    document.getElementById('blockCount').innerHTML =(e.data[2]);
+    }//reduce lag
   }
   if(e.data[0]=='done'){
     document.getElementById('overlay').style.display='none';
@@ -68,21 +73,7 @@ gameWorker.onmessage = function(e){
     //calculate uv by removing 1 (for 0 min) and multiply by 16 for px position (0 = y pos)
   }
   if(e.data[0]=='voxel_title'){
-    /*
-    document.getElementById('voxelNameOuter').style.display='block';
-    fromTween.op = 1;//reset
-    document.getElementById('voxelName').innerText = e.data[1];
-    if(tweenRunning==true){
-      tween.stop();
-      tweenRunning = false;
-      fromTween.op = 1;
-      document.getElementById('voxelNameOuter').style.opacity = 1;
-    }
-       tween = new TWEEN.Tween(fromTween).to(toTween,1000).onUpdate(function(){
-        document.getElementById('voxelNameOuter').style.opacity =fromTween.op;
-        tweenRunning=true;
-      }).delay(1000).start();//start tween
-*/
+
 var cele = document.getElementsByClassName('voxelNameOuter');
 for(var i = 0;i<cele.length;i++){
 
@@ -112,7 +103,20 @@ setTimeout(function(){
 */
   }
 }
+var graphicsMode = 'fancy';
+window["switchGraphicsType"]=function(e){
 
+  if(graphicsMode == 'fancy'){
+   graphicsMode ='faster'
+e.innerHTML = 'Graphics: Faster';
+    gameWorker.postMessage({type:'graphicsFaster'});
+  }
+  else if(graphicsMode =='faster'){
+    graphicsMode = 'fancy';
+    e.innerHTML = 'Graphics: Fancy'
+    gameWorker.postMessage({type:'graphicsFancy'});
+  }
+}
 function tweenLoop(){
   requestAnimationFrame(tweenLoop);
   TWEEN.update();
@@ -139,22 +143,36 @@ window.addEventListener('resize',function(e){
   updateCrosshair();
 });
 document.body.addEventListener('keydown',function(e){
-  if(canLock==true){
+  if(canLock==true&&canMove==true){
   gameWorker.postMessage({type:'keydown',key:e.key});
   }
 });
 document.body.addEventListener('keyup',function(e){
+  if(e.key=='`'){
+
+    if(document.getElementById('gameoptions').style.display=='none'){
+      canMove = false;
+    document.getElementById('gameoptions').style.display= 'block';
+    document.exitPointerLock();
+    }else{
+      canMove = true;
+      document.getElementById('gameoptions').style.display = 'none';
+      document.body.requestPointerLock();
+    }
+  }
     if(e.key=='e'){
     //open inv
     var iv = document.getElementById('inventory')
     if(iv.style.display==='none'){
       iv.style.display='block';
       canLock = false;
+      canMove = false;
       document.exitPointerLock();
   
     }else{
       iv.style.display='none';
       canLock = true;
+      canMove = true;
   document.body.requestPointerLock();
     }
 
@@ -166,7 +184,7 @@ document.body.addEventListener('keyup',function(e){
 
 //key updates
 document.body.addEventListener('mousedown',function(e){
-  if(e.button==0&&canLock==true){
+  if(e.button==0&&canLock==true&&event.target == canvas){
 
   document.body.requestPointerLock();//lock pointer
   }

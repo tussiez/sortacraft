@@ -1,3 +1,5 @@
+//Kept as source, won't delete for now
+
 import * as THREE from 'https://threejs.org/build/three.module.js'
 //modified to support worker
 var PointerLockControls = function ( camera ) {

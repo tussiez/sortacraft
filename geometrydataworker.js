@@ -361,7 +361,7 @@ VoxelWorld.faces_half = [//half block
 const voxelWorld = new VoxelWorld({
   cellSize:64,
   tileSize:16,
-  tileTextureWidth:704,
+  tileTextureWidth:720,
   tileTextureHeight:48,
   calculateFaces:true
 });//prep voxelwordl

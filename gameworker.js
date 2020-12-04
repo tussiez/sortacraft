@@ -1,6 +1,13 @@
+/*I recommend you look into web assembly. I have heard it runs much faster than JavaScript, so it might help you speed up the process easier. Of course, it has some limitations right now, web assembly can't use native JavaScript functions (as I have heard), so it will be harder to implement, but the best part is that you don't necessarily have to "write" it, rather you can compile it into web assembly.
+
+-@baconman321 */
+/*That's a good idea! I think I've seen the compilers before.*/
+
+
+
 //main thread for Threejs
-import * as THREE from 'https://threejs.org/build/three.module.js'
-import {CSM} from 'https://threejs.org/examples/jsm/csm/CSM.js'//csm
+import * as THREE from '/threejs.js'
+import {CSM} from 'https://threejs.org/examples/jsm/csm/CSM.js'//
 //import {PointerLockControls} from 'modified_pointerlock.js'//modified pointerlock
 const handlers = {
   main,
@@ -12,6 +19,8 @@ const handlers = {
   mousedown,
   wheel,
   time_update,
+  graphicsFaster,
+  graphicsFancy
 }
 //hello there
 //variables
@@ -31,6 +40,8 @@ ChunksMesh={},
 CullChunkIndex=[],
 CullChunks = {},
 PlayerChunk,
+playerSpeed = .3,
+playerCorrectiveSpeed = .23,
 geometryDataWorker = new Worker('geometrydataworker.js'),
 geometryDataWorker2 = new Worker('geometrydataworker.js'),//for chunk update
 chunkIndex=[],
@@ -38,6 +49,8 @@ done = true,
 light,
 shadows,
 material,
+fastmaterial,
+fancymaterial,
 chunkTotal =16640,//for progress
 loader,
 texture,
@@ -49,7 +62,7 @@ clock = new THREE.Clock(),
 currentVoxel = 1,
 cellSize = 64,
 tileSize = 16,
-tileTextureWidth = 256,
+tileTextureWidth = 720,
 tileTextureHeight= 48,
 intersectWorld,
 heightMult = 2,
@@ -64,7 +77,7 @@ bumping=false,
 maxReach = 6,//max player reach
 pointerBlock,
 moved = [],
-amountOfVoxels = 44,
+amountOfVoxels = 45,
 chunkWorker,
 voxelNames = [
   'Stone',
@@ -111,6 +124,7 @@ voxelNames = [
   'Spruce Log',
   'Dark Oak Log',
   'Coal Ore',
+  'Snowy Leaves',
 ],//voxe names (by idx)
 voxelDrops = [
 'Cobblestone',
@@ -156,7 +170,8 @@ voxelDrops = [
 'Birch Log',
 'Spruce Log',
 'Dark Oak Log',
-'Coal'
+'Coal',
+'Snowy Leaves'
 ],//what voxel drops
 lazyVoxelData = {
   current:0,//kindof like i
@@ -209,7 +224,7 @@ lazyVoxelData = {
 finish:function(){
   const posVec = this.getVoxelData(0).intersect,x=posVec.x,y=posVec.y,z=posVec.z;
   geometryDataWorker.postMessage(['geometrydata',posVec.x,posVec.y,posVec.z,'regular',posVec]);//reg
-//  consEole.log('Time to run: '+((currentTime-this.startTime)/1000).toFixed(2))
+ // ((currentTime-this.startTime)/1000).toFixed(2)
 },
 realFinish:function(){
   var posVec = this.getVoxelData(0).intersect;
@@ -244,13 +259,17 @@ worldTextureLoader.setOptions({imageOrientation:'flipY'});//flips when using bit
 worldTextureBitmap = worldTextureLoader.load('textures.png',function(bmap){
 worldTextureBitmap = new THREE.CanvasTexture(bmap,undefined,undefined,undefined,THREE.NearestFilter,THREE.NearestFilter);//build texture from xhr req
 //worldTextureBitmap = bmap;
-  material = new THREE.MeshBasicMaterial({
+  fancymaterial = new THREE.MeshLambertMaterial({
     color:'gray',
-    transparent:false,
-  alphaTest:0.1,
     map:worldTextureBitmap,//texture
   });//setup mat
-  shadows.setupMaterial(material);
+  fastmaterial = new THREE.MeshBasicMaterial({
+    color:'gray',
+    map:worldTextureBitmap,
+  });
+  //setup fast speedy mat
+  material = fancymaterial;//start on fancy material
+  shadows.setupMaterial(fancymaterial);
   renderer.compile(scene,camera);//compile
 
 }),
@@ -274,6 +293,7 @@ geometryDataWorker.onmessage = function(e){
 
   }
   }
+  renderer.shadowMap.needsUpdate=true;//shadow map update
 }
 geometryDataWorker2.onmessage = function(e){
   if(e.data[0]=='geometrydata'){
@@ -297,6 +317,7 @@ geometryDataWorker2.onmessage = function(e){
 
   geometry.setIndex(e.data[4]);//update geometry
   geometry.computeBoundingSphere();
+
 
 
   }
@@ -333,6 +354,7 @@ geometryDataWorker2.onmessage = function(e){
 
   }
   }
+  renderer.shadowMap.needsUpdate = true;//chunk updated,needs updated shadows
 }
 function stringVec(vec){
   return (vec.x+","+vec.y+","+vec.z)
@@ -398,8 +420,51 @@ function checkIntersections(){
 }
 
 var playerHand;
-function keydown(e){keys[e.key]=true};
-function keyup(e){keys[e.key]=false};//key updates.. hah.."KEY" updates? eh? getit? no?nvm
+function keydown(e){
+  keys[e.key]=true;
+ if(e.key=='Shift'){
+  keys['isShift']=true; 
+  playerSpeed = .3;
+  playerCorrectiveSpeed = .15;
+  if(keys['W']==true){
+  keys['w']=false;
+  }
+  if(keys['A']==true){
+  keys['a']=false;
+  }
+  if(keys['S']==true){
+  keys['s']=false;
+  }
+  if(keys['D']==true){
+  keys['d']=false;
+  }
+ }
+ };
+function keyup(e){
+  keys[e.key]=false;
+  if(e.shiftKey==false){
+    playerCorrectiveSpeed = .23;
+    playerSpeed = .3;
+    keys['isShift']=false;
+    if(keys['W']==true){
+      keys['W']=false;
+      keys['w']=true;
+    }
+    if(keys['A']==true){
+      keys['A']=false;
+      keys['a']=true;
+    }
+    if(keys['S']==true){
+      keys['S']=false;
+      keys['s']=true;
+    }
+    if(keys['D']==true){
+      keys['D']=false;
+      keys['d']=true;
+    }
+
+  }
+  };//key updates.. hah.."KEY" updates? eh? getit? no?nvm
 
 function main(dat){
   camera = new THREE.PerspectiveCamera(70,dat.width/dat.height,0.1,500);
@@ -412,7 +477,7 @@ function main(dat){
   controls = new PointerLockControls(camera);
   clock = new THREE.Clock();
   camera.position.set(1,128,1);//1 for inner chunk
-  var ambient = new THREE.AmbientLight(0xffffff,0.3);
+  var ambient = new THREE.AmbientLight(0xffffff,0.2);
   scene.add(ambient);//ambient light
   shadows = new CSM({
     maxFar:camera.far,
@@ -423,7 +488,7 @@ function main(dat){
     lightDirection:new THREE.Vector3(-1,-1,1).normalize(),
     parent:scene,
     camera:camera,
-    lightIntensity:0.01,
+    lightIntensity:.3,
   });
   playerHand = new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:"green"}));
   scene.add(playerHand);
@@ -437,10 +502,25 @@ function main(dat){
   sunLight = new THREEx.DayNight.SunLight();
   scene.add(sunLight.object3d);
 
-  renderer.compile(scene,camera);//compile material shaders
+ 
 //  initParticles();//particle
   render();
   getFPS.framerate();//start fps counter
+}
+function graphicsFancy(){//switch to fancy mode
+material = fancymaterial;
+//switch all chunks ig to fancy (may lag)
+var l = chunkIndex.length;//more optimized than reading length?
+for(var i = 0;i<l;i++){
+  ChunksMesh[chunkIndex[i]].material = material;//switch(lag?)
+}
+}
+function graphicsFaster(){//switch to faster graphics
+material = fastmaterial;
+var l = chunkIndex.length;
+for(var i =0;i<l;i++){
+  ChunksMesh[chunkIndex[i]].material = material;//switch
+}
 }
 function render(){
   requestAnimationFrame(render);
@@ -456,7 +536,7 @@ function render(){
 
   camera.updateMatrixWorld();//req.for shadows
 
-  shadows.update();//update csm
+  shadows.update();//update
 
   if(PlayerChunk!='hold'){//dont change unless not hold or undefined
     PlayerChunk = chunkClamp(camera.position,true);//clamp chunk to player area
@@ -557,36 +637,36 @@ function playerMovement(){//move plyr
   moved[4] = 0;
   moved[5] = 0;;
   var preMovement = new THREE.Vector3().copy(camera.position)
-  if(keys['w']){
-    controls.moveForward(.3);
+  if(keys['w']||keys['W']){
+    controls.moveForward(playerSpeed);
   moved[0]=1;
   if(checkIntersections()==true){
-  controls.moveForward(-.3)//pre check so you cant see inside
+  controls.moveForward(-playerSpeed)//pre check so you cant see inside
   }else{
-  controls.moveForward(-.23);
+  controls.moveForward(-playerCorrectiveSpeed);
   }
 
   }
-  if(keys['a']){
-    controls.moveRight(-.3);
+  if(keys['a']||keys['A']){
+    controls.moveRight(-playerSpeed);
   moved[1]=1;
   if(checkIntersections()==true){
-  controls.moveRight(.3)//pre check so you cant see inside
+  controls.moveRight(playerSpeed)//pre check so you cant see inside
   }else{
-  controls.moveRight(.23);
+  controls.moveRight(playerCorrectiveSpeed);
   }
   }
 
-  if(keys['s']){
-    controls.moveForward(-.3);
+  if(keys['s']||keys['S']){
+    controls.moveForward(-playerSpeed);
 moved[3]=1;
 if(checkIntersections()==true){
-controls.moveForward(.3)//pre check so you cant see inside
+controls.moveForward(playerSpeed)//pre check so you cant see inside
 }else{
-controls.moveForward(.23);
+controls.moveForward(playerCorrectiveSpeed);
 }
   }
-  if(keys['d']){
+  if(keys['d']||keys['D']){
     controls.moveRight(.3);
     moved[4]=1;
     if(checkIntersections()==true){
@@ -866,6 +946,7 @@ function modifyChunk2(voxel1){
   const intersection = intersectWorld.intersectRay(start,end);//find a hit
 
   if(intersection){//got a voxel
+
     const voxelId = voxel1;//set for comparison between break/place
 
     const pos = intersection.position.map(function(v,ndx){//map position to normal
@@ -1091,7 +1172,7 @@ function blockPointer(){
 
 
 //DayNight(minify)
-var THREEx=THREEx||{};THREEx.DayNight={},THREEx.DayNight.baseURL="/",THREEx.DayNight.currentPhase=function(t){return Math.sin(t)>Math.sin(0)?"day":Math.sin(t)>Math.sin(-Math.PI/6)?"twilight":"night"},THREEx.DayNight.SunLight=function(){var t=new THREE.DirectionalLight(16777215,1);this.object3d=t,this.update=function(i){t.position.x=0,t.position.y=9e4*Math.sin(i),t.position.z=9e4*Math.cos(i);var a=THREEx.DayNight.currentPhase(i);"day"===a?t.color.set("rgb(255,"+(Math.floor(200*Math.sin(i))+55)+","+Math.floor(200*Math.sin(i))+")"):"twilight"===a?(t.intensity=1,t.color.set("rgb("+(255-Math.floor(510*Math.sin(i)*-1))+","+(55-Math.floor(110*Math.sin(i)*-1))+",0)")):t.intensity=0}},THREEx.DayNight.SunSphere=function(){var t=new THREE.SphereGeometry(20,30,30),i=new THREE.MeshBasicMaterial({color:16711680}),a=new THREE.Mesh(t,i);this.object3d=a,this.update=function(t){a.position.x=0,a.position.y=400*Math.sin(t),a.position.z=400*Math.cos(t);var i=THREEx.DayNight.currentPhase(t);"day"===i?a.material.color.set("rgb(255,"+(Math.floor(200*Math.sin(t))+55)+","+(Math.floor(200*Math.sin(t))+5)+")"):"twilight"===i&&a.material.color.set("rgb(255,55,5)")}};
+var THREEx=THREEx||{};THREEx.DayNight={},THREEx.DayNight.baseURL="/",THREEx.DayNight.currentPhase=function(t){return Math.sin(t)>Math.sin(0)?"day":Math.sin(t)>Math.sin(-Math.PI/6)?"twilight":"night"},THREEx.DayNight.SunLight=function(){var t=new THREE.DirectionalLight(16777215,.1);this.object3d=t,this.update=function(i){t.position.x=0,t.position.y=9e4*Math.sin(i),t.position.z=9e4*Math.cos(i);var a=THREEx.DayNight.currentPhase(i);"day"===a?t.color.set("rgb(255,"+(Math.floor(200*Math.sin(i))+55)+","+Math.floor(200*Math.sin(i))+")"):"twilight"===a?(t.intensity=.1,t.color.set("rgb("+(255-Math.floor(510*Math.sin(i)*-1))+","+(55-Math.floor(110*Math.sin(i)*-1))+",0)")):t.intensity=0}},THREEx.DayNight.SunSphere=function(){var t=new THREE.SphereGeometry(20,30,30),i=new THREE.MeshBasicMaterial({color:16711680}),a=new THREE.Mesh(t,i);this.object3d=a,this.update=function(t){a.position.x=0,a.position.y=400*Math.sin(t),a.position.z=400*Math.cos(t);var i=THREEx.DayNight.currentPhase(t);"day"===i?a.material.color.set("rgb(255,"+(Math.floor(200*Math.sin(t))+55)+","+(Math.floor(200*Math.sin(t))+5)+")"):"twilight"===i&&a.material.color.set("rgb(255,55,5)")}};
 //PointerLockControls(minify)
 var PointerLockControls=function(t){var o=this;this.minPolarAngle=0,this.maxPolarAngle=Math.PI;var n,r=new THREE.Euler(0,0,0,"YXZ"),e=Math.PI/2,i=new THREE.Vector3;this.mousemove=function(n){var i=n.x,a=n.y;r.setFromQuaternion(t.quaternion),r.y-=.002*i,r.x-=.002*a,r.x=Math.max(e-o.maxPolarAngle,Math.min(e-o.minPolarAngle,r.x)),t.quaternion.setFromEuler(r)},this.getDirection=(n=new THREE.Vector3(0,0,-1),function(o){return o.copy(n).applyQuaternion(t.quaternion)}),this.moveForward=function(o){i.setFromMatrixColumn(t.matrix,0),i.crossVectors(t.up,i),t.position.addScaledVector(i,o)},this.moveRight=function(o){i.setFromMatrixColumn(t.matrix,0),t.position.addScaledVector(i,o)}};
 //VoxelWorld code (minify)
@@ -1450,7 +1531,11 @@ chunkWorker.onmessage = function(e){
     startCount+=1;
   }
   if(e.data[0]=='progress'){
-    postMessage(['progress',((e.data[1]*100)/chunkTotal)+1])
+    if(e.data[1]%20==0){
+    postMessage(['progress',((e.data[1]*100)/chunkTotal)+1,e.data[1],chunkTotal])
+    }else{
+      postMessage(['progress',((e.data[1]*100)/chunkTotal)+1])
+    }
   }
   if(e.data[0]==='complete'){
     lazyVoxelData.finishedPosting = true;
@@ -1469,6 +1554,7 @@ function createEmptyChunk(position){
   var mesh = new THREE.Mesh(geometry,material);//need emtpty area for geometry data to fill in
   mesh.castShadow = true;
   mesh.receiveShadow = true;
+  renderer.compile(scene,camera);
   mesh.position.set(position.x,position.y,position.z);
   ChunksMesh[position.x+","+position.y+","+position.z]=mesh;
   Chunks[position.x+","+position.y+","+position.z] = new VoxelWorld({
@@ -1509,4 +1595,5 @@ mesh.receiveShadow=true;
 mesh.position.set(x,y,z);//set pos
 scene.add(mesh)//ad to scene
 renderer.shadowMap.needsUpdate=true;//new chunk, need new shadow
+renderer.compile(scene,camera);
 }
