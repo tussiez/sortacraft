@@ -1,3 +1,4 @@
+/*Cascading Shadow Maps (terrain shadows)*/
 var csm;
 	class FrustumVertex {
 		constructor(x, y, z) {
@@ -14,6 +15,7 @@ var csm;
 			return this;
 		}
 	}
+  var csmLights = [];
 
 	function toRad(degrees) {
 		return degrees * Math.PI / 180;
@@ -304,16 +306,24 @@ uniform float shadowFar;
 				light.castShadow = true;
 				light.shadow.mapSize.width = this.shadowMapSize;
 				light.shadow.mapSize.height = this.shadowMapSize;
-				light.renderOrder = 2;//before lights
+			//	light.renderOrder = 2;//before lights
 				light.shadow.camera.near = this.lightNear;
 				light.shadow.camera.far = this.lightFar;
 				light.shadow.bias = this.shadowBias;
+        this.csmLights.push(light);
 				this.parent.add(light);
 				this.parent.add(light.target);
 				this.lights.push(light);
 			}
 		}
-
+    
+    updateLightIntensity(brightness){
+     for(let  i = 0;i < this.csmLights;i++){
+       var lt = this.csmLights[i];
+       lt.intensity = brightness;
+     }
+    }
+  
 		initCascades() {
 			this.mainFrustum = new Frustum({
 				fov: this.fov,

@@ -1,6 +1,6 @@
 var gameWorker = new Worker('gameworker.js',{type:"module"});//enable modules
 //setup dom
-
+window["gameWorker"]=gameWorker;
 import TWEEN from '/tween.js'
 var canMove = true;
 var fromTween = {op:1,reset:false};
@@ -33,7 +33,14 @@ gameWorker.onmessage = function(e){
     document.getElementById('fpsEle').innerText = 'FPS: '+e.data[1];
   }
   if(e.data[0]=='debug'){
-    document.getElementById('debug').innerText = e.data[1];
+    if(e.data[2]=='log'){
+      document.getElementById('debug').style.display='block';
+    document.getElementById('debug').innerHTML+= '<br>'+e.data[1];
+    }
+    if(e.data[2]=='close'){
+      document.getElementById('debug').style.display='none';
+    }
+  
   }
   if(e.data[0]=='chunks'){
     download('my_world.dat',JSON.stringify(e.data[1]))
@@ -218,3 +225,41 @@ function updateCrosshair(){
   document.getElementById('crosshairY').style.top ='calc(50% - 10px)';//update crosshair
 }
 prepCanvas();
+//Displays the version at the bottom of the screen (it tries to get the local (the one that the user is running on) version, then if that fails, gets the actual version).
+function displayVer(){
+  let h6 = document.createElement("h6");
+  h6.setAttribute("style","color:white;font-family:sans-serif;position:fixed;bottom:10px;left:5px;z-index:1000;");
+  caches.open("cache").then(function(cache){
+    return cache.match("VERSION.txt").then(function(res){
+      if(!res){
+        throw new Error("Invalid cache response.");
+      }
+      return res.text();
+    }).then(function(txt){
+      h6.textContent = "Current version: " + txt;
+      document.body.appendChild(h6);
+      return;
+    });
+  }).catch(function(){
+    fetch("VERSION.txt").then(function(res){
+      if(!res){
+        throw new Error("Fetch failed.");
+      }
+      return res.text();
+    }).then(function(txt){
+      if(!txt){
+        throw new Error("Response.text() returned an invalid response.");
+      }
+      h6.textContent = "Current version: " + txt;
+      document.body.appendChild(h6);
+      return;
+    }).catch(function(err){
+      /*Hmmmm, something must have gone horribly wrong here if an error is generated to the point where this code runs...*/
+      h6.textContent = "Unknown";
+      document.body.appendChild(h6);
+      console.warn("Failed getting version. This shouldn't happen. If you are offline, try connecting to the internet. If that doesn't work, then please try clearing the site data. Error generated: " + err);
+      return;
+    });
+  });
+}
+displayVer();

@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <script src="swHandler.js"></script><!--moved to head-->
+    <!--We need swHandler.js, in the case someone goes directly to newgame.html-->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
+    <meta name="description" content="New game">
+    <meta name="author" content="baconman321,tussiez">
+    <meta name="title" content="SortaCraft">
     <title>Sortacraft</title>
+    <link rel="manifest" href="manifest.json">
     <link href="style.css" rel="stylesheet" type="text/css" />
     <link rel="preload" as="worker" href="chunkworker.js" />
     <link rel="icon" type="image/x-icon" href="sortacraft.ico">
   </head>
   <body>
-    <div id="overlay"></div>
+    <div id="overlay"><div id="overlay2"></div></div>
     <div id="fpsEle"></div>
     <div id="debug"></div>
     <div id="gameoptions">
@@ -50,7 +55,7 @@
 
 
 <div class = "hotbar" id="ack" style="z-index:999">
-     <img src ="items/hotbar.png" height="64" width="585">
+     <img src ="items/hotbar.png" height="64" width="585" alt="hotbar">
      </div>
 
 

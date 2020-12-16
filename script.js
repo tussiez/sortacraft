@@ -1,3 +1,7 @@
+/* OLD VERSION */
+
+
+
 import {PointerLockControls} from 'https://threejs.org/examples/jsm/controls/PointerLockControls.js'
 //learned from Threejs voxel geom
 import {GLTFExporter} from 'https://threejs.org/examples/jsm/exporters/GLTFExporter.js';
@@ -157,7 +161,7 @@ function init(){
 					shadowMapSize: 1024,
 					lightDirection: new THREE.Vector3( -1, -1, 1 ).normalize(),
 					camera: camera,
-          lightIntensity:0.01,
+          lightIntensity:1,
 } );
 
 

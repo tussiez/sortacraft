@@ -8,7 +8,6 @@
 //main thread for Threejs
 import * as THREE from '/threejs.js'
 import {CSM} from 'https://threejs.org/examples/jsm/csm/CSM.js'//
-//import {PointerLockControls} from 'modified_pointerlock.js'//modified pointerlock
 const handlers = {
   main,
   mousemove,
@@ -20,25 +19,38 @@ const handlers = {
   wheel,
   time_update,
   graphicsFaster,
-  graphicsFancy
+  graphicsFancy,
+  changeShadowBias,
 }
 //hello there
 //variables
+let g;
+const G = 9.807;
+//Let's try 150 pounds. OMg lol heavy player
+//Equivilant to 150 pounds
+const M = 68.0389;;
+let R;
+
 var camera,
 scene,
 fallen = false,
+canJump=true,
 renderer,
 globalSeed = Math.floor(Math.random()*65535),
 controls,
 particleGroup,
 emitter,
 clock,
+chunkWorker,
+jumpY,
 cube,
+fallSpeed = .1,
 keys=[],
 Chunks = {},
 ChunksMesh={},
 CullChunkIndex=[],
 CullChunks = {},
+ChunkLights = {},
 PlayerChunk,
 playerSpeed = .3,
 playerCorrectiveSpeed = .23,
@@ -55,7 +67,7 @@ chunkTotal =16640,//for progress
 loader,
 texture,
 sunAngle = -1/6*Math.PI*10,
-dayDuration = 1020,
+dayDuration = 720,//720/60 = 10min
 sunSphere,
 sunLight,
 clock = new THREE.Clock(),
@@ -78,7 +90,6 @@ maxReach = 6,//max player reach
 pointerBlock,
 moved = [],
 amountOfVoxels = 45,
-chunkWorker,
 voxelNames = [
   'Stone',
   'Grass Block',
@@ -224,7 +235,7 @@ lazyVoxelData = {
 finish:function(){
   const posVec = this.getVoxelData(0).intersect,x=posVec.x,y=posVec.y,z=posVec.z;
   geometryDataWorker.postMessage(['geometrydata',posVec.x,posVec.y,posVec.z,'regular',posVec]);//reg
- // ((currentTime-this.startTime)/1000).toFixed(2)
+//postMessage(['debug', ((currentTime-this.startTime)/1000).toFixed(2),'newline']);
 },
 realFinish:function(){
   var posVec = this.getVoxelData(0).intersect;
@@ -370,6 +381,24 @@ onmessage = function(e) {
 }
 
 };
+function changeShadowBias(dat){
+  console.log('Changed shadowbias to '+dat.bias);
+  shadows.remove();
+  shadows = new CSM({
+    maxFar:camera.far,
+    cascades:4,
+    mode:'practical',
+    shadowMapSize:128,//low res shadows
+    shadowBias:dat.bias,
+    lightDirection:new THREE.Vector3(-1,-1,1).normalize(),
+    parent:scene,
+    camera:camera,
+    lightIntensity:.001,
+  });
+  shadows.setupMaterial(fancymaterial);
+  shadows.setupMaterial(fastmaterial);
+renderer.shadowMap.needsUpdate = true;
+}
 function time_update(dat){
   currentTime = dat.time;
 }
@@ -426,23 +455,27 @@ function keydown(e){
   keys['isShift']=true; 
   playerSpeed = .3;
   playerCorrectiveSpeed = .15;
-  if(keys['W']==true){
-  keys['w']=false;
+  if(keys['w']==true){
+keys['w']=false;
+keys['W']=true;
   }
-  if(keys['A']==true){
-  keys['a']=false;
+  if(keys['a']==true){
+keys['a']=false;
+keys['A']=true;
   }
-  if(keys['S']==true){
-  keys['s']=false;
+  if(keys['d']==true){
+keys['d']=false;
+keys['D']=true;
   }
-  if(keys['D']==true){
-  keys['d']=false;
+  if(keys['s']==true){
+    keys['s']=false;
+    keys['S']=true;
   }
  }
  };
 function keyup(e){
   keys[e.key]=false;
-  if(e.shiftKey==false){
+  if(e.key=='Shift'){
     playerCorrectiveSpeed = .23;
     playerSpeed = .3;
     keys['isShift']=false;
@@ -484,11 +517,10 @@ function main(dat){
     cascades:4,
     mode:'practical',
     shadowMapSize:128,//low res shadows
-    shadowBias:-0.000005,
     lightDirection:new THREE.Vector3(-1,-1,1).normalize(),
     parent:scene,
     camera:camera,
-    lightIntensity:.3,
+    lightIntensity:.001,
   });
   playerHand = new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:"green"}));
   scene.add(playerHand);
@@ -500,6 +532,7 @@ function main(dat){
   sunSphere = new THREEx.DayNight.SunSphere();
   scene.add(sunSphere.object3d);
   sunLight = new THREEx.DayNight.SunLight();
+  sunLight.object3d.renderOrder = 2;
   scene.add(sunLight.object3d);
 
  
@@ -617,7 +650,17 @@ function vecFromString(str){
 function updateDaytime(){
   sunAngle	+= clock.getDelta()/dayDuration * Math.PI*2;
   sunLight.update(sunAngle);
+
   sunSphere.update(sunAngle);
+  let v =  new THREE.Vector3(0,-1,Math.cos(sunAngle)).normalize();
+
+  /*shadows.lightDirection =v
+  if(currentTime/1000 %1000 == 0){
+    renderer.shadowMap.needsUpdate = true;
+  }
+  */
+  //shadows.updateLightIntensity(sunLight.object3d.intensity);
+  //update shadow brightness
   var phase = THREEx.DayNight.currentPhase(sunAngle);
   //bg color
   if( phase === 'day'){
@@ -630,12 +673,13 @@ function updateDaytime(){
 }
 
 function playerMovement(){//move plyr
+ PlayerChunk = chunkClamp(camera.position,true);
   moved[0]=0;
   moved[1] = 0;
   moved[2] = 0;
-  moved[3] = 0;
+   moved[3] = 0;
   moved[4] = 0;
-  moved[5] = 0;;
+  moved[5] = 0;
   var preMovement = new THREE.Vector3().copy(camera.position)
   if(keys['w']||keys['W']){
     controls.moveForward(playerSpeed);
@@ -658,33 +702,39 @@ function playerMovement(){//move plyr
   }
 
   if(keys['s']||keys['S']){
-    controls.moveForward(-playerSpeed);
+    controls.moveForward(-.3);
 moved[3]=1;
 if(checkIntersections()==true){
-controls.moveForward(playerSpeed)//pre check so you cant see inside
+controls.moveForward(.3)//pre check so you cant see inside
 }else{
-controls.moveForward(playerCorrectiveSpeed);
+controls.moveForward(.23);
 }
   }
   if(keys['d']||keys['D']){
-    controls.moveRight(.3);
+    controls.moveRight(playerSpeed);
     moved[4]=1;
     if(checkIntersections()==true){
-    controls.moveRight(-.3)//pre check so you cant see inside
+    controls.moveRight(-playerSpeed)//pre check so you cant see inside
     }else{
-    controls.moveRight(-.23);
+    controls.moveRight(-playerCorrectiveSpeed);
   }
 
   }
   if(keys[' ']){
+    if(canJump==true){ 
+      canJump=false;
+      
     jumping=true;
     moved[2] =1;//preset
-    camera.position.y+=0.5;
+    /*Define these variables*/
+    camera.position.y+=2;
     if(checkIntersections()==true){
-      camera.position.y-=0.5;//pre check so you cant see inside the ceiling
+      camera.position.y-=2;//pre check so you cant see inside the ceiling
     }else{
-    camera.position.y-=0.4;
+  //  camera.position.y-=.1;No thin
+  //jumpY = camera.position.y; //Save jump height
   }
+    }
 
 
   }else{
@@ -703,25 +753,66 @@ controls.moveForward(playerCorrectiveSpeed);
   }else{
     bumping=false;
     if(jumping==false){
-     camera.position.y-=.2;
+      //Check distance to ground
+      let dToGround = getDistanceToGround();
+      /*Formula for calculating acceleration due to gravity:
+      g = G*M/R^2
+      Ok that's a lot to take in
+      Let's break it down
+      g = acceleration due to gravity (the result)
+      G = Universal gravitational constant (we can make our own)
+      M = mass (how much matter is in an object) in kilograms
+      R = distance (how far are we from the deacceleration point like the ground) in meters
+    */
+    /*Forumula declarations */
+    //Earth's gravitational constant. Let's try this.
+    //I realized M should be the mass of the player. Lol imagine weighing 1000 pounds XD
+    R = dToGround;
+   // console.clear();clearing too rapidl;y 
+  //  console.log(R);
+  console.log(camera.position.y)
+    /*Find the gravitational pull using this forumula  */
+    g = G*M/R^2;
+    // console.log(g);
+    // g/=(getFPS.fps);//Multiply just because
+   // g = .1;//test
+    /*Yes it is*/
+    // if(g>.5){
+    //   g=.5;
+    // }
+    if(g<0){
+      g=0;
+    }
+    
+    /*I think I found out the problem. When we are on the ground, we have a constante gravitational pull, but the ground pushes up. However, the game subtracts your height from the gravitational constant. We need to either not fall if we are touching the ground, or have the ground push up constantly (which will probably cause performance issues as well as  glitches).*/
+    //Correct!
+
+    if(PlayerChunk!=undefined||PlayerChunk!='hold'&&dToGround!=0){
+     camera.position.y-=g;
+    }
+     
+
+     //overestimate 
      moved[5]=1;
       if(checkIntersections()===true){
 
         bumping=true;
-        camera.position.y+=.2;
-
+        camera.position.y+=g;
+        canJump=true;
       }else{
-        camera.position.y+=.1;
+      //nothing at all!
       }
     }
     moveHand();
     renderer.render(scene,camera);
   }
-  PlayerChunk = chunkClamp(camera.position,true)
+ /*
   if(PlayerChunk!=undefined&&fallen==false){
   fallen = true;
   dropPlayerToGround();
-  }
+  
+ }
+ */
 }
 function goBack(arr){
     if(arr[0]){
@@ -742,7 +833,7 @@ function goBack(arr){
 
 }
 function dropPlayerToGround(){
-  let start = new THREE.Vector3(camera.position.x+0.05,camera.position.y,camera.position.z+0.05);
+  let start = new THREE.Vector3(camera.position.x+0.05,camera.position.y+1.5,camera.position.z+0.05);
   let end = new THREE.Vector3(camera.position.x+0.05,camera.position.y-64,camera.position.z+0.05);
   const intersect = intersectWorld.intersectRay(start,end);
   if(intersect){
@@ -753,6 +844,28 @@ function dropPlayerToGround(){
     });
     camera.position.set(...pos);
     camera.position.y+=1.5
+  }
+}
+function getDistanceToGround(){
+
+
+    let start = new THREE.Vector3(camera.position.x+0.05,camera.position.y+1.5,camera.position.z+0.05);
+  let end = new THREE.Vector3(camera.position.x+0.05,camera.position.y-64,camera.position.z+0.05);
+  const intersect = intersectWorld.intersectRay(start,end);
+  if(intersect){
+    //get posy
+    let voxelId = 1;//so you end up ontop
+    const pos = intersect.position.map((v, ndx) => {
+      return v + intersect.normal[ndx] * (voxelId > 0 ? 0.5 : -0.5);
+    });
+  //Dist to ground
+ let dToGround = camera.position.y-pos[1];
+
+return dToGround;
+//dist/base v?
+
+  }else{
+    return 0;
   }
 }
 function resize(dat){
@@ -992,7 +1105,24 @@ if(intersectionVector.y>1){
 
       geometryDataWorker2.postMessage(['voxel',pos[0],pos[1],pos[2],voxel1]);//for chunkupdATE
 
-      //
+      if(voxel1===8){
+          //torch, set light
+          var light = new THREE.PointLight(0xffe53b,2,100);
+         
+					light.renderOrder=5;
+          light.position.set(pos[0]+.5,pos[1]+.5,pos[2]+.5);//center light
+          var lightfr = floorVec(new THREE.Vector3(pos[0],pos[1],pos[2]));
+          ChunkLights[lightfr.x+","+lightfr.y+","+lightfr.z]=light;//for removal later
+          scene.add(light);
+        }
+        if(voxel1==0){
+          var lt = floorVec(new THREE.Vector3(pos[0],pos[1],pos[2]));
+        var lightObj = ChunkLights[lt.x+","+lt.y+","+lt.z];
+        if(lightObj!=undefined){
+          scene.remove(lightObj);
+          lightObj = undefined;
+        }
+        }
 
       if(relativeBlockPosition.x == 0 || relativeBlockPosition.x == 16 ||relativeBlockPosition.x==1||relativeBlockPosition.x==15||relativeBlockPosition.z==1||relativeBlockPosition.z==15|| relativeBlockPosition.z == 0 || relativeBlockPosition.z == 16){
         //on edge of chunk, must call of geometry data so you can't see through chunks
@@ -1172,7 +1302,7 @@ function blockPointer(){
 
 
 //DayNight(minify)
-var THREEx=THREEx||{};THREEx.DayNight={},THREEx.DayNight.baseURL="/",THREEx.DayNight.currentPhase=function(t){return Math.sin(t)>Math.sin(0)?"day":Math.sin(t)>Math.sin(-Math.PI/6)?"twilight":"night"},THREEx.DayNight.SunLight=function(){var t=new THREE.DirectionalLight(16777215,.1);this.object3d=t,this.update=function(i){t.position.x=0,t.position.y=9e4*Math.sin(i),t.position.z=9e4*Math.cos(i);var a=THREEx.DayNight.currentPhase(i);"day"===a?t.color.set("rgb(255,"+(Math.floor(200*Math.sin(i))+55)+","+Math.floor(200*Math.sin(i))+")"):"twilight"===a?(t.intensity=.1,t.color.set("rgb("+(255-Math.floor(510*Math.sin(i)*-1))+","+(55-Math.floor(110*Math.sin(i)*-1))+",0)")):t.intensity=0}},THREEx.DayNight.SunSphere=function(){var t=new THREE.SphereGeometry(20,30,30),i=new THREE.MeshBasicMaterial({color:16711680}),a=new THREE.Mesh(t,i);this.object3d=a,this.update=function(t){a.position.x=0,a.position.y=400*Math.sin(t),a.position.z=400*Math.cos(t);var i=THREEx.DayNight.currentPhase(t);"day"===i?a.material.color.set("rgb(255,"+(Math.floor(200*Math.sin(t))+55)+","+(Math.floor(200*Math.sin(t))+5)+")"):"twilight"===i&&a.material.color.set("rgb(255,55,5)")}};
+var THREEx=THREEx||{};THREEx.DayNight={},THREEx.DayNight.baseURL="/",THREEx.DayNight.currentPhase=function(t){return Math.sin(t)>Math.sin(0)?"day":Math.sin(t)>Math.sin(-Math.PI/6)?"twilight":"night"},THREEx.DayNight.SunLight=function(){var t=new THREE.DirectionalLight(16777215,2);this.object3d=t,this.update=function(i){t.position.x=0,t.position.y=9e4*Math.sin(i),t.position.z=9e4*Math.cos(i);var a=THREEx.DayNight.currentPhase(i);"day"===a?t.color.set("rgb(255,"+(Math.floor(200*Math.sin(i))+55)+","+Math.floor(200*Math.sin(i))+")"):"twilight"===a?(t.intensity=2,t.color.set("rgb("+(255-Math.floor(510*Math.sin(i)*-1))+","+(55-Math.floor(110*Math.sin(i)*-1))+",0)")):t.intensity=0}},THREEx.DayNight.SunSphere=function(){var t=new THREE.SphereGeometry(20,30,30),i=new THREE.MeshBasicMaterial({color:16711680}),a=new THREE.Mesh(t,i);this.object3d=a,this.update=function(t){a.position.x=0,a.position.y=400*Math.sin(t),a.position.z=400*Math.cos(t);var i=THREEx.DayNight.currentPhase(t);"day"===i?a.material.color.set("rgb(255,"+(Math.floor(200*Math.sin(t))+55)+","+(Math.floor(200*Math.sin(t))+5)+")"):"twilight"===i&&a.material.color.set("rgb(255,55,5)")}};
 //PointerLockControls(minify)
 var PointerLockControls=function(t){var o=this;this.minPolarAngle=0,this.maxPolarAngle=Math.PI;var n,r=new THREE.Euler(0,0,0,"YXZ"),e=Math.PI/2,i=new THREE.Vector3;this.mousemove=function(n){var i=n.x,a=n.y;r.setFromQuaternion(t.quaternion),r.y-=.002*i,r.x-=.002*a,r.x=Math.max(e-o.maxPolarAngle,Math.min(e-o.minPolarAngle,r.x)),t.quaternion.setFromEuler(r)},this.getDirection=(n=new THREE.Vector3(0,0,-1),function(o){return o.copy(n).applyQuaternion(t.quaternion)}),this.moveForward=function(o){i.setFromMatrixColumn(t.matrix,0),i.crossVectors(t.up,i),t.position.addScaledVector(i,o)},this.moveRight=function(o){i.setFromMatrixColumn(t.matrix,0),t.position.addScaledVector(i,o)}};
 //VoxelWorld code (minify)
@@ -1519,7 +1649,9 @@ intersectWorld = new VoxelWorld({
 
 function createChunk(x,y,z){
   if(material){
+    if(chunkWorker==undefined){
 chunkWorker = new Worker('chunkworker.js');
+    }
 var currentBiome = 'caves';
 lazyVoxelData.needsClear = true;//need a clear
 chunkWorker.postMessage(['create',16,tileSize,tileTextureWidth,tileTextureHeight,globalSeed,x,y,z,heightMult,currentBiome,2]);
@@ -1541,7 +1673,7 @@ chunkWorker.onmessage = function(e){
     lazyVoxelData.finishedPosting = true;
     lazyVoxelData.lazyArrayTotal = startCount;//set max
  if(PlayerChunk === 'hold'){PlayerChunk =undefined}//reset
-    chunkWorker.terminate();//close worker, there's only so many CPU threads available
+//    chunkWorker.terminate();//close worker, there's only so many CPU threads available
   }
 }
 }else{
