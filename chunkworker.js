@@ -1,5 +1,4 @@
-//Chunk Generator
-
+/* Generates chunk terrain */
 //random numbers
 const rand = {
   random:function(a){
@@ -28,9 +27,32 @@ THREE = {
     euclideanModulo:function(c,a){return(c%a+a)%a}
   }
 }//euclidean modulo support
-
+var vars = [
+  'heightMult',
+  'cellSize',
+  'tileSize',
+  'flatness',
+  'tileTextureWidth',
+  'tileTextureHeight',
+  'seed',
+  'x1',
+  'y1',
+  'z1',
+  'biome',
+  'perlin',
+  'localWorld',
+  'progress',
+  'levels',
+  'caveBlks',
+  'biomeLevel'
+]
 self.onmessage = function(e){//onmessage
-
+for(var i = 0;i<vars.length;i++){
+  var v = self[vars[i]];
+  if(v!=undefined){
+  v = undefined;
+  }
+}
   if(e.data[0]==='create'){//create chunk
 
     var heightMult = e.data[9];

@@ -147,6 +147,7 @@ var itemNames = [
   'Wooden Pickaxe',
   'Wooden Spear',
   'Wooden Sword',
+  ''
 ]//WOW !!! THATS A LOTTA DAMAGE
 //BRUH
 function addToInv(item,itemName,x,y){

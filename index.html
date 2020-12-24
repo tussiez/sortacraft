@@ -1,80 +1,105 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <link rel="icon" type="image/x-icon" href="sortacraft.ico">
-    <title>Sorta-craft</title>
-    <style>
-      @font-face{
-        font-family:minecraft;
-        src:url(https://minecraftfont.tussiez.repl.co/Minecraft.ttf);
-      }
-      body{
-        font-family:minecraft;
-        height:100%;
-        width:100%;
-        overflow:hidden;
-        image-rendering:pixelated;
-        background-image:url(dirt.png);
-        background-size:64px 64px;
-        background-repeat:repeat;
-        text-shadow:2px 2px gray;
-      }
-      input[type="number"]{
-        font-family:minecraft;
-        background-color:black;
-        color:white;
-        border:1px solid white;
-        height:26px;
-        font-size:16px;
-      }
-      .play{
-        position:absolute;
-        left:calc(50% - 39px);
-      }
-      a,button{
-        height:20px;
-        width:60px;
-        background-color:gray;
-        padding:8px;
-        border:1px solid white;
-        text-align:center;
-        color:white;
-        text-decoration:none;
-        font-family:Minecraft;
-      }
-      button{
-        width:120px;
-        height:35px;
-        cursor:pointer;
-      }
+<html lang="en">
 
-      a:hover,button:hover{
-        border:2px solid white;
-        margin-left:-1px;
-        margin-top:-1px;
-        text-decoration:underline;
-        background-color:#649cf5;
-      }
-      ::placeholder {
-        color:lightgray;
-      }
-      html{height:100%;width:100%;overflow:hidden;}
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<meta name="description" content="Voxel-based, sandbox minecraft remake">
+	<meta name="author" content="baconman321,tussiez">
+	<meta name="title" content="SortaCraft">
+	<link rel="manifest" href="manifest.json">
+	<link rel="icon" type="image/x-icon" href="sortacraft.ico">
+	<title>Sorta-craft</title>
+	<style>
+		@font-face {
+			font-family: minecraft;
+			src: url(https://minecraftfont.tussiez.repl.co/Minecraft.ttf);
+		}
 
-      h1{text-align:center;}
+		body {
+			font-family: minecraft;
+			height: 100%;
+			width: 100%;
+			overflow: hidden;
+			image-rendering: pixelated;
+			background-image: url(dirt.png);
+			background-size: 64px 64px;
+			background-repeat: repeat;
+			text-shadow: 2px 2px gray;
+		}
 
-    </style>
-<script src="swHandler.js"></script><!-- no need to use text/javascript anymore -->
-  </head>
-  <body>
-    <h1 style="color:white;">Sorta-craft</h1>
-    <hr>
-    <a href="javascript:window.location.href= 'newgame.html'" class="play">Play</a><br>
-  
-    <a href="javascript:window.location.href='http://website.hicam.net:88'">Multiplayer[Old]</a>
-    <br>
+		input[type="number"] {
+			font-family: minecraft;
+			background-color: black;
+			color: white;
+			border: 1px solid white;
+			height: 26px;
+			font-size: 16px;
+		}
 
-    <
+		.play {
+			position: absolute;
+			left: calc(50% - 39px);
+		}
+
+		a,
+		button {
+			height: 20px;
+			width: 60px;
+			background-color: gray;
+			padding: 8px;
+			border: 1px solid white;
+			text-align: center;
+			color: white;
+			text-decoration: none;
+			font-family: Minecraft;
+		}
+
+		button {
+			width: 120px;
+			height: 35px;
+			cursor: pointer;
+		}
+
+		a:hover,
+		button:hover {
+			border: 2px solid white;
+			margin-left: -1px;
+			margin-top: -1px;
+			text-decoration: underline;
+			background-color: #649cf5;
+		}
+
+		::placeholder {
+			color: lightgray;
+		}
+
+		html {
+			height: 100%;
+			width: 100%;
+			overflow: hidden;
+		}
+
+		h1 {
+			text-align: center;
+		}
+	</style>
+	<script src="swHandler.js">
+
+	</script><!-- no need to use text/javascript anymore -->
+</head>
+
+<body>
+	<noscript>
+		<div id="nosc" style="height:75px;width:500px;background-color:gray;opacity:.9;border-radius:5px;">
+			You need to enable JavaScript to play SortaCraft. Please enable JavaScript, and then reload.
+		</div>
+	</noscript>
+	<h1 style="color:white;">Sorta-craft</h1>
+	<hr>
+	<a href="javascript:window.location.href= 'newgame.html'" class="play">Play</a>
+  <br>
+  <a href="javascript:alert('Server offline')" style="cursor:no-drop">Multiplayer[Old]</a>
+  <br>
   </body>
 </html>

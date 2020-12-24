@@ -1,3 +1,5 @@
+/* day night cycle, no need to cache, as it is in worker*/
+
 var THREEx	= THREEx	|| {}
 
 THREEx.DayNight	= {}
@@ -64,7 +66,7 @@ THREEx.DayNight.SunLight	= function(){
 		if( phase === 'day' ){
 			light.color.set("rgb(255,"+ (Math.floor(Math.sin(sunAngle)*200)+55) + "," + (Math.floor(Math.sin(sunAngle)*200)) +")");
 		}else if( phase === 'twilight' ){
-		        light.intensity = 1;
+		        light.intensity = 10;
 	        	light.color.set("rgb(" + (255-Math.floor(Math.sin(sunAngle)*510*-1)) + "," + (55-Math.floor(Math.sin(sunAngle)*110*-1)) + ",0)");
 		} else {
 			light.intensity	= 0;

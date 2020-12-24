@@ -1,0 +1,22 @@
+{
+  "name": "Sortacraft - Minecraft style game online",
+  "short_name": "Sortacraft",
+  "description": "A voxel-based sandbox game, with gameplay similar to Minecraft",
+  "icons": [
+    {
+      "src": "icons/logo-small.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icons/logo-large.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "background_color": "brown",
+  "start_url": "/",
+  "display": "fullscreen",
+  "scope": "/",
+  "theme_color": "brown"
+}

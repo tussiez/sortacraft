@@ -1,7 +1,9 @@
 ## Known Bugs  
-- Sprinting is broken  
-**Physics Errors**  
-- Collisions miss corners when pressing more than one key (e.g wa, wd)  
-- It is also possible to fly into a block(Fix: Check collisions when flying on both blocks (player center, player 1 block above? Possbily apply same correction used when moving))  
-- You can walk into unloaded chunks, possibly getting you stuck  (Fix: Check if the player is in a chunk or not, easy fix)
-- Rare stone only biome
+- Jumping snaps to highest position, needs to be animated
+- You can "crawl" onto the sides of blocks, however this could be a feature as its helps building in the air
+- Light blocks only illuminate some voxels
+- Partial trees
+- ~~Infinite fly~~ Flying broken (currently trying to implement gravity/terminal velocity)
+- Collisions miss corners when pressing more than one key (e.g wa, wd)
+- You can clip yourself into blocks if you place two blocks in front of you
+- Rare stone only biome (Probably an easy fix)

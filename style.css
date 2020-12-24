@@ -77,6 +77,15 @@ html{
   top:0;
   left:0;
 }
+#overlay2{
+  height:100%;
+  width:100%;
+  z-index:1000;
+  background-image:url(garland.png);
+  image-rendering:pixelated;
+  background-size:30% 10%;
+  background-repeat:repeat-x;
+}
 canvas{
   z-index:998;
   position:absolute;
@@ -119,17 +128,19 @@ background-size:100% 100%;
   display:none;
 }
 #debug{
-  z-index:999;
+  z-index:9999;
   position:absolute;
   top:5%;
   left:1%;
   background-color:black;
-  opacity:.90;
+  opacity:.70;
   color:white;
   height:24px;
   width:125px;
   border-radius:10px;
   font-size:16px;
+  display:none;
+  font-family:monospace;
 }
 .voxelName{
   text-align:center;

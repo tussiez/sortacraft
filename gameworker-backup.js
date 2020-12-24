@@ -20,13 +20,17 @@ const handlers = {
   time_update,
   graphicsFaster,
   graphicsFancy,
-  changeShadowBias,
   toggleGravity,
-  //You put your function names here, they can be executed from the main thread.
-  //Data is passed like this to the worker: gameworker.postMessage({type:'FUNCTIONAME'})
 }
 //hello there
 //variables
+let g;
+const G = 9.807;
+//Let's try 150 pounds.
+//Equivilant to 150 pounds. Because physics calculations are mainly in SI units, it has to be measured in kilograms
+const M = 68.0389;
+let R;
+
 var camera,
 scene,
 fallen = false,
@@ -38,8 +42,8 @@ particleGroup,
 emitter,
 clock,
 chunkWorker,
-cube,
 jumpY,
+cube,
 fallSpeed = .1,
 keys=[],
 Chunks = {},
@@ -48,6 +52,7 @@ CullChunkIndex=[],
 CullChunks = {},
 ChunkLights = {},
 PlayerChunk,
+Gravity = false,
 playerSpeed = .3,
 playerCorrectiveSpeed = .23,
 geometryDataWorker = new Worker('geometrydataworker.js'),
@@ -395,20 +400,6 @@ function changeShadowBias(dat){
   shadows.setupMaterial(fastmaterial);
 renderer.shadowMap.needsUpdate = true;
 }
-function toggleGravity(d){
-  //It's passed as an object
-  let toggleState = d.toggleState;
-  if(toggleState !== true || toggleState !== false){
-    console.error(new TypeError("Parameter \"toggleState\" must be of type " + typeof true + ", got type " + typeof toggleState + "."));
-  }
-  //Undefind AND false evaluate to falsely
-  if(!self.gravity){
-    self.gravity = true;
-    return self.gravity;
-  }
-  self.gravity = false;
-  return self.gravity;
-}
 function time_update(dat){
   currentTime = dat.time;
 }
@@ -432,6 +423,9 @@ function wheel(dat){
   }
   postMessage(['hand_uv',currentVoxel]);//pass hand uv
   postMessage(['voxel_title',voxelNames[currentVoxel-1]]);
+}
+function toggleGravity(){
+  Gravity = !Gravity;
 }
 function checkIntersections(){
   //checking for hits
@@ -519,7 +513,7 @@ function main(dat){
   renderer.setSize(dat.width,dat.height,false);//req.false
   controls = new PointerLockControls(camera);
   clock = new THREE.Clock();
-  camera.position.set(1,128,1);//1 for inner chunk
+  camera.position.set(8,64,8);//1 for inner chunk
   var ambient = new THREE.AmbientLight(0xffffff,0.2);
   scene.add(ambient);//ambient light
   shadows = new CSM({
@@ -580,11 +574,11 @@ function render(){
   camera.updateMatrixWorld();//req.for shadows
 
   shadows.update();//update
-
-  if(PlayerChunk!='hold'){//dont change unless not hold or undefined
+/*
+  if(PlayerChunk!='hold'||PlayerChunk==undefined){//dont change unless not hold or undefined
     PlayerChunk = chunkClamp(camera.position,true);//clamp chunk to player area
   }
-
+*/
   manageVoxelLoading();//manage voxel world (if creating)
 
   lazyLoadChunks();//init lazy loadin g
@@ -663,14 +657,6 @@ function updateDaytime(){
 
   sunSphere.update(sunAngle);
   let v =  new THREE.Vector3(0,-1,Math.cos(sunAngle)).normalize();
-
-  /*shadows.lightDirection =v
-  if(currentTime/1000 %1000 == 0){
-    renderer.shadowMap.needsUpdate = true;
-  }
-  */
-  //shadows.updateLightIntensity(sunLight.object3d.intensity);
-  //update shadow brightness
   var phase = THREEx.DayNight.currentPhase(sunAngle);
   //bg color
   if( phase === 'day'){
@@ -683,9 +669,7 @@ function updateDaytime(){
 }
 
 function playerMovement(){//move plyr
-getDistanceToGround();//fall speed
- PlayerChunk = chunkClamp(camera.position,true);
- if(PlayerChunk!=undefined&&camera.position.y<64||PlayerChunk===undefined&&camera.position.y>64){
+    PlayerChunk=chunkClamp(camera.position,true)
   moved[0]=0;
   moved[1] = 0;
   moved[2] = 0;
@@ -733,26 +717,23 @@ controls.moveForward(.23);
 
   }
   if(keys[' ']){
-    if(canJump==true){
+    if(canJump==true){ 
       canJump=false;
-      keys[' ']= false;
-    //jumping=true;
+      
+    jumping=true;
     moved[2] =1;//preset
-    camera.position.y+=2.1;
-    
+    /*Define these variables*/
+    camera.position.y+=2;
     if(checkIntersections()==true){
-      camera.position.y-=2.1;//pre check so you cant see inside the ceiling
+      camera.position.y-=2;//pre check so you cant see inside the ceiling
     }else{
-  //  camera.position.y-=.1;
   }
-  jumpY = camera.position.y;
     }
 
 
   }else{
     jumping=false;
   }
-  
 
 
 
@@ -766,27 +747,48 @@ controls.moveForward(.23);
   }else{
     bumping=false;
     if(jumping==false){
-     camera.position.y-=fallSpeed*2;
+      //Check distance to ground
+      let dToGround = getDistanceToGround();
+      /*Formula for calculating acceleration due to gravity:
+      g = G*M/R^2
+      Ok that's a lot to take in
+      Let's break it down
+      g = acceleration due to gravity (the result)
+      G = Universal gravitational constant (we can make our own)
+      M = mass (how much matter is in an object) in kilograms
+      R = distance (how far are we from the deacceleration point like the ground) in meters
+    */
+    /*Forumula declarations */
+    //Earth's gravitational constant. Let's try this.
+    R = dToGround;
+
+    /*Find the gravitational pull using this forumula  */
+    g = G*M/R^2;
+    //  console.log(PlayerChunk)
+    if(g<0){
+      g=0;
+    }
+    //Correct!
+
+    if(Gravity==true){
+     camera.position.y-=g;
+    }
+     
+
      //overestimate 
      moved[5]=1;
       if(checkIntersections()===true){
 
         bumping=true;
-        camera.position.y+=fallSpeed*2;
+        camera.position.y+=g;
         canJump=true;
       }else{
-        camera.position.y+=fallSpeed;
+      //nothing at all!
       }
     }
     moveHand();
     renderer.render(scene,camera);
   }
- 
-  if(PlayerChunk!=undefined&&fallen==false){
-  fallen = true;
-  dropPlayerToGround();
-  }
- }
 }
 function goBack(arr){
     if(arr[0]){
@@ -807,7 +809,7 @@ function goBack(arr){
 
 }
 function dropPlayerToGround(){
-  let start = new THREE.Vector3(camera.position.x+0.05,camera.position.y,camera.position.z+0.05);
+  let start = new THREE.Vector3(camera.position.x+0.05,camera.position.y+1.5,camera.position.z+0.05);
   let end = new THREE.Vector3(camera.position.x+0.05,camera.position.y-64,camera.position.z+0.05);
   const intersect = intersectWorld.intersectRay(start,end);
   if(intersect){
@@ -821,15 +823,10 @@ function dropPlayerToGround(){
   }
 }
 function getDistanceToGround(){
-  if(PlayerChunk!=undefined||PlayerChunk!='hold'){
-    
-    if(jumpY!=undefined){
-      var y = jumpY;
-    }else{
-      var y = camera.position.y;
-    }
-    let start = new THREE.Vector3(camera.position.x+0.05,y,camera.position.z+0.05);
-  let end = new THREE.Vector3(camera.position.x+0.05,y-64,camera.position.z+0.05);
+
+
+    let start = new THREE.Vector3(camera.position.x+0.05,camera.position.y+1.5,camera.position.z+0.05);
+  let end = new THREE.Vector3(camera.position.x+0.05,camera.position.y-64,camera.position.z+0.05);
   const intersect = intersectWorld.intersectRay(start,end);
   if(intersect){
     //get posy
@@ -838,13 +835,13 @@ function getDistanceToGround(){
       return v + intersect.normal[ndx] * (voxelId > 0 ? 0.5 : -0.5);
     });
   //Dist to ground
-  var dToGround = camera.position.y-pos[1];
+ let dToGround = camera.position.y-pos[1];
+
+return dToGround;
 //dist/base v?
-fallSpeed = dToGround/20;
-if(fallSpeed > .8){
-  fallSpeed = .8;
-}
-  }
+
+  }else{
+    return 0;
   }
 }
 function resize(dat){
