@@ -784,8 +784,7 @@ controls.moveForward(.23);
      R=dToGround + 1000//1.6093e+7;
      g=G*M/R^2;
 
-     g/=getFPS.fps;
-    //  g/=10;//Currently don't need
+     g/=(getFPS.fps*dToGround)/10;
      console.log(g);
       if(g>10000){//Prevent infinite speed (If it ever happens)
         g = 0.8;
