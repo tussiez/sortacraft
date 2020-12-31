@@ -78,6 +78,7 @@ html{
   left:0;
 }
 #overlay2{
+  /*Garland
   height:100%;
   width:100%;
   z-index:1000;
@@ -85,6 +86,7 @@ html{
   image-rendering:pixelated;
   background-size:30% 10%;
   background-repeat:repeat-x;
+  */
 }
 canvas{
   z-index:998;

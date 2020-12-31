@@ -15,6 +15,9 @@ var tweenRunning = false;
 window["downloadWorld"] = function(){
   gameWorker.postMessage({type:'downloadGame'});
 }
+window["setVoxel"] = function(v){
+  gameWorker.postMessage({type:'setVoxelTo',no:v})
+}
 function updateTime(){
   requestAnimationFrame(updateTime);
   gameWorker.postMessage({type:'time_update',time:performance.now()});//forgot why I needed thislol
