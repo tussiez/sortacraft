@@ -147,23 +147,82 @@ var itemNames = [
   'Wooden Pickaxe',
   'Wooden Spear',
   'Wooden Sword',
-  ''
+  'Stone',
+  'Grass Block',
+  'Sand',
+  'Water',
+  'Oak Log',
+  'Soil',
+  'Leaves',
+  'Light Block',
+  'Furnace[Unlit]',
+  'Diamond Ore',
+  'Redstone Ore',
+  'Lapis Lazuli',
+  'Emerald Ore',
+  'Workbench',
+  'Furnace[Lit]',
+  'Obsidian',
+  'Brick Block',
+  'Redstone Block',
+  'Prismarine',
+  'Bookshelf',
+  'End Stone',
+  'Yellow Block',
+  'Emerald Block',
+  'Red Block',
+  'Light Blue Block',
+  'Black Block',
+  'Brown Block',
+  'Copper Ore',
+  'Silver Ore',
+  'Cobblestone',
+  'Diorite',
+  'Granite',
+  'Snowy Grass Block',
+  'Ice',
+  'Oak Planks',
+  'Dark Oak Planks',
+  'Spruce Planks',
+  'Birch Planks',
+  'Acacia Planks',
+  'Acacia Log',
+  'Birch Log',
+  'Spruce Log',
+  'Dark Oak Log',
+  'Coal Ore',
+  'Snowy Leaves',
+  
 ]//WOW !!! THATS A LOTTA DAMAGE
 //BRUH
+
+var endOfItems = 49;//that is last item, 49 = stone
 function addToInv(item,itemName,x,y){
   var mainDiv = document.createElement('div');
+  if(itemURL[itemNames.indexOf(itemName)]!=undefined){
   var image = document.createElement('img');
   image.setAttribute('src','items/'+itemURL[itemNames.indexOf(itemName)]);
+  }else{
+    var blockX = ((itemNames.indexOf(itemName)-endOfItems)*16);
+    var image = document.createElement('div');
+    image.setAttribute('style','height:16px;width:16px;background-image:url("textures.png");background-size:16p 16px;background-position:'+-blockX+'px 0px;transform:scale(1.5)');
+  }
   image.setAttribute('title',itemName);
-  mainDiv.setAttribute('ondragover','allowDrop(event)');
-  image.setAttribute('class','item');
+    image.setAttribute('class','item');
   image.setAttribute('draggable','true');
   image.setAttribute('ondragstart','drag(event)');
+  
   image.setAttribute('id',itemName+'&'+x+'&'+y);
+  
+  mainDiv.setAttribute('ondragover','allowDrop(event)');
+
   mainDiv.appendChild(image);
   //Add to inv
   var ele = document.getElementById('box'+(x+','+y))
  ele.appendChild(mainDiv);//issue
   
 }
-addToInv(2,'Stone Sword',1,2);//test
+addToInv(2,'Stone Sword',1,2);//item test
+addToInv(3,'Grass Block',2,1);//block test
+addToInv(4,'Stone',0,1);
+addToInv(5,'Workbench',2,3);

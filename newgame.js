@@ -1,3 +1,6 @@
+window.onbeforeunload = function(){
+  return "This is so someone doesn't accidentally exit out of the game";
+};
 var gameWorker = new Worker('gameworker.js',{type:"module"});//enable modules
 //setup dom
 window["gameWorker"]=gameWorker;
@@ -165,9 +168,11 @@ document.body.addEventListener('keyup',function(e){
     if(document.getElementById('gameoptions').style.display=='none'){
       canMove = false;
     document.getElementById('gameoptions').style.display= 'block';
+    canLock = false;
     document.exitPointerLock();
     }else{
       canMove = true;
+      canLock = true;
       document.getElementById('gameoptions').style.display = 'none';
       document.body.requestPointerLock();
     }

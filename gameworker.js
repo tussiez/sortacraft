@@ -27,6 +27,13 @@ const handlers = {
 }
 //hello there
 //variables
+//variables
+let g;
+const G = 9.807;//9.807
+//Let's try 150 pounds.
+//Equivalent to 150 pounds. Because physics calculations are mainly in SI units, it has to be measured in kilograms
+const M = 68.0389;
+let R;
 var camera,
 scene,
 fallen = false,
@@ -40,7 +47,7 @@ clock,
 chunkWorker,
 cube,
 jumpY,
-fallSpeed = .1,
+dToGround = 0,
 keys=[],
 Chunks = {},
 ChunksMesh={},
@@ -70,6 +77,7 @@ clock = new THREE.Clock(),
 currentVoxel = 1,
 cellSize = 64,
 tileSize = 16,
+graphicsMode = 'fancy',
 tileTextureWidth = 720,
 tileTextureHeight= 48,
 intersectWorld,
@@ -266,10 +274,13 @@ worldTextureLoader.setOptions({imageOrientation:'flipY'});//flips when using bit
 worldTextureBitmap = worldTextureLoader.load('textures.png',function(bmap){
 worldTextureBitmap = new THREE.CanvasTexture(bmap,undefined,undefined,undefined,THREE.NearestFilter,THREE.NearestFilter);//build texture from xhr req
 //worldTextureBitmap = bmap;
-  fancymaterial = new THREE.MeshLambertMaterial({
+  fancymaterial = new THREE.MeshPhongMaterial({
     color:'gray',
     map:worldTextureBitmap,//texture
   });//setup mat
+ // fancymaterial.shininess = 0;//No shininess
+
+  //fancymaterial.roughness = 100;//Super rough
   fastmaterial = new THREE.MeshBasicMaterial({
     color:'gray',
     map:worldTextureBitmap,
@@ -551,6 +562,7 @@ function main(dat){
   getFPS.framerate();//start fps counter
 }
 function graphicsFancy(){//switch to fancy mode
+graphicsMode = 'fancy';
 material = fancymaterial;
 //switch all chunks ig to fancy (may lag)
 var l = chunkIndex.length;//more optimized than reading length?
@@ -559,6 +571,7 @@ for(var i = 0;i<l;i++){
 }
 }
 function graphicsFaster(){//switch to faster graphics
+graphicsMode = 'fast';
 material = fastmaterial;
 var l = chunkIndex.length;
 for(var i =0;i<l;i++){
@@ -584,6 +597,7 @@ function render(){
   if(PlayerChunk!='hold'){//dont change unless not hold or undefined
     PlayerChunk = chunkClamp(camera.position,true);//clamp chunk to player area
   }
+
 
   manageVoxelLoading();//manage voxel world (if creating)
 
@@ -766,16 +780,34 @@ controls.moveForward(.23);
   }else{
     bumping=false;
     if(jumping==false){
-     camera.position.y-=fallSpeed*2;
+      //Test
+     R=dToGround + 1000//1.6093e+7;
+     g=G*M/R^2;
+
+     g/=getFPS.fps;
+    //  g/=10;//Currently don't need
+     console.log(g);
+      if(g>10000){//Prevent infinite speed (If it ever happens)
+        g = 0.8;
+     }
+      if(g>0&&g<.1){
+        g=.1;//Minimum speed
+      }
+      if(g<0){//In the case that g is negative (Going up)
+        g = .1;
+      }
+     camera.position.y-=g;
      //overestimate 
      moved[5]=1;
       if(checkIntersections()===true){
 
         bumping=true;
-        camera.position.y+=fallSpeed*2;
+        camera.position.y+=g;
+        //right here
         canJump=true;
       }else{
-        camera.position.y+=fallSpeed;
+        //Do nothing, all is good
+      
       }
     }
     moveHand();
@@ -838,12 +870,9 @@ function getDistanceToGround(){
       return v + intersect.normal[ndx] * (voxelId > 0 ? 0.5 : -0.5);
     });
   //Dist to ground
-  var dToGround = camera.position.y-pos[1];
+dToGround = camera.position.y-pos[1];
 //dist/base v?
-fallSpeed = dToGround/20;
-if(fallSpeed > .8){
-  fallSpeed = .8;
-}
+
   }
   }
 }
@@ -1070,7 +1099,7 @@ if(intersectionVector.y>1){
 
 
       //the chunk exists
-
+if(pos[1]<64){
      var correctedPos = chunkClamp(intersectionVector,true);
 
      var relativeBlockPosition = roundVec(new THREE.Vector3(pos[0]-correctedPos.x,pos[1]-correctedPos.y,pos[2]-correctedPos.z));//realtive
@@ -1130,7 +1159,7 @@ if(intersectionVector.y>1){
     }
   }
 }
-
+  }
   }
 function modifyChunk(voxel1){//modify a chunk
 
