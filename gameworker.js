@@ -56,6 +56,7 @@ var camera,
   CullChunks = {},
   ChunkLights = {},
   PlayerChunk,
+  jumpG = .02,
   playerSpeed = .3,
   playerCorrectiveSpeed = .23,
   geometryDataWorker = new Worker('geometrydataworker.js'),
@@ -279,7 +280,7 @@ worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
     color: 'gray',
     map: worldTextureBitmap,//texture
   });//setup mat
-  // fancymaterial.shininess = 0;//No shininess
+   fancymaterial.shininess = 0;//No shininess
 
   //fancymaterial.roughness = 100;//Super rough
   fastmaterial = new THREE.MeshBasicMaterial({
@@ -535,8 +536,8 @@ function main(dat) {
   controls = new PointerLockControls(camera);
   clock = new THREE.Clock();
   camera.position.set(1, 128, 1);//1 for inner chunk
-  var ambient = new THREE.AmbientLight(0xffffff, 0.2);
-  //tscene.add(ambient);//ambient light
+  var ambient = new THREE.AmbientLight(0xffffff, 0.1);
+  scene.add(ambient);//ambient light
   shadows = new CSM({
     maxFar: camera.far,
     cascades: 4,
@@ -549,6 +550,12 @@ function main(dat) {
     lightNear: 50,
     lightFar: 500,
   });
+  shadows.updateLightIntensity = function(brightness){
+     for(let  i = 0;i < shadows.lights.length;i++){
+       var lt = shadows.lights[i];
+       lt.intensity = brightness;
+     }
+    }
   playerHand = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "green" }));
   scene.add(playerHand);
   playerHand.scale.set(.1, .1, .1)
@@ -560,7 +567,7 @@ function main(dat) {
 
   scene.add(sunSphere.object3d);
   sunLight = new THREEx.DayNight.SunLight();
-  sunLight.object3d.renderOrder = 2;
+ // sunLight.object3d.renderOrder = 2;
 
   //  scene.add(sunLight.object3d);
 
@@ -588,8 +595,7 @@ function graphicsFaster() {//switch to faster graphics
 }
 function render() {
   requestAnimationFrame(render);
-
-  if (performance.now() % 500 == 0) {
+  if (Math.floor(currentTime) % 10 == 0) {
     renderer.shadowMap.needsUpdate = true;
   }
 
@@ -688,18 +694,34 @@ function updateDaytime() {
   sunSphere.update(sunAngle);
   let v = new THREE.Vector3(0, -1, Math.cos(sunAngle)).normalize();
 
-  /*shadows.lightDirection =v
+  /*
   if(currentTime/1000 %1000 == 0){
     renderer.shadowMap.needsUpdate = true;
   }
   */
-  //shadows.updateLightIntensity(sunLight.object3d.intensity);
+  let intensity = Math.sin(sunAngle);
+  /*
+  if(phase!='day'){
+    intensity = .15;
+  }
+  */
+  if(intensity<0){
+    intensity = .2;
+  }
+  if(phase=='day'){
+    intensity/=5;//wait
+  }
+  if(intensity>.6){
+    intensity =  .6;
+  }
+  shadows.updateLightIntensity(intensity);
   //update shadow brightness
   var phase = THREEx.DayNight.currentPhase(sunAngle);
   //bg color
   if (phase === 'day') {
-    scene.background = new THREE.Color('rgb(0,120,255)');
+    scene.background = new THREE.Color('#548AB8');
   } else if (phase === 'twilight') {
+    //Change the "120" and the "240"? Idk
     scene.background = new THREE.Color("rgb(0," + (120 - Math.floor(Math.sin(sunAngle) * 240 * -1)) + "," + (255 - Math.floor(Math.sin(sunAngle) * 510 * -1)) + ")");
   } else {
     scene.background = new THREE.Color('black');
@@ -756,30 +778,43 @@ function playerMovement() {//move plyr
       }
 
     }
+    if(jumping==true){
+      if(jumpG>0.02){
+      jumpG -= .02;
+      camera.position.y+=jumpG;
+      if(checkIntersections()==true){
+        //Evil player jumped into ceiling :(
+        camera.position.y-=jumpG;
+        jumping=false;//no jumpign for you
+      }
+      }else{
+        jumping=false;
+      }
+      
+    }
     if (keys[' ']) {
       if (canJump == true) {
+        //Set jump speed
+        jumpG = .25;//Minecraft lets you jump only 1 block
         jumping=true;
         canJump = false;
         keys[' '] = false;
         //jumping=true;
         moved[2] = 1;//preset
-        camera.position.y += 2.1;
-
+        
+        /*
         if (checkIntersections() == true) {
           camera.position.y -= 2.1;//pre check so you cant see inside the ceiling
         } else {
           //  camera.position.y-=.1;
         }
+        */
         jumpY = camera.position.y;
-        setTimeout(function(){
-          jumping = false;
-          canJump=true;
-        },250)
       }
 
 
     } else {
-     // jumping = false;
+      
     }
 
 
@@ -789,7 +824,6 @@ function playerMovement() {//move plyr
     //  g=G*M/R^2;
 
     //  g/=(getFPS.fps*dToGround)/10;
-    //  console.log(g);
     //   if(g>10000){//Prevent infinite speed (If it ever happens)
     //     g = 0.8;
     //  }
@@ -817,7 +851,7 @@ function playerMovement() {//move plyr
         if (g < .8) {
           g += 0.02;
         }
-        console.log(g);
+
         camera.position.y -= g;
 
         /*
@@ -829,6 +863,7 @@ function playerMovement() {//move plyr
         if (checkIntersections() === true) {
           camera.position.y += g;//In a block, go back up!
           let gBuffer = g;
+          canJump = true;//Test
           g = 0;
           moved[5] = 1;
           if (checkIntersections() === true) {//In a block again!
@@ -1151,7 +1186,6 @@ function modifyChunk2(voxel1) {
               //torch, set light
               var light = new THREE.PointLight(0xffe53b, 2, 16);
 
-              light.renderOrder = 5;
               light.position.set(pos[0], pos[1] + .5, pos[2]);//center light
               var lightfr = floorVec(new THREE.Vector3(pos[0], pos[1], pos[2]));
               ChunkLights[lightfr.x + "," + lightfr.y + "," + lightfr.z] = light;//for removal later
@@ -1720,7 +1754,7 @@ function createChunk(x, y, z) {
     }
   } else {
     setTimeout(function () { createChunk(x, y, z) }, 250);
-    console.warn('Thread Warning:\n' + 'Texture not loaded. Waiting 250ms..')
+    console.log("Info \nSince I'm too lazy to add async functions, this code will simply keep running repeatedly until the texture finishes loading.\n Probably will replace this later :)")
   }
 }
 function createEmptyChunk(position) {

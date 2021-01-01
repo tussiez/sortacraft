@@ -1,3 +1,3 @@
 # SortaCraft
 Minecraft-like voxel game built with Three.js  
-Play now @ https://tussiez.github.io/sortacraft/ or https://sortacraft-1.tussiez.repl.co
+The latest stable(working) version of this game can be found @ https://tussiez.github.io/sortacraft

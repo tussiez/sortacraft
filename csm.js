@@ -318,8 +318,8 @@ uniform float shadowFar;
 		}
     
     updateLightIntensity(brightness){
-     for(let  i = 0;i < this.csmLights;i++){
-       var lt = this.csmLights[i];
+     for(let  i = 0;i < this.lights.length;i++){
+       var lt = this.lights[i];
        lt.intensity = brightness;
      }
     }

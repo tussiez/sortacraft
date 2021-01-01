@@ -1,5 +1,11 @@
 /* Generates chunk terrain */
 //random numbers
+
+
+/*
+DISABLE CAVES:
+comment out 212-214
+*/
 const rand = {
   random:function(a){
     return function() {
@@ -112,6 +118,8 @@ for(var i = 0;i<vars.length;i++){
   //  var oreSize = .22;
   //  var oreBias = .01;
     var caveBias = .10;
+    var waterBias = .5;
+    var waterSize = .55;
 
     var oreChances = [
       {
@@ -184,6 +192,7 @@ for(var i = 0;i<vars.length;i++){
         var type = 1;
 
         var attenuatedCaveSize = caveSize - ((y/170)-caveBias);
+        var attenuatedWaterSize = waterSize -((y/170)-waterBias);
         if(y==0){
           var biomeNoise = perlin.noise((x+x1)/100,(z+z1)/100,0);
           biomeLevel[x+","+z]= biomeNoise;
@@ -193,14 +202,20 @@ for(var i = 0;i<vars.length;i++){
           var currentBiome = getCurrentBiome(biomeNoise);
 
         var density = perlin.noise((x+x1)/12,(z+z1)/12,(y+y1)/12);
+        var waterDensity = perlin.noise((x+x1)/12,(z+z1)/12,(y+y1)/12);
         //var oreNoise = perlin.noise((x+x1)/6,(z+z1)/6,(y+y1)/6);
         var hm = mineHeight(x,z);
         levels[x+","+z]=hm;
+        if(waterDensity>attenuatedWaterSize&&y<hm-5){
+        localWorld.setVoxel(x,y,z,4);
+        postMessage(['voxel',x,y,z,4]);
+        caveBlks[x+","+(y)+","+z]=1;
+        }
         if(y<hm){
-
+        
         if(density>attenuatedCaveSize){
 
-          localWorld.setVoxel(x,y,z,type);
+         localWorld.setVoxel(x,y,z,type);
           postMessage(['voxel',x,y,z,type]);
             caveBlks[x+","+y+","+z]=1;
 
@@ -256,7 +271,8 @@ for(var i = 0;i<vars.length;i++){
                 var biomeNoise = biomeLevel[x+","+z];
 
 
-                var type = getCurrentBiome(biomeNoise)
+                var type = getCurrentBiome(biomeNoise);
+               
   
                 if(localWorld.getVoxel(x,hm,z)==0&&caveBlks[x+","+(hm-1)+","+z]==1){
                 localWorld.setVoxel(x,hm,z,type);
