@@ -72,7 +72,8 @@ function checkVer() {
   /*Fetch the cached version of VERSION.txt, then compare it to the website's file. If there is a difference, update the cache. */
   checkCache().then(function (cacheVer) {
     let current = cacheVer;
-    fetch("https://sortacraft-1.tussiez.repl.co/VERSION.txt").then(function (res) {
+    /*Made a change to fetch the version file relatively (because otherwise it's blocked by CORS)*/
+    fetch("/VERSION.txt").then(function (res) {
       return res.text();
     }).then(function (txt) {
       if (Number(txt)) {
@@ -158,7 +159,7 @@ self.addEventListener("fetch", function (event) {
 
           else {
             /*Return the response telling them that something went wrong. (One of the main reasons this would happen is if something isn't cached and they are offline) */
-            return new Response("<!DOCTYPE html> <html lang='en'> <head> <meta charset='UTF-8'> <title>Error fetching cache</title>  <meta charset='UTF-8'> <meta name='viewport' content='width=device-width, initial-scale=1'> <meta name='description' content='Error'></head> <body><h1>Error fetching cache.</h1><p>Try connecting to the internet. If that doesn't work, try clearing the site's data.</p></body> </html>", { status: 520, statusText: "Error fetching cache", headers: new Headers({ "Content-Type": "text/html" }) });
+            return new Response("<!DOCTYPE html> <html lang='en'> <head> <meta charset='UTF-8'> <title>Service unavailable</title>  <meta charset='UTF-8'> <meta name='viewport' content='width=device-width, initial-scale=1'> <meta name='description' content='Error'></head> <body><h1>Error fetching cache.</h1><p>Try connecting to the internet. If that doesn't work, try clearing the site's data.</p></body> </html>", { status: 503, statusText: "Service unavailable.", headers: new Headers({ "Content-Type": "text/html" }) });
             //Interesting
           }
 
