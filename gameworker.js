@@ -279,6 +279,7 @@ worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
   fancymaterial = new THREE.MeshPhongMaterial({
     color: 'gray',
     map: worldTextureBitmap,//texture
+    wireframe:true,//Wireframe Test
   });//setup mat
    fancymaterial.shininess = 0;//No shininess
 
