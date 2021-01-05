@@ -6,7 +6,7 @@
 - Weather (clouds, rain, e.t.c)
 - Sounds
 - Mobs (very *very* far off)
-- Flying (coming *very* soon)
+- ~~Flying (coming *very* soon)~~ Fine tune flying (and sprinting)
 - Save/Load functionality  
 - Multiplayer?  
 - In-game commands
@@ -19,7 +19,7 @@
  - Add inventory "API" to gameworker.js EASY  
  - Get jumping to work (Inverse gravity) HARD?  
  - More options: FOV,sensitivity,etc EASY
- - Flying EASY
+ - Fine tune flying/sprinting EASY
  - Inventory and hotbar MEDIUM
  - Make water generate closer to the surface MEDIUM/HARD
 

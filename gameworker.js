@@ -8,6 +8,7 @@
 //main thread for Threejs
 import * as THREE from '/threejs.js'
 import { CSM } from 'https://threejs.org/examples/jsm/csm/CSM.js'//
+
 const handlers = {
   main,
   mousemove,
@@ -30,21 +31,24 @@ const handlers = {
 //variables
 //variables
 let g;
-const G = 9.807;//9.807
-//Let's try 150 pounds.
-//Equivalent to 150 pounds. Because physics calculations are mainly in SI units, it has to be measured in kilograms
-const M = 68.0389;
-let R;
+// const G = 9.807;//9.807
+// //Let's try 150 pounds.
+// //Equivalent to 150 pounds. Because physics calculations are mainly in SI units, it has to be measured in kilograms
+// const M = 68.0389;
+// let R;
 var camera,
   scene,
   fallen = false,
   canJump = true,
   renderer,
+  doubleTapDelay = 375,
   globalSeed = Math.floor(Math.random() * 65535),
   controls,
   particleGroup,
   emitter,
   clock,
+  lastSpacePress = 0,
+  lastWPress = 0,
   chunkWorker,
   cube,
   jumpY,
@@ -89,6 +93,7 @@ var camera,
   positionNumComponents = 3,
   normalNumComponents = 3,
   lazyVoxelWorld,
+  flying = false,
   currentTime = 0,
   jumping = false,
   bumping = false,
@@ -279,9 +284,8 @@ worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
   fancymaterial = new THREE.MeshPhongMaterial({
     color: 'gray',
     map: worldTextureBitmap,//texture
-    wireframe:true,//Wireframe Test
   });//setup mat
-   fancymaterial.shininess = 0;//No shininess
+  fancymaterial.shininess = 0;//No shininess
 
   //fancymaterial.roughness = 100;//Super rough
   fastmaterial = new THREE.MeshBasicMaterial({
@@ -478,51 +482,41 @@ function checkIntersections() {
 var playerHand;
 function keydown(e) {
   keys[e.key] = true;
-  if (e.key == 'Shift') {
-    keys['isShift'] = true;
-    playerSpeed = .3;
-    playerCorrectiveSpeed = .15;
-    if (keys['w'] == true) {
-      keys['w'] = false;
-      keys['W'] = true;
-    }
-    if (keys['a'] == true) {
-      keys['a'] = false;
-      keys['A'] = true;
-    }
-    if (keys['d'] == true) {
-      keys['d'] = false;
-      keys['D'] = true;
-    }
-    if (keys['s'] == true) {
-      keys['s'] = false;
-      keys['S'] = true;
-    }
+  if (e.key == 'w') {
+ //   lastWPress = currentTime;
   }
 };
 function keyup(e) {
   keys[e.key] = false;
-  if (e.key == 'Shift') {
-    playerCorrectiveSpeed = .23;
-    playerSpeed = .3;
-    keys['isShift'] = false;
-    if (keys['W'] == true) {
-      keys['W'] = false;
-      keys['w'] = true;
+  if (e.key == ' ') {
+    if (currentTime - lastSpacePress < doubleTapDelay && flying == true) {
+      //Is flying, and double tapped space again (stop flying)
+      flying = false;
     }
-    if (keys['A'] == true) {
-      keys['A'] = false;
-      keys['a'] = true;
-    }
-    if (keys['S'] == true) {
-      keys['S'] = false;
-      keys['s'] = true;
-    }
-    if (keys['D'] == true) {
-      keys['D'] = false;
-      keys['d'] = true;
+    else if (currentTime - lastSpacePress < doubleTapDelay) {//<pre-determined amount of time since last space press
+      //TODO:Add option to change timing later
+      flying = true;
     }
 
+    lastSpacePress = currentTime;
+
+  }
+  if (e.key == 'w') {
+    if (currentTime - lastWPress < doubleTapDelay && playerCorrectiveSpeed == .23) {
+      playerCorrectiveSpeed = .15;
+      playerSpeed = .3;
+      //Sprinting
+      camera.fov = 90;
+      camera.updateProjectionMatrix();
+
+
+    } else if (playerCorrectiveSpeed == .15) {
+      playerSpeed = .3;
+      camera.fov = 70;
+      camera.updateProjectionMatrix();
+      playerCorrectiveSpeed = .23;
+    }
+    lastWPress = currentTime;
   }
 };//key updates.. hah.."KEY" updates? eh? getit? no?nvm
 
@@ -547,16 +541,17 @@ function main(dat) {
     lightDirection: new THREE.Vector3(-1, -1, 1).normalize(),
     parent: scene,
     camera: camera,
+    fade: true,
     lightIntensity: .5,
-    lightNear: 50,
+    lightNear: 25,
     lightFar: 500,
   });
-  shadows.updateLightIntensity = function(brightness){
-     for(let  i = 0;i < shadows.lights.length;i++){
-       var lt = shadows.lights[i];
-       lt.intensity = brightness;
-     }
+  shadows.updateLightIntensity = function (brightness) {
+    for (let i = 0; i < shadows.lights.length; i++) {
+      var lt = shadows.lights[i];
+      lt.intensity = brightness;
     }
+  }
   playerHand = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "green" }));
   scene.add(playerHand);
   playerHand.scale.set(.1, .1, .1)
@@ -568,7 +563,7 @@ function main(dat) {
 
   scene.add(sunSphere.object3d);
   sunLight = new THREEx.DayNight.SunLight();
- // sunLight.object3d.renderOrder = 2;
+  // sunLight.object3d.renderOrder = 2;
 
   //  scene.add(sunLight.object3d);
 
@@ -706,14 +701,14 @@ function updateDaytime() {
     intensity = .15;
   }
   */
-  if(intensity<0){
+  if (intensity < 0) {
     intensity = .2;
   }
-  if(phase=='day'){
-    intensity/=5;//wait
+  if (phase == 'day') {
+    intensity /= 5;//wait
   }
-  if(intensity>.6){
-    intensity =  .6;
+  if (intensity > .6) {
+    intensity = .6;
   }
   shadows.updateLightIntensity(intensity);
   //update shadow brightness
@@ -739,7 +734,16 @@ function playerMovement() {//move plyr
     moved[3] = 0;
     moved[4] = 0;
     moved[5] = 0;
-    var preMovement = new THREE.Vector3().copy(camera.position)
+    var preMovement = new THREE.Vector3().copy(camera.position);
+    if (keys['Shift']) {
+      if (flying == true) {
+        //Go down,if flying
+        camera.position.y -= .1;
+        if (checkIntersections() == true) {//Undo
+          camera.position.y += .1;
+        }
+      }
+    }
     if (keys['w'] || keys['W']) {
       controls.moveForward(playerSpeed);
       moved[0] = 1;
@@ -751,12 +755,12 @@ function playerMovement() {//move plyr
 
     }
     if (keys['a'] || keys['A']) {
-      controls.moveRight(-playerSpeed);
+      controls.moveRight(-.3);
       moved[1] = 1;
       if (checkIntersections() == true) {
-        controls.moveRight(playerSpeed)//pre check so you cant see inside
+        controls.moveRight(.3)//pre check so you cant see inside
       } else {
-        controls.moveRight(playerCorrectiveSpeed);
+        controls.moveRight(.23);
       }
     }
 
@@ -770,70 +774,55 @@ function playerMovement() {//move plyr
       }
     }
     if (keys['d'] || keys['D']) {
-      controls.moveRight(playerSpeed);
+      controls.moveRight(.3);
       moved[4] = 1;
       if (checkIntersections() == true) {
-        controls.moveRight(-playerSpeed)//pre check so you cant see inside
+        controls.moveRight(-.3)//pre check so you cant see inside
       } else {
-        controls.moveRight(-playerCorrectiveSpeed);
+        controls.moveRight(-.23);
       }
 
     }
-    if(jumping==true){
-      if(jumpG>0.02){
-      jumpG -= .02;
-      camera.position.y+=jumpG;
-      if(checkIntersections()==true){
-        //Evil player jumped into ceiling :(
-        camera.position.y-=jumpG;
-        jumping=false;//no jumpign for you
+    if (jumping == true) {
+      if (jumpG > 0.02) {
+        jumpG -= .02;
+        camera.position.y += jumpG;
+        if (checkIntersections() == true) {
+          //Evil player jumped into ceiling :(
+          camera.position.y -= jumpG;
+          jumping = false;//no jumpign for you
+        }
+      } else {
+        jumping = false;
       }
-      }else{
-        jumping=false;
-      }
-      
+
     }
     if (keys[' ']) {
-      if (canJump == true) {
-        //Set jump speed
-        jumpG = .25;//Minecraft lets you jump only 1 block
-        jumping=true;
-        canJump = false;
-        keys[' '] = false;
-        //jumping=true;
-        moved[2] = 1;//preset
-        
-        /*
-        if (checkIntersections() == true) {
-          camera.position.y -= 2.1;//pre check so you cant see inside the ceiling
-        } else {
-          //  camera.position.y-=.1;
+      if (flying == false) {
+        if (canJump == true) {
+
+          //Set jump speed
+          jumpG = .25;//Minecraft lets you jump only 1 block
+          jumping = true;
+          canJump = false;
+          keys[' '] = false;
+          //jumping=true;
+          moved[2] = 1;//preset
+
+          jumpY = camera.position.y;
         }
-        */
-        jumpY = camera.position.y;
+      } else {
+        camera.position.y += .1;
+        if (checkIntersections() == true) {
+          camera.position.y -= .1;
+        }
       }
-
-
     } else {
-      
+
     }
 
 
-    //Other
-    //   //Test
-    //  R=dToGround + 1000//1.6093e+7;
-    //  g=G*M/R^2;
 
-    //  g/=(getFPS.fps*dToGround)/10;
-    //   if(g>10000){//Prevent infinite speed (If it ever happens)
-    //     g = 0.8;
-    //  }
-    //   if(g>0&&g<.1){
-    //     g=.1;//Minimum speed
-    //   }
-    //   if(g<0){//In the case that g is negative (Going up)
-    //     g = .1;
-    //   }
 
     if (checkIntersections() === true) {
 
@@ -845,15 +834,16 @@ function playerMovement() {//move plyr
     } else {
       bumping = false;
       if (jumping == false) {
+        if (flying == false) {//Not flying
+          if (!g) {
+            g = 0;
+          }
+          if (g < .8) {
+            g += 0.02;
+          }
 
-        if (!g) {
-          g = 0;
+          camera.position.y -= g;
         }
-        if (g < .8) {
-          g += 0.02;
-        }
-
-        camera.position.y -= g;
 
         /*
         #1. Subtract position by gravity

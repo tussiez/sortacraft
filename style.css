@@ -14,6 +14,12 @@ body{
   background-size:64px 64px;
   background-repeat:repeat;
 }
+.hotbarBox{
+  display:inline-block;
+  border:1px solid white;
+  height:64px;
+  width:64px;
+}
 html{
   height:100%;
   width:100%;

@@ -1,5 +1,6 @@
       var cool = document.getElementById('inventory');
-      var inventory = []; //this is  two dimensional array ( inventory[y][x])
+      var inventory = [];
+      var hotbar = []; //this is  two dimensional array ( inventory[y][x])
       function addSlots(){
         cool.innerHTML+="<br><br><br><br>"
         for(var y = 0;y<4;y++){
@@ -27,8 +28,17 @@
       //add slots
       addSlots();
       
-
-     
+function generateHotbar(){
+  var hotbarz= document.getElementById('ack');
+  for(var x = 0;x<9;x++){
+    var box = document.createElement('div');
+    box.setAttribute('class','hotbarBox');
+    box.setAttribute('id','hotbarBox'+x);
+    hotbarz.appendChild(box);
+    hotbar[x]=box;
+  }
+}
+generateHotbar();
 function allowDrop(ev) {
   ev.preventDefault();
 }
