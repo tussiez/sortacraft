@@ -1,17 +1,19 @@
 window.onbeforeunload = function(){
   return "This is so someone doesn't accidentally exit out of the game";
 };
-var gameWorker = new Worker('gameworker.js',{type:"module"});//enable modules
+let gameWorker = new Worker('gameworker.js',{type:"module"});//enable modules
 //setup dom
 window["gameWorker"]=gameWorker;
 import TWEEN from '/tween.js'
-var canMove = true;
-var fromTween = {op:1,reset:false};
-var canvas;
-var canLock = true;
-var toTween = {op:0,reset:false};//invisible
-var tween;
-var tweenRunning = false;
+let canMove = true;
+let fromTween = {op:1,reset:false};
+let canvas;
+let canLock = true;
+let toTween = {op:0,reset:false};//invisible
+let tween;
+let tweenRunning = false;
+//Cinematic mode
+let cineMode = false;
 window["downloadWorld"] = function(){
   gameWorker.postMessage({type:'downloadGame'});
 }
@@ -66,7 +68,7 @@ gameWorker.onmessage = function(e){
   if(e.data[0]=='done'){
     document.getElementById('overlay').style.display='none';
   //  document.getElementById('loader_outer').style.display='none';
-  var outr = document.getElementById('loader_outer');
+  let outr = document.getElementById('loader_outer');
   outr.style.left = '-5%';
   outr.style.top = '0%';
   outr.style.display = 'none';
@@ -74,14 +76,14 @@ gameWorker.onmessage = function(e){
     canvas.style.display='block';
   }
   if(e.data[0]=='break_animation'){
-    var fromRotation = {z:0,y:0};
-    var toRotation = {z:-60,y:-60};
-    var breaktween = new TWEEN.Tween(fromRotation).to(toRotation,125).onUpdate(function(){
+    let fromRotation = {z:0,y:0};
+    let toRotation = {z:-60,y:-60};
+    let breaktween = new TWEEN.Tween(fromRotation).to(toRotation,125).onUpdate(function(){
       document.getElementById('handItem').style.transform = 'rotateY('+fromRotation.y+'deg) rotateZ(50deg) rotateX('+fromRotation.z+'deg)';
     }).start();
-    var fromRotation2 = {z:0,y:-60};
-    var toRotation2 = {z:-60,y:0};
-    var breakundo = new TWEEN.Tween(toRotation2).to(fromRotation2,125).onUpdate(function(){
+    let fromRotation2 = {z:0,y:-60};
+    let toRotation2 = {z:-60,y:0};
+    let breakundo = new TWEEN.Tween(toRotation2).to(fromRotation2,125).onUpdate(function(){
         document.getElementById('handItem').style.transform = 'rotateY('+fromRotation2.y+'deg) rotateZ(50deg) rotateX('+toRotation2.z+'deg)';
     }).delay(125).start();
   }
@@ -92,22 +94,22 @@ gameWorker.onmessage = function(e){
   }
   if(e.data[0]=='voxel_title'){
 
-var cele = document.getElementsByClassName('voxelNameOuter');
-for(var i = 0;i<cele.length;i++){
+let cele = document.getElementsByClassName('voxelNameOuter');
+for(let i = 0;i<cele.length;i++){
 
   document.body.removeChild(cele[i]);//clear out
 }
-var ele = document.createElement('div');
-var eleInner = document.createElement('div');
+let ele = document.createElement('div');
+let eleInner = document.createElement('div');
 eleInner.setAttribute('class','voxelName');
 ele.setAttribute('class','voxelNameOuter');
 ele.style.display='block';
 ele.appendChild(eleInner);
 eleInner.innerText = e.data[1];//block name
 document.body.appendChild(ele);
-var fromTween = {op:1};
-var toTween = {op:0}
-var tween = new TWEEN.Tween(fromTween).to(toTween,1000).onUpdate(function(){
+let fromTween = {op:1};
+let toTween = {op:0}
+let tween = new TWEEN.Tween(fromTween).to(toTween,1000).onUpdate(function(){
   ele.style.opacity = fromTween.op;
 }).delay(1000).onComplete(function(){
   try{
@@ -121,7 +123,7 @@ setTimeout(function(){
 */
   }
 }
-var graphicsMode = 'fancy';
+let graphicsMode = 'fancy';
 window["switchGraphicsType"]=function(e){
 
   if(graphicsMode == 'fancy'){
@@ -141,7 +143,7 @@ function tweenLoop(){
 }
 tweenLoop();
 function download(filename, text) {
-  var element = document.createElement('a');
+  let element = document.createElement('a');
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
   element.setAttribute('download', filename);
 
@@ -153,9 +155,9 @@ function download(filename, text) {
   document.body.removeChild(element);
 }
 //event handlers
-var touchPosition = {x:0,y:0};
-var lastTouchPos = {x:0,y:0}
-var touchMove = false;
+let touchPosition = {x:0,y:0};
+let lastTouchPos = {x:0,y:0}
+let touchMove = false;
 window.addEventListener('resize',function(e){
   gameWorker.postMessage({type:'resize',width:window.innerWidth,height:window.innerHeight})
   updateCrosshair();
@@ -180,9 +182,9 @@ document.body.addEventListener('keyup',function(e){
       document.body.requestPointerLock();
     }
   }
-    if(e.key=='e'){
+  if(e.key=='e'){
     //open inv
-    var iv = document.getElementById('inventory')
+    let iv = document.getElementById('inventory')
     if(iv.style.display==='none'){
       iv.style.display='block';
       canLock = false;
@@ -196,6 +198,33 @@ document.body.addEventListener('keyup',function(e){
   document.body.requestPointerLock();
     }
 
+  }
+  if(e.key === "j"){
+    //Cinematic mode
+    if(!cineMode){
+      document.getElementById("crosshairX").style.transition = "all 1s ease";
+      document.getElementById("crosshairY").style.transition = "all 1s ease";
+      document.getElementById("handItem").style.display = "none";
+      document.getElementById("ack").style.display = "none";
+      document.getElementById("loader_outer").style.display = "none";
+      document.getElementById("loader_bg").style.display = "none";
+      document.getElementById("crosshairX").style.opacity = "0";
+      document.getElementById("crosshairY").style.opacity = "0";
+      document.getElementById("gameVersionText").style.display = "none";
+      cineMode = true;
+    }
+    else{
+      document.getElementById("crosshairX").style.transition = "";
+      document.getElementById("crosshairY").style.transition = "";
+      document.getElementById("handItem").style.display = "";
+      document.getElementById("ack").style.display = "";
+      document.getElementById("loader_outer").style.display = "";
+      document.getElementById("loader_bg").style.display = "";
+      document.getElementById("crosshairX").style.opacity = "0.7";
+      document.getElementById("crosshairY").style.opacity = "0.7";
+      document.getElementById("gameVersionText").style.display = "";
+      cineMode = false;
+    }
   }
 
   gameWorker.postMessage({type:'keyup',key:e.key});
@@ -242,6 +271,7 @@ prepCanvas();
 function displayVer(){
   let h6 = document.createElement("h6");
   h6.setAttribute("style","color:white;font-family:sans-serif;position:fixed;bottom:10px;left:5px;z-index:1000;");
+  h6.setAttribute("id","gameVersionText");
   caches.open("cache").then(function(cache){
     return cache.match("VERSION.txt").then(function(res){
       if(!res){

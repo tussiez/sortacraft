@@ -60,6 +60,7 @@ for(var i = 0;i<vars.length;i++){
   }
 }
   if(e.data[0]==='create'){//create chunk
+  var startGenerateTime = performance.now();
 
     var heightMult = e.data[9];
 
@@ -191,7 +192,7 @@ for(var i = 0;i<vars.length;i++){
         //test
         var type = 1;
 
-        var attenuatedCaveSize = caveSize - ((y/170)-caveBias);
+        var attenuatedCaveSize = caveSize - ((y/240)-caveBias);
         var attenuatedWaterSize = waterSize -((y/170)-waterBias);
         if(y==0){
           var biomeNoise = perlin.noise((x+x1)/100,(z+z1)/100,0);
@@ -431,8 +432,9 @@ function setV(x,y,z,type){
 }
 
     //geometry
-    var {positions,normals,uvs,indices}= localWorld.generateGeometryDataForCell(0,0,0);
-    postMessage(['complete',positions,normals,uvs,indices]);//done
+    //var {positions,normals,uvs,indices}= localWorld.generateGeometryDataForCell(0,0,0);
+
+    postMessage(['complete']);//done
 
 
 

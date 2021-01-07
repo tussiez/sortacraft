@@ -523,6 +523,7 @@ function keyup(e) {
 function main(dat) {
   camera = new THREE.PerspectiveCamera(70, dat.width / dat.height, 0.1, 500);
   scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0xffffff,0.01)
   renderer = new THREE.WebGLRenderer({ canvas: dat.canvas });
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.autoUpdate = false;
@@ -543,8 +544,8 @@ function main(dat) {
     camera: camera,
     fade: true,
     lightIntensity: .5,
-    lightNear: 25,
-    lightFar: 500,
+    lightNear: 30,
+    lightFar: 750,
   });
   shadows.updateLightIntensity = function (brightness) {
     for (let i = 0; i < shadows.lights.length; i++) {
@@ -744,7 +745,7 @@ function playerMovement() {//move plyr
         }
       }
     }
-    if (keys['w'] || keys['W']) {
+    if (keys['w']) {
       controls.moveForward(playerSpeed);
       moved[0] = 1;
       if (checkIntersections() == true) {
@@ -754,7 +755,7 @@ function playerMovement() {//move plyr
       }
 
     }
-    if (keys['a'] || keys['A']) {
+    if (keys['a']) {
       controls.moveRight(-.3);
       moved[1] = 1;
       if (checkIntersections() == true) {
@@ -764,7 +765,7 @@ function playerMovement() {//move plyr
       }
     }
 
-    if (keys['s'] || keys['S']) {
+    if (keys['s']) {
       controls.moveForward(-.3);
       moved[3] = 1;
       if (checkIntersections() == true) {
@@ -773,7 +774,7 @@ function playerMovement() {//move plyr
         controls.moveForward(.23);
       }
     }
-    if (keys['d'] || keys['D']) {
+    if (keys['d']) {
       controls.moveRight(.3);
       moved[4] = 1;
       if (checkIntersections() == true) {

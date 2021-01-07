@@ -9,7 +9,7 @@
 - ~~Flying (coming *very* soon)~~ Fine tune flying (and sprinting)
 - Save/Load functionality  
 - Multiplayer?  
-- In-game commands
+- In-game commands (with exclusive CLI language to be released)
 - Health
 - Survival
 - GUIs for crafting table/furnace/etc

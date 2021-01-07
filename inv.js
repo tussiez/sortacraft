@@ -2,7 +2,7 @@
       var inventory = [];
       var hotbar = []; //this is  two dimensional array ( inventory[y][x])
       function addSlots(){
-        cool.innerHTML+="<br><br><br><br>"
+        cool.innerHTML+="<br><br><br><br><Br><br>"
         for(var y = 0;y<4;y++){
           inventory[y] = [];//set
           for(var x = 0;x<9;x++){
@@ -51,10 +51,28 @@ function drop(ev,sel) {
   ev.preventDefault();
   var data = ev.dataTransfer.getData("text");
   sel.style.backgroundColor = "#dcdce3";
+  
   if(sel.children.length==0){
   ev.target.appendChild(document.getElementById(data));
+  if(ev.target.id.replace('box','').split(',')[0]==3){
+    //It is hotbar element, clone
+    var x = ev.target.id.replace('box','').split(',')[1];
+    var clone = document.getElementById(data).cloneNode();
+    clone.draggable = '';
+    clone.ondragstart = '';
+    clone.style.margin = '8px';
+    clone.style.objectFit = 'contain'
+    if(clone.dataset.block=='true'){
+      clone.style.scale = '2'
+    }
+    clone.style.display ='block';
+    clone.style.backgroundColor = 'transparent';
+    hotbar[x].appendChild(clone);
+    
+    
+  }
   }else{
-    console.log('cant place')
+  //Canot place
   }
 }
 var itemURL= [
@@ -216,6 +234,7 @@ function addToInv(item,itemName,x,y){
     var blockX = ((itemNames.indexOf(itemName)-endOfItems)*16);
     var image = document.createElement('div');
     image.setAttribute('style','height:16px;width:16px;background-image:url("textures.png");background-size:16p 16px;background-position:'+-blockX+'px 0px;transform:scale(1.5)');
+    image.setAttribute('data-block','true')
   }
   image.setAttribute('title',itemName);
     image.setAttribute('class','item');
