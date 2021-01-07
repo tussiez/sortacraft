@@ -39,9 +39,61 @@ function generateHotbar(){
   }
 }
 generateHotbar();
+setInterval(hotbarUpdate,1000);
 function allowDrop(ev) {
+  if(ev.target.id.replace('box','').split(',')[0]==3){
+    //Is a hotbar box that's being moved from, update
+    var x = ev.target.id.replace('box','').split(',')[1];
+    var ch = hotbar[x].children;
+    if(ch[0]!=undefined){
+    hotbar[x].removeChild(ch[0])
+    }
+  }
   ev.preventDefault();
 }
+function hotbarUpdate(){
+  for(var x = 0;x<9;x++){
+    var hotbarBox = hotbar[x];
+    var hotbarInv =document.getElementById('box'+ inventory[3][x]);;
+    if(hotbarInv.children.length>0&&hotbarBox.children.length>0){
+    var imgSrc = hotbarInv.children[0].src;
+    if(imgSrc!=hotbarBox.children[0].src&&hotbarBox.children[0].src!=undefined&&imgSrc!=undefined){
+    
+      hotbarBox.removeChild(hotbarBox.children[0]);
+    var clone = hotbarInv.children[0].cloneNode();
+    clone.draggable = '';
+    clone.ondragstart = '';
+    clone.style.margin = '8px';
+    clone.style.objectFit = 'contain'
+    if(clone.dataset.block=='true'){
+      clone.style.scale = '2';
+      clone.style.margin = '20px'
+    }
+    clone.style.display ='block';
+    clone.style.backgroundColor = 'transparent';
+    hotbar[x].appendChild(clone);
+    }
+    }
+    if(hotbarInv.children.length>0&&hotbarBox.children.length==0){
+      var clone = hotbarInv.children[0].cloneNode();
+    clone.draggable = '';
+    clone.ondragstart = '';
+    clone.style.margin = '8px';
+    clone.style.objectFit = 'contain'
+    if(clone.dataset.block=='true'){
+      clone.style.scale = '2';
+      clone.style.margin = '20px'
+    }
+    clone.style.display ='block';
+    clone.style.backgroundColor = 'transparent';
+    hotbar[x].appendChild(clone);
+    }
+    if(hotbarInv.children.length==0&&hotbarBox.children.length>0){
+       hotbarBox.removeChild(hotbarBox.children[0]);
+    }
+  }
+}
+
 
 function drag(ev) {
   ev.dataTransfer.setData("text", ev.target.id);
@@ -63,7 +115,8 @@ function drop(ev,sel) {
     clone.style.margin = '8px';
     clone.style.objectFit = 'contain'
     if(clone.dataset.block=='true'){
-      clone.style.scale = '2'
+      clone.style.scale = '2';
+      clone.style.margin = '20px'
     }
     clone.style.display ='block';
     clone.style.backgroundColor = 'transparent';

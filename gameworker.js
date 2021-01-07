@@ -428,7 +428,7 @@ function toggleGravity(d) {
   return self.gravity;
 }
 function setVoxelTo(dat) {
-  currentVoxel = dat.no;
+  currentVoxel = voxelNames.indexOf(dat.voxel)+1
 }
 function time_update(dat) {
   currentTime = dat.time;
@@ -437,6 +437,7 @@ function downloadGame() {
   postMessage(['chunks', Chunks]);//post chunks
 }
 function wheel(dat) {
+  /*
   if (dat.deltaY > 0) {
     if (currentVoxel < amountOfVoxels) {
       currentVoxel += 1;
@@ -450,7 +451,8 @@ function wheel(dat) {
     } else {
       currentVoxel = amountOfVoxels;
     }
-  }
+    */
+  
   postMessage(['hand_uv', currentVoxel]);//pass hand uv
   postMessage(['voxel_title', voxelNames[currentVoxel - 1]]);
 }

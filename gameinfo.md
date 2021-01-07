@@ -13,6 +13,9 @@
 - Health
 - Survival
 - GUIs for crafting table/furnace/etc
+- Possibly add a "realistic" option to make the game look more realistic.
+- More realistic caves
+- Fog in caves
 
 ## Checklist  
  - Fix shadowmap MEDIUM   
@@ -22,6 +25,7 @@
  - Fine tune flying/sprinting EASY
  - Inventory and hotbar MEDIUM
  - Make water generate closer to the surface MEDIUM/HARD
+ - Add more fog to caves.
 
 
 ## Known Bugs  

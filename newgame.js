@@ -18,7 +18,7 @@ window["downloadWorld"] = function(){
   gameWorker.postMessage({type:'downloadGame'});
 }
 window["setVoxel"] = function(v){
-  gameWorker.postMessage({type:'setVoxelTo',no:v})
+  gameWorker.postMessage({type:'setVoxelTo',voxel:v})
 }
 function updateTime(){
   requestAnimationFrame(updateTime);
@@ -94,7 +94,16 @@ gameWorker.onmessage = function(e){
   }
   if(e.data[0]=='voxel_title'){
 
-let cele = document.getElementsByClassName('voxelNameOuter');
+
+/*
+setTimeout(function(){
+  document.body.removeChild(ele);
+},1000)
+*/
+  }
+}
+function showVoxelTitle(voxelNM){
+  let cele = document.getElementsByClassName('voxelNameOuter');
 for(let i = 0;i<cele.length;i++){
 
   document.body.removeChild(cele[i]);//clear out
@@ -105,7 +114,7 @@ eleInner.setAttribute('class','voxelName');
 ele.setAttribute('class','voxelNameOuter');
 ele.style.display='block';
 ele.appendChild(eleInner);
-eleInner.innerText = e.data[1];//block name
+eleInner.innerText = voxelNM//block name
 document.body.appendChild(ele);
 let fromTween = {op:1};
 let toTween = {op:0}
@@ -116,12 +125,6 @@ let tween = new TWEEN.Tween(fromTween).to(toTween,1000).onUpdate(function(){
     document.body.removeChild(ele)
   }catch(err){}
 }).start();
-/*
-setTimeout(function(){
-  document.body.removeChild(ele);
-},1000)
-*/
-  }
 }
 let graphicsMode = 'fancy';
 window["switchGraphicsType"]=function(e){
@@ -168,6 +171,16 @@ document.body.addEventListener('keydown',function(e){
   }
 });
 document.body.addEventListener('keyup',function(e){
+  if(e.key=='1'||e.key=='2'||e.key=='3'||e.key=='4'||e.key=='5'||e.key=='6'||e.key=='7'||e.key=='9'){
+    if(hotbar[Number(e.key)-1].children.length>0){
+    var v = hotbar[Number(e.key)-1].children[0].title;
+    if(hotbar[Number(e.key)-1].children[0].dataset.block=='true'){
+    gameWorker.postMessage({type:'setVoxelTo',voxel:v});
+    showVoxelTitle(v);
+    }
+    }//set block
+
+  }
   if(e.key=='`'){
 
     if(document.getElementById('gameoptions').style.display=='none'){
