@@ -338,13 +338,13 @@ function findEmptySlot(){
 function getInv(x,y){//Returns item data @ inventory pos
   let obj = document.getElementById('box'+inventory[y][x]).children[0];
   if(obj != undefined){
+    if(obj.children[0]!=undefined){
     return {
       type:obj.children[0].dataset.block == 'true' ? 'block' : 'item',
       name:obj.children[0].title,//used on :355
       obj:obj.children[0],
     }
-  }else{
-    return undefined;
+  }
   }
 }
 function invContains(item){//Checks if inventory contains the item (name)
@@ -352,9 +352,12 @@ function invContains(item){//Checks if inventory contains the item (name)
   for(let y = 0;y<4;y++){
     for(let x = 0;x<9;x++){
       //y,x
-      if(getInv(x,y).name==item){
+      let slot = getInv(x,y);
+      if(slot != undefined){
+        if(slot.name==item){
         //Item name matches inv slot
         return getInv(x,y);//return the item
+        }
       }
     }
   }
@@ -367,7 +370,7 @@ addToInv(5,'Oak Planks');
 
 
 function equipBlock(name){//Put all the functions together
-if(invContains(item)==undefined){//Doesn't already have that item
+if(invContains(name)==undefined){//Doesn't already have that item
   //Woops, I forgot I need to do a full inventory check. meh
   addToInv(0,name);//First argument does nothing ATM.
   //add to inventory

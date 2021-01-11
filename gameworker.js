@@ -1143,7 +1143,8 @@ function modifyChunk2(voxel1) {
     var intersectionVector = vecFromArray(pos);//vec from array
     if (voxel1 == 0) {
 
-      postMessage(['debug', voxelDrops[intersectWorld.getVoxel(pos[0], pos[1], pos[2]) - 1]]);
+      postMessage(['equip_block', voxelDrops[intersectWorld.getVoxel(pos[0], pos[1], pos[2]) - 1]]);
+      //Equip Block
     }
 
     chunkPosition = newChunkClamp(intersectionVector);//get the position of the chunk (vertical support)
