@@ -92,14 +92,9 @@ gameWorker.onmessage = function(e){
 //    document.getElementById('handItem').style.backgroundPosition  = -((e.data[1]-1)*16)+"px "+48+"px";//set "uv"
     //calculate uv by removing 1 (for 0 min) and multiply by 16 for px position (0 = y pos)
   }
-  if(e.data[0]=='voxel_title'){
-
-
-/*
-setTimeout(function(){
-  document.body.removeChild(ele);
-},1000)
-*/
+  if(e.data[0]=='equip_block'){
+    //Pass to inventory
+    equipBlock(e.data[1]);
   }
 }
 function showVoxelTitle(voxelNM){
@@ -172,11 +167,23 @@ document.body.addEventListener('keydown',function(e){
 });
 document.body.addEventListener('keyup',function(e){
   if(e.key=='1'||e.key=='2'||e.key=='3'||e.key=='4'||e.key=='5'||e.key=='6'||e.key=='7'||e.key=='9'){
+    var handItem = document.getElementById('handItem');
     if(hotbar[Number(e.key)-1].children.length>0){
     var v = hotbar[Number(e.key)-1].children[0].title;
+    var vNo = hotbar[Number(e.key)-1].children[0].dataset.uv;
     if(hotbar[Number(e.key)-1].children[0].dataset.block=='true'){
     gameWorker.postMessage({type:'setVoxelTo',voxel:v});
     showVoxelTitle(v);
+    //Is block
+    handItem.style.zIndex ='99999'
+    handItem.style.backgroundImage = 'url(textures.png)';
+    handItem.style.backgroundPosition = (vNo)+'px 0px';
+    handItem.style.backgroundSize = 'background-size:16 16;';
+    }else{
+      handItem.style.zIndex = '99999';
+      handItem.style.backgroundImage = 'url('+(hotbar[Number(e.key)-1].children[0].src)+')';
+      handItem.style.backgroundPosition = '';
+      handItem.style.backgroundSize = '';
     }
     }//set block
 
@@ -224,6 +231,7 @@ document.body.addEventListener('keyup',function(e){
       document.getElementById("crosshairX").style.opacity = "0";
       document.getElementById("crosshairY").style.opacity = "0";
       document.getElementById("gameVersionText").style.display = "none";
+      document.getElementById("fpsEle").style.display = "none";
       cineMode = true;
     }
     else{
@@ -236,6 +244,7 @@ document.body.addEventListener('keyup',function(e){
       document.getElementById("crosshairX").style.opacity = "0.7";
       document.getElementById("crosshairY").style.opacity = "0.7";
       document.getElementById("gameVersionText").style.display = "";
+      document.getElementById("fpsEle").style.display = "";
       cineMode = false;
     }
   }

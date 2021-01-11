@@ -1,12 +1,15 @@
       var cool = document.getElementById('inventory');
       var inventory = [];
+      var invObject = [];
       var hotbar = []; //this is  two dimensional array ( inventory[y][x])
       function addSlots(){
-        cool.innerHTML+="<br><br><br><br><Br><br>"
+        cool.innerHTML+="<br><br><br><br><Br><br>"//this is a filler
         for(var y = 0;y<4;y++){
           inventory[y] = [];//set
+          invObject[y] = [];
           for(var x = 0;x<9;x++){
-            inventory[y][x]=0;//nothing in this slot
+            inventory[y][x]=0;//test
+            invObject[y][x] = undefined;//Empty slot
             var boxElement = document.createElement('div');
             boxElement.setAttribute('class','box');
             boxElement.setAttribute('onmouseover','this.style.backgroundColor ="#89e647"');
@@ -41,6 +44,8 @@ function generateHotbar(){
 generateHotbar();
 setInterval(hotbarUpdate,1000);
 function allowDrop(ev) {
+  var nmSplit = ev.target.id.replace('box','').split(',');
+  invObject[nmSplit[0],nmSplit[1]] = undefined;
   if(ev.target.id.replace('box','').split(',')[0]==3){
     //Is a hotbar box that's being moved from, update
     var x = ev.target.id.replace('box','').split(',')[1];
@@ -106,6 +111,8 @@ function drop(ev,sel) {
   
   if(sel.children.length==0){
   ev.target.appendChild(document.getElementById(data));
+  var nmSplit = ev.target.id.replace('box','').split(',');
+  invObject[nmSplit[0],nmSplit[1]] = document.getElementById(data);
   if(ev.target.id.replace('box','').split(',')[0]==3){
     //It is hotbar element, clone
     var x = ev.target.id.replace('box','').split(',')[1];
@@ -287,7 +294,8 @@ function addToInv(item,itemName,x,y){
     var blockX = ((itemNames.indexOf(itemName)-endOfItems)*16);
     var image = document.createElement('div');
     image.setAttribute('style','height:16px;width:16px;background-image:url("textures.png");background-size:16p 16px;background-position:'+-blockX+'px 0px;transform:scale(1.5)');
-    image.setAttribute('data-block','true')
+    image.setAttribute('data-block','true');
+    image.setAttribute('data-uv',-blockX);
   }
   image.setAttribute('title',itemName);
     image.setAttribute('class','item');
@@ -300,11 +308,71 @@ function addToInv(item,itemName,x,y){
 
   mainDiv.appendChild(image);
   //Add to inv
-  var ele = document.getElementById('box'+(x+','+y))
+  if(x!=undefined&&y!=undefined){
+  var ele = document.getElementById('box'+(y+','+x))
+  }else{
+    var slot = findEmptySlot();//find an empty slot
+    var x= slot.x;
+    var y = slot.y;
+    var ele = document.getElementById('box'+(y+','+x))
+  }
+  invObject[y][x] = mainDiv.cloneNode();
+  
  ele.appendChild(mainDiv);//issue
   
 }
-addToInv(2,'Stone Sword',1,2);//item test
-addToInv(3,'Grass Block',2,1);//block test
-addToInv(4,'Stone',0,1);
-addToInv(5,'Workbench',2,3);
+
+
+function findEmptySlot(){
+  for(var y = 0;y<4;y++){
+   for(var x = 0;x<9;x++){
+     
+     var slot = invObject[y][x];
+     if(slot == undefined){
+       return {x:x,y:y};
+     }
+   }
+  }
+}
+
+function getInv(x,y){//Returns item data @ inventory pos
+  let obj = document.getElementById('box'+inventory[y][x]).children[0];
+  if(obj != undefined){
+    return {
+      type:obj.children[0].dataset.block == 'true' ? 'block' : 'item',
+      name:obj.children[0].title,//used on :355
+      obj:obj.children[0],
+    }
+  }else{
+    return undefined;
+  }
+}
+function invContains(item){//Checks if inventory contains the item (name)
+  //Excessively using for loops here *should* be fine, since it's not running in a loop, and also because it doesn't loop too many times.
+  for(let y = 0;y<4;y++){
+    for(let x = 0;x<9;x++){
+      //y,x
+      if(getInv(x,y).name==item){
+        //Item name matches inv slot
+        return getInv(x,y);//return the item
+      }
+    }
+  }
+}
+addToInv(1,'Stone Sword');//item test
+addToInv(2,'Light Block');
+addToInv(3,'Snowy Leaves');
+addToInv(4,'Grass Block');
+addToInv(5,'Oak Planks');
+
+
+function equipBlock(name){//Put all the functions together
+if(invContains(item)==undefined){//Doesn't already have that item
+  //Woops, I forgot I need to do a full inventory check. meh
+  addToInv(0,name);//First argument does nothing ATM.
+  //add to inventory
+}
+}
+//"Tree":
+// gameworker.js fires block break --> newgame.js
+// newgame.js passes data to --> inv.js (runs equipBlock(name))
