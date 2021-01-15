@@ -16,6 +16,7 @@
 - Possibly add a "realistic" option to make the game look more realistic.
 - More realistic caves
 - Fog in caves
+- Make moving more smoother.
 
 ## Checklist  
  - Fix shadowmap MEDIUM   

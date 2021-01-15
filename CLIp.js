@@ -1,23 +1,55 @@
 /*
+    Code maintained by Baconman321 (https://repl.it/@baconman321). If you want to use this code please provide appropriate credit.
+    
+    To be licensed.
+
+*/
+
+/*
 TODO:
     Quite a lot.
+    
+    
+    ***Ignore me conversing with myself and move along like any normal citizen would...
 
-    *Make a compile-to-js method to compile the CLI lang to JavaScript for optional JavaScript execution (probably would have to be through eval() though...).
-    *Make the ability to listen for property changes/method-calls.
-    *Make the ability to call functions with null or undefined and pass them in as arguments (to represent a argumentless function). However, allow them in a string (like "null" instead of null (without paranthesis)) (LOL I have no idea what this means I wrote this at night). -- rip
-    *Make the ability to assign a value of one property/call a method with the value of another property (Allow parent-property pointers after the setter operator).
-    *Make the above also compatible with the value of assigning a property/callig a method (Allow multiple assignment operators).
+    *Make a compile-to-js method to compile the CLI lang to JavaScript for optional JavaScript execution (probably would have to be through eval() though...). (This seems pretty nice. I'm worried about the eval though. Well, if the syntax checker does it's job it will filter out all the JavaScript commands (probably due to the fact that I use a different syntax here than JavaScript). Also, it compiles it to a value-set/method-call command so I don't think it could be too malicious (just don't handle sensitive information and you should be fine. That said, don't ever handle sensitive information on the client).)
+    
+    *Make the ability to listen for property changes/method-calls. (This seems very much like candy to a programer. Yes, I think this is going to be one of the top things to do on my list.)
+    
+    *Make the ability to call functions with null or undefined and pass them in as arguments (to represent a argumentless function). However, allow them in a string (like "null" instead of null (without paranthesis)) (LOL I have no idea what this means because I wrote it at night). (Rip).
+    
+    *Make the ability to assign a value of one property/call a method with the value of another property (Allow parent-property pointers after the setter operator). (Hmm, this seems very pratical. I wonder if anyone would use this though. Remember that the people playing the game don't want to learn a programming language, but rather utilize the terminal for *hacks*.)
+    
+    *Make the above also compatible with the value of assigning a property/callig a method (Allow multiple assignment operators). (Hmmmm, I don't know if I want to do this, I would have to create a logical order system (like PEMDAS but for assignments) and it would just get too messy. Keep dreamin' tho, maybe I might get an idea of how it could work!)
+    
     *Make the errors have a prefix with their type in the constructor instead of having to write it every time (E.g: ParsetimeError adds "(CLIp parser): " to the beginning).
+    
     *Examine the error types to make sure they actually ARE the right types (I might have a few error types that should be another type I don't know...).
-    *Find a way to check if a method returns anything (to list it as a void or a whatever you call a function with a return value) (probably will have to be through user definition).
-    *Make the ability to create extra objects (bind main objects to main objects, essentially);
-    *Allow character escaping
-    *Make read-only values.
+    
+    *Find a way to check if a method returns anything (to list it as a void or a whatever you call a function with a return value) (probably will have to be through explicit initialization-time definition). (Yeah, would be nice. I think I'll have to make it be declared when the method itself is declared (I don't want to make a whole JS parser lul))
+    
+    *Make the ability to create extra objects (bind main objects to main objects, essentially). (I don't see why I SHOULDN'T do that. Just seems like a bad idea to leave it out because a game might have a lot of commands and the programmer might want to arrange different commands into different groups like "World::ThisInstance::User::Speed->5". Yeah, that makes sense.)
+    
+    *Allow character escaping (Especially useful for chatting commands (what if someone wanted to quote the greate GigaChad lul).)
+    
+    *Make read-only values for properties and something similar for methods (executable, not executable) (For properties that's really easy, I already implemented it I just have to make a function for it. I don't know if I want to do that for methods... why would anyone need something like that?).
+    
+    *Make properties that can only be changed by the code itself.
+    
+    *Make single quotes valid string declarative operators. (Programming languages have them for a reason (technically in GoLang they are "runes" and in C++ they are for single characters and probably the same for many other languages but still - Python, JavaScript, PHP, and many others use them for string alternatives)!)
+    
+    *Comments? (No way. It's all inlined, so why?)
+    
+    *Maybe allow whitespace? (That would make things a whole lot more compilicated. What am I just going to make a whole ".clip" file and write CLIp code in there (actually that might be a cool idea...)? The complexity of having to go over each line though... I think I'll stick to inline and no-whitespace code for now)
+    
+    *If-then statements? (We aren't building a programming language bruh... ._. )
+    
+    
     
 
 BUGS:
 
-    *CLIp main-object doesn't allow case-insensitivity.
+    None ATM (yay!)
     
 */
 
@@ -25,6 +57,8 @@ BUGS:
 
 /*
     Honestly the parsing and syntax checking probably isn't the best way to check the legality of the code...
+    
+    Sigh, I should have done lexing but I didn't find out soon enough. I'd rather not re-write the whole thing when I'm not even going expand the command syntax much.
 */
 
 /*-----------------------------*/
@@ -67,11 +101,13 @@ let CLIp = {};
     let objList = null;
     let modes = {"executionMode":{"value":"readWrite","allowedValues":["writeOnly","readOnly","readWrite"]},"strictMode":false,"strictCommandMode":false};
     CLIp.InitRoot = function(){
-        objList = new Object();
+        objList = new Object(0);
         /*To make sure the user always has a way of getting help.*/
-        Object.defineProperty(objList,"CLIp",{value:{type:"CLIp-Help",enumerable:true,writable:false,configurable:false}});
-        Object.defineProperty(objList["CLIp"],"About",{value:{type:"property",allowedValues:[""],value:"CLIp (Stands for \"CLI parser\", pronounced \"Clype\") is a CLI (Command Line Interface) that is programmed in JavaScript.\nIt allows functionality for creating a terminal-like interface for applications (especially online games).\n\nCLIp is built and maintained by Baconman321, so check him out (https://repl.it/@baconman321)! If you want a tutorial on how to use CLIp just type into the terminal \"CLIp::OpenTutorial->null\"."},enumerable:true,writable:false,configurable:false});
-        Object.defineProperty(objList["CLIp"],"OpenTutorial",{value:{type:"method",value:function(){/*Currently I don't have a website for this.*/window.open("");}},enumerable:true,writable:false,configurable:false});
+        Object.defineProperty(objList,"CLIp",{value:{type:"clip-help"},enumerable:true});
+        Object.defineProperty(objList.CLIp,"About",{value:{type:"property",allowedValues:new Array(0),propertyAccessibility:"read-only",value:"CLIp (Stands for \"CLI parser\", pronounced \"Clype\") is a CLI (Command Line Interface) that is programmed in JavaScript.\nIt allows functionality for creating a terminal-like interface for applications (especially online games).\n\nCLIp is built and maintained by Baconman321, so check him out (https://repl.it/@baconman321)! If you want a tutorial on how to use CLIp just type into the terminal \"CLIp::OpenTutorial->null\"."},enumerable:true});
+        Object.defineProperty(objList.CLIp,"OpenTutorial",{value:{type:"method",value:function(){/*Currently I don't have a website for this.*/window.open("");}},enumerable:true});
+        /*Hmmmmm, Object.freeze seems more reliable than "writable:false" or "configurable:false" (apparently you can edit these values in devtools, but that would be the user's fault then... That said, there probably exists a way to work around Object.freeze in the devtools as well, so I don't trust it. Still, it's more effecient in my opinion.).*/
+        Object.freeze(objList.CLIp.About,objList.CLIp.type,objList.CLIp.allowedValues,objList.CLIp.About.value,objList.CLIp.OpenTutorial,objList.CLIp.OpenTutorial.type,objList.CLIp.OpenTutorial.value);
         return objList;
     };
     CLIp.ChangeExecutionMode = function(mode/*writeOnly,readOnly,readWrite*/){
@@ -81,6 +117,15 @@ let CLIp = {};
         modes.executionMode.value = mode;
         return modes.executionMode.value;
     };
+    /*Strict mode throws errors in situations where a fault might go unnoticed by the user (like making a command with an illegal character, which is then impossible to call using ParseCLI()).
+    
+    Possible uses:
+    
+    *Making a command using an illegal character so that the user cannot call the function (Illegal character meaning in the CLIp language).
+    
+    *Attempting to attach a value-change/method-call listener to an object not configured to do so.
+    
+    */
     CLIp.EnableStrictMode = function(){
         if(objList === null){
             throw new InitializationError("(CLIp Initializer): Root object is not initiated.");
@@ -93,10 +138,17 @@ let CLIp = {};
         }
         modes.strictMode = false;
     };
+    /*Strict command mode makes allows case-insensitivity (so "CLIp" and "clip" are both treated as the same command, which is easier for users).*/
     CLIp.enableStrictCommandMode = function(){
+        if(objList === null){
+            throw new InitializationError("(CLIp Initializer): Root object is not initiated.");
+        }
         modes.strictCommandMode = true;
     };
     CLIp.disableStrictCommandMode = function(){
+        if(objList === null){
+            throw new InitializationError("(CLIp Initializer): Root object is not initiated.");
+        }
         modes.strictCommandMode = false;
     };
     CLIp.DefineMainObject = function(mainObject){
@@ -109,7 +161,7 @@ let CLIp = {};
         if(typeof mainObject !== typeof ""){
             throw new TypeError("Parameter \"mainObject\" (argument 1) must be a string containing the name of the main object.");
         }
-        Object.defineProperty(objList,mainObject,{value:{type:"Main-object"},enumerable:true});
+        Object.defineProperty(objList,mainObject,{value:{type:"main-object"},enumerable:true});
         return objList[mainObject];
     };
     CLIp.BindProperty = function(mainObject,propertyArray){
@@ -122,7 +174,7 @@ let CLIp = {};
         if(typeof propertyArray === typeof void(0)){
             throw new TypeError("Parameter \"propertyArray\" (argument 2) is not defined.");
         }
-        if(typeof Object.prototype.toString.call(mainObject) !== typeof Object.prototype.toString.call(Object())){
+        if(typeof Object.prototype.toString.call(mainObject) !== typeof Object.prototype.toString.call(new Object(0))){
             throw new TypeError("Parameter \"mainObject (argument 2) is not an object to bind the property to.");
         }
         if(typeof Object.prototype.toString.call(propertyArray) !== typeof Object.prototype.toString.call([])){
@@ -131,10 +183,19 @@ let CLIp = {};
         if(typeof propertyArray[0] !== typeof ""){
             throw new TypeError("Paramter \"propertyArray\" (argument 2) is not a valid array with values containing the name of the property of type \"string\" and the value.");
         }
-        if(typeof Object.prototype.toString.call(propertyArray[1]) === typeof Object.prototype.toString.call({})){
+        if(typeof propertyArray[1] === typeof {}){
             throw new TypeError("The value cannot be an object. Try using \"defineMainObject()\" instead.");
         }
-        Object.defineProperty(mainObject,propertyArray[0].toString(),{value:{type:"property",value:propertyArray[1],allowedValues:new Array(0)},enumerable:true});
+        if(typeof propertyArray[2] !== typeof void(0) && typeof propertyArray[2] !== typeof ""){
+            throw new TypeError("Parameter \"propertyArray\" has the property-access value passed in but is not of type \"string\" representing the values \"read-only\" or \"read-write\".");
+        }
+        if(propertyArray[2] !== "read-only" && propertyArray[2] !== "read-write"){
+            if(typeof propertyArray[2] !== typeof void(0)) throw new TypeError("Parameter \"propertyArray\" has the property-access value passed in but is not a string containing the values \"read-only\" or \"read-write\". Instead found a value of type \"" + typeof propertyArray[2] + "\" and a value of " + propertyArray[2] + ".");
+        }
+        if(typeof propertyArray[2] === typeof void(0)){
+            propertyArray[2] = "read-write";
+        }
+        Object.defineProperty(mainObject,propertyArray[0].toString(),{value:{type:"property",value:propertyArray[1],allowedValues:new Array(0),propertyAccessibility:propertyArray[2]},enumerable:true});
         return mainObject[propertyArray[0]];
     };
     CLIp.BindMethod = function(mainObject,methodArray){
@@ -176,7 +237,7 @@ let CLIp = {};
         if(typeof propertyArray === typeof void(0)){
             throw new TypeError("Parameter \"propertyArray\" (argument 2) is not defined.");
         }
-        if(typeof Object.prototype.toString.call(mainObject) !== typeof Object.prototype.toString.call(Object())){
+        if(typeof Object.prototype.toString.call(mainObject) !== typeof Object.prototype.toString.call(new Object(0))){
             throw new TypeError("Parameter \"mainObject (argument 2) is not an object to bind the property to.");
         }
         if(typeof Object.prototype.toString.call(propertyArray) !== typeof Object.prototype.toString.call([])){
@@ -222,7 +283,6 @@ let CLIp = {};
         if(objList === null){
             throw new InitializationError("(CLIp Initializer): Root object is not initiated.");
         }
-        /*::->value is valid and can be interpreted as null::null->value (because I'm lazy; I'll do more later). Right now this is just a bunch of if's and then's to check if the statement contains a pointer and if it doesn't contain a pointer or a setter and all.*/
         if(typeof command === typeof void(0)){
             throw new TypeError("Parameter \"command\" (argument 1) is not defined.");
         }
@@ -403,17 +463,12 @@ let CLIp = {};
                 parentPropArr.forEach(function(v){
                     if(modes.strictCommandMode === false){
                         for(let indx in objProp){
-                            console.log(indx);
                             if(indx.toLowerCase() === v.toLowerCase()){
                                 v = indx;
                             }
                         }
                     }
                     if(typeof objProp[v] === typeof void(0)){
-                        console.log("Checking 2");
-                        console.log(v);
-                        console.log(objProp);
-                        console.log(objProp[v]);
                         rej(new ParsetimeError("(CLIp parser): Property \"" + v + "\" is not defined."));
                         return;
                     }
@@ -448,12 +503,12 @@ let CLIp = {};
                     }
                 }
                 let isProperty = false;
-                /*We need to check if the object is a method, property or Main-object (or if the "type" even exists. If it doesn't it shouldn't be setttable). Note that main objects are not changable or executable.*/
-                if(prop.type === "Main-object" && startCollecting){
+                /*We need to check if the object is a method, property or main-object (or if the "type" even exists. If it doesn't it shouldn't be setttable). Note that main objects are not changable or executable.*/
+                if(prop.type === "main-object" && startCollecting){
                     rej(new ParsetimeError("(CLIp parser): Cannot set or execute a main object."));
                 }
                 if(typeof prop.type === typeof void(0) && startCollecting){
-                    rej(new ParsetimeError("(CLIp parser): Property's type cannot be determined (\"property\",\"method\" or \"Main-object\") meaning that it is not changable (Main objects are not changable)."));
+                    rej(new ParsetimeError("(CLIp parser): Property's type cannot be determined (\"property\",\"method\" or \"main-object\") meaning that it is not changable (Main objects are not changable)."));
                     return;
                 }
                 if(prop.type === "method"){
@@ -537,12 +592,17 @@ let CLIp = {};
                             type = "Executable Command";
                         }
                         else if(type === "property"){
-                            type = "Changable Value";
+                            if(prop.propertyAccessibility && prop.propertyAccessibility === "read-only"){
+                                type = "Read-Only Value";
+                            }
+                            else{
+                                type = "Changable Value";
+                            }
                         }
-                        else if(type === "Main-object"){
+                        else if(type === "main-object"){
                             type = "Property Container";
                         }
-                        else if(type === "CLIp-Help"){
+                        else if(type === "clip-help"){
                             type = "Official CLIp help commands";
                         }
                         else{
@@ -577,6 +637,10 @@ let CLIp = {};
                         }
                         let result;
                         if(isProp){
+                            if(prop.propertyAccessibility && prop.propertyAccessibility === "read-only"){
+                                rej(new RuntimeError("(CLIp runtime-checker): Cannot change the property because it is read-only."));
+                                return;
+                            }
                             prop.value = val;
                             result = prop.value;
                         }

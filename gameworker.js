@@ -27,6 +27,14 @@ const handlers = {
   //You put your function names here, they can be executed from the main thread.
   //Data is passed like this to the worker: gameworker.postMessage({type:'FUNCTIONAME'})
 }
+
+//Map numbers to range
+Number.prototype.map = function (in_min, in_max, out_min, out_max) {
+  return (this - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+
+
 //hello there
 //variables
 //variables
@@ -51,6 +59,7 @@ var camera,
   lastWPress = 0,
   chunkWorker,
   cube,
+  blockParticles = [],
   jumpY,
   dToGround = 0,
   keys = [],
@@ -247,6 +256,8 @@ var camera,
       const posVec = this.getVoxelData(0).intersect, x = posVec.x, y = posVec.y, z = posVec.z;
       geometryDataWorker.postMessage(['geometrydata', posVec.x, posVec.y, posVec.z, 'regular', posVec]);//reg
       //postMessage(['debug', ((currentTime-this.startTime)/1000).toFixed(2),'newline']);
+      //timer
+      //console.log((performance.now()-this.startTime)/1000);
     },
     realFinish: function () {
       var posVec = this.getVoxelData(0).intersect;
@@ -428,7 +439,7 @@ function toggleGravity(d) {
   return self.gravity;
 }
 function setVoxelTo(dat) {
-  currentVoxel = voxelNames.indexOf(dat.voxel)+1
+  currentVoxel = voxelNames.indexOf(dat.voxel) + 1
 }
 function time_update(dat) {
   currentTime = dat.time;
@@ -452,7 +463,7 @@ function wheel(dat) {
       currentVoxel = amountOfVoxels;
     }
     */
-  
+
   postMessage(['hand_uv', currentVoxel]);//pass hand uv
   postMessage(['voxel_title', voxelNames[currentVoxel - 1]]);
 }
@@ -483,12 +494,14 @@ function checkIntersections() {
 
 var playerHand;
 function keydown(e) {
+  //e.key = e.key.toLowerCase();
   keys[e.key] = true;
   if (e.key == 'w') {
- //   lastWPress = currentTime;
+    //   lastWPress = currentTime;
   }
 };
 function keyup(e) {
+  // e.key = e.key.toLowerCase();
   keys[e.key] = false;
   if (e.key == ' ') {
     if (currentTime - lastSpacePress < doubleTapDelay && flying == true) {
@@ -525,7 +538,7 @@ function keyup(e) {
 function main(dat) {
   camera = new THREE.PerspectiveCamera(70, dat.width / dat.height, 0.1, 500);
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0xffffff,0.01)
+  scene.fog = new THREE.FogExp2('rgb(255,255,255)', 0.01);
   renderer = new THREE.WebGLRenderer({ canvas: dat.canvas });
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.autoUpdate = false;
@@ -555,9 +568,7 @@ function main(dat) {
       lt.intensity = brightness;
     }
   }
-  playerHand = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "green" }));
-  scene.add(playerHand);
-  playerHand.scale.set(.1, .1, .1)
+  createParticles(0,16,0);
   pointerBlock = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ wireframe: true, color: "white" }));
   pointerBlock.scale.set(1.01, 1.01, 1.01);//to fix outlines not showing
   scene.add(pointerBlock)
@@ -574,6 +585,33 @@ function main(dat) {
   //  initParticles();//particle
   render();
   getFPS.framerate();//start fps counter
+}
+function createParticles(x,y,z){
+  let pos = new THREE.Vector3(x,y,z)
+  let particles = new THREE.Geometry();
+  let particleMaterial = new THREE.PointsMaterial({
+  color:new THREE.Color('green'),
+  size:.1
+  });
+  for(let p = 0;p<10;p++){
+    let particle = new THREE.Vector3(Math.random(),Math.random(),Math.random());
+   // particle.add(pos);//correct position
+    particle.velocity = Math.random()*0.1;
+    particles.vertices.push(particle);
+  }
+  let particleSystem = new THREE.Points(
+    particles,
+    particleMaterial,
+  )
+  particleSystem.position.set(x,y,z);
+  particleSystem.sortParticles = true;
+    blockParticles.push(particleSystem);
+  scene.add(particleSystem);
+  setTimeout(function(){
+    blockParticles.splice(blockParticles.indexOf(particleSystem),1);
+    scene.remove(particleSystem);
+  },5000);//Delete after 10 seconds
+  return particleSystem;
 }
 function graphicsFancy() {//switch to fancy mode
   graphicsMode = 'fancy';
@@ -601,6 +639,8 @@ function render() {
   updateDaytime()//update sun
 
   playerMovement();
+  
+  dropParticles();
 
 
   blockPointer();//block outline
@@ -623,6 +663,24 @@ function render() {
   //hideOldChunks();
 
 }
+function dropParticles(){
+  for(let i in blockParticles){
+    let group = blockParticles[i];
+    for(let p in group.geometry.vertices){
+      let particle = group.geometry.vertices[p];
+      if(particle.velocity < .2){
+        particle.velocity += Math.random()*0.05;
+      }
+      //let colli = checkCollisions(particle);
+      //if(true==true){
+      particle.y -= particle.velocity;
+      //}
+    }
+    group.geometry.verticesNeedUpdate = true;
+  }
+}
+
+
 function hideOldChunks() {
   var camPos = realRoundVec(camera.position)
   var camPosBox = {
@@ -668,11 +726,11 @@ function checkCullChunks() {
 
     //get neighbors for chunks
     var allThere = true;
-    /*
-    for(var lp = 0;lp<4;lp++){
-      if(fourNeighbors[lp]==undefined){ allThere=false};
+
+    for (var lp = 0; lp < 4; lp++) {
+      if (fourNeighbors[lp] == undefined) { allThere = false };
     }//check if all chunks there yet to clear out
-    */
+
     if (allThere == true) {
       //because all chunks there , you can regenerated geometry data
 
@@ -689,33 +747,36 @@ function vecFromString(str) {
 function updateDaytime() {
   sunAngle += clock.getDelta() / dayDuration * Math.PI * 2;
   sunLight.update(sunAngle);
-
+  sunSphere.object3d.lookAt(camera.position)
   sunSphere.update(sunAngle);
   let v = new THREE.Vector3(0, -1, Math.cos(sunAngle)).normalize();
 
-  /*
-  if(currentTime/1000 %1000 == 0){
-    renderer.shadowMap.needsUpdate = true;
-  }
-  */
   let intensity = Math.sin(sunAngle);
-  /*
-  if(phase!='day'){
-    intensity = .15;
+  let density = -Math.sin(sunAngle);
+  var phase = THREEx.DayNight.currentPhase(sunAngle);
+  if (density < 0) {
+    density = 0.01
   }
-  */
+  if (density > .1) {
+    density = .1;
+  }
+  //scene.fog.density = density;
+  
+  //let colorRange = density.map(0.01, .1, 255, 0);
+  //scene.fog.color.setRGB(colorRange, colorRange, colorRange);
+  //scene.fog.color.setHex(0xffffff)
+  //0 in RGB = black, 255 = white
+
+
   if (intensity < 0) {
     intensity = .2;
-  }
-  if (phase == 'day') {
-    intensity /= 5;//wait
   }
   if (intensity > .6) {
     intensity = .6;
   }
   shadows.updateLightIntensity(intensity);
   //update shadow brightness
-  var phase = THREEx.DayNight.currentPhase(sunAngle);
+
   //bg color
   if (phase === 'day') {
     scene.background = new THREE.Color('#548AB8');
@@ -914,7 +975,15 @@ function dropPlayerToGround() {
     camera.position.y += 1.5
   }
 }
-
+function checkCollisions(pos){
+  //let pos2 = new THREE.Vector3(pos.x,pos.y,pos.z);
+  const intersect = intersectWorld.intersectRay(pos,pos);
+  if(intersect){
+    return true;
+  }else{
+    return false;
+  }
+}
 function getDistanceToGround() {
   if (PlayerChunk != undefined || PlayerChunk != 'hold') {
 
@@ -1171,6 +1240,14 @@ function modifyChunk2(voxel1) {
             //  var correctedPos = chunkPosition
             selectedChunk.setVoxel(pos[0] - correctedPos.x, pos[1] - correctedPos.y, pos[2] - correctedPos.z, voxel1);//set voxel @ chunk
 
+
+            //Drop Particles
+            let blockX = (Math.floor(pos[0]))
+            let blockY = (Math.floor(pos[1]))
+            let blockZ = (Math.floor(pos[2]));
+            createParticles(blockX,blockY,blockZ)
+            //End drop particles
+
             intersectWorld.setVoxel(intersectionVector.x, intersectionVector.y, intersectionVector.z, voxel1);//for intesection later at world relative
 
             geometryDataWorker.postMessage(['voxel', intersectionVector.x, intersectionVector.y, intersectionVector.z, voxel1]);//set for geometry data update
@@ -1289,6 +1366,7 @@ function lazyLoadChunks() {
       if (chunk == undefined && lazyVoxelData.done == true) {
         lazyVoxelData.done = false;
         createChunk(x, 0, z);
+
       }
     }
   }
@@ -1373,7 +1451,7 @@ function blockPointer() {
 
 
 //DayNight(minify)
-var THREEx = THREEx || {}; THREEx.DayNight = {}, THREEx.DayNight.baseURL = "/", THREEx.DayNight.currentPhase = function (t) { return Math.sin(t) > Math.sin(0) ? "day" : Math.sin(t) > Math.sin(-Math.PI / 6) ? "twilight" : "night" }, THREEx.DayNight.SunLight = function () { var t = new THREE.DirectionalLight(16777215, 2); this.object3d = t, this.update = function (i) { t.position.x = 0, t.position.y = 9e4 * Math.sin(i), t.position.z = 9e4 * Math.cos(i); var a = THREEx.DayNight.currentPhase(i); "day" === a ? t.color.set("rgb(255," + (Math.floor(200 * Math.sin(i)) + 55) + "," + Math.floor(200 * Math.sin(i)) + ")") : "twilight" === a ? (t.intensity = 2, t.color.set("rgb(" + (255 - Math.floor(510 * Math.sin(i) * -1)) + "," + (55 - Math.floor(110 * Math.sin(i) * -1)) + ",0)")) : t.intensity = 0 } }, THREEx.DayNight.SunSphere = function () { var t = new THREE.SphereGeometry(20, 30, 30), i = new THREE.MeshBasicMaterial({ color: 16711680 }), a = new THREE.Mesh(t, i); this.object3d = a, this.update = function (t) { a.position.x = 0, a.position.y = 400 * Math.sin(t), a.position.z = 400 * Math.cos(t); var i = THREEx.DayNight.currentPhase(t); "day" === i ? a.material.color.set("rgb(255," + (Math.floor(200 * Math.sin(t)) + 55) + "," + (Math.floor(200 * Math.sin(t)) + 5) + ")") : "twilight" === i && a.material.color.set("rgb(255,55,5)") } };
+var THREEx = THREEx || {}; THREEx.DayNight = {}, THREEx.DayNight.baseURL = "/", THREEx.DayNight.currentPhase = function (t) { return Math.sin(t) > Math.sin(0) ? "day" : Math.sin(t) > Math.sin(-Math.PI / 6) ? "twilight" : "night" }, THREEx.DayNight.SunLight = function () { var t = new THREE.DirectionalLight(16777215, 2); this.object3d = t, this.update = function (i) { t.position.x = 0, t.position.y = 9e4 * Math.sin(i), t.position.z = 9e4 * Math.cos(i); var a = THREEx.DayNight.currentPhase(i); "day" === a ? t.color.set("rgb(255," + (Math.floor(200 * Math.sin(i)) + 55) + "," + Math.floor(200 * Math.sin(i)) + ")") : "twilight" === a ? (t.intensity = 2, t.color.set("rgb(" + (255 - Math.floor(510 * Math.sin(i) * -1)) + "," + (55 - Math.floor(110 * Math.sin(i) * -1)) + ",0)")) : t.intensity = 0 } }, THREEx.DayNight.SunSphere = function () { var t = new THREE.PlaneGeometry(30, 30, 30), i = new THREE.MeshBasicMaterial({ color: 16711680,side:THREE.DoubleSide }), a = new THREE.Mesh(t, i); this.object3d = a, this.update = function (t) { a.position.x = 0, a.position.y = 400 * Math.sin(t), a.position.z = 400 * Math.cos(t); var i = THREEx.DayNight.currentPhase(t); "day" === i ? a.material.color.set("rgb(255," + (Math.floor(200 * Math.sin(t)) + 55) + "," + (Math.floor(200 * Math.sin(t)) + 5) + ")") : "twilight" === i && a.material.color.set("rgb(255,55,5)") } };
 //PointerLockControls(minify)
 var PointerLockControls = function (t) { var o = this; this.minPolarAngle = 0, this.maxPolarAngle = Math.PI; var n, r = new THREE.Euler(0, 0, 0, "YXZ"), e = Math.PI / 2, i = new THREE.Vector3; this.mousemove = function (n) { var i = n.x, a = n.y; r.setFromQuaternion(t.quaternion), r.y -= .002 * i, r.x -= .002 * a, r.x = Math.max(e - o.maxPolarAngle, Math.min(e - o.minPolarAngle, r.x)), t.quaternion.setFromEuler(r) }, this.getDirection = (n = new THREE.Vector3(0, 0, -1), function (o) { return o.copy(n).applyQuaternion(t.quaternion) }), this.moveForward = function (o) { i.setFromMatrixColumn(t.matrix, 0), i.crossVectors(t.up, i), t.position.addScaledVector(i, o) }, this.moveRight = function (o) { i.setFromMatrixColumn(t.matrix, 0), t.position.addScaledVector(i, o) } };
 //VoxelWorld code (minify)
@@ -1695,8 +1773,9 @@ function manageVoxelLoading() {
 
           lazyVoxelData.lazyLoad();
         }
-        //requestAnimationFrame(lazyLoad)
+
       }
+
     }
     lazyLoad();
 
@@ -1733,13 +1812,15 @@ function createChunk(x, y, z) {
         lazyVoxelData.lazyArray.push({ type: e.data[4], intersect: [x, y, z], position: [e.data[1], e.data[2], e.data[3]] });
         startCount += 1;
       }
+
       if (e.data[0] == 'progress') {
-        if (e.data[1] % 20 == 0) {
+        if (e.data[1] % 750 == 0) {
           postMessage(['progress', ((e.data[1] * 100) / chunkTotal) + 1, e.data[1], chunkTotal])
         } else {
-          postMessage(['progress', ((e.data[1] * 100) / chunkTotal) + 1])
+          //  postMessage(['progress', ((e.data[1] * 100) / chunkTotal) + 1])
         }
       }
+
       if (e.data[0] === 'complete') {
         lazyVoxelData.finishedPosting = true;
         lazyVoxelData.lazyArrayTotal = startCount;//set max

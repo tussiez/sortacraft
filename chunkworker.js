@@ -258,7 +258,7 @@ for(var i = 0;i<vars.length;i++){
         postMessage(['voxel',x,y,z,type])
       }
       progress += 1;
-      if(progress % 10 == 0){
+      if(progress % 250 == 0){
         postMessage(['progress',progress]);
       }
     }

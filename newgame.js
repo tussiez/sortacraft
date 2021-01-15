@@ -59,11 +59,10 @@ gameWorker.onmessage = function(e){
     download('my_world.dat',JSON.stringify(e.data[1]))
   }
   if(e.data[0]=='progress'){
-    document.getElementById('loader').style.width = (e.data[1]+1)+'%';
+    document.getElementById('loader').style.width = (e.data[1]+3)+'%';
     document.getElementById('loader_outer').style.display='block';
-    if(e.data[2]){
-    document.getElementById('blockCount').innerHTML =(e.data[2]);
-    }//reduce lag
+    document.getElementById('blockCount').innerHTML =(Math.floor(e.data[1]+3)+'%');
+    
   }
   if(e.data[0]=='done'){
     document.getElementById('overlay').style.display='none';

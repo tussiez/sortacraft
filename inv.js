@@ -338,13 +338,12 @@ function findEmptySlot(){
 function getInv(x,y){//Returns item data @ inventory pos
   let obj = document.getElementById('box'+inventory[y][x]).children[0];
   if(obj != undefined){
-    if(obj.children[0]!=undefined){
     return {
       type:obj.children[0].dataset.block == 'true' ? 'block' : 'item',
       name:obj.children[0].title,//used on :355
       obj:obj.children[0],
     }
-  }
+  
   }
 }
 function invContains(item){//Checks if inventory contains the item (name)
@@ -378,4 +377,4 @@ if(invContains(name)==undefined){//Doesn't already have that item
 }
 //"Tree":
 // gameworker.js fires block break --> newgame.js
-// newgame.js passes data to --> inv.js (runs equipBlock(name))
+// newgame.js passes data to --> inv.js (runs equipBlock(name))woo
