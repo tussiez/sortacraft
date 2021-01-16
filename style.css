@@ -107,12 +107,20 @@ html{
   background-repeat:repeat-x;
   */
 }
-canvas{
+.gameCanvas{
   z-index:998;
   position:absolute;
   top:0;
   left:0;
   image-rendering:pixelated;
+}
+.inventory{
+  z-index:9999;
+  position: absolute;
+  top:calc(50% - 137.5px);
+  left:calc(50% - 150px);
+  background-color:gray;
+  display:none;
 }
 #fpsEle{
   position: absolute;

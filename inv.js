@@ -1,3 +1,4 @@
+/*
       var cool = document.getElementById('inventory');
       var inventory = [];
       var invObject = [];
@@ -135,6 +136,105 @@ function drop(ev,sel) {
   //Canot place
   }
 }
+//BRUH
+var endOfItems = 49;//that is last item, 49 = stone
+function addToInv(item,itemName,x,y){
+  var mainDiv = document.createElement('div');
+  if(itemURL[itemNames.indexOf(itemName)]!=undefined){
+  var image = document.createElement('img');
+  image.setAttribute('src','items/'+itemURL[itemNames.indexOf(itemName)]);
+  }else{
+    var blockX = ((itemNames.indexOf(itemName)-endOfItems)*16);
+    var image = document.createElement('div');
+    image.setAttribute('style','height:16px;width:16px;background-image:url("textures.png");background-size:16p 16px;background-position:'+-blockX+'px 0px;transform:scale(1.5)');
+    image.setAttribute('data-block','true');
+    image.setAttribute('data-uv',-blockX);
+  }
+  image.setAttribute('title',itemName);
+    image.setAttribute('class','item');
+  image.setAttribute('draggable','true');
+  image.setAttribute('ondragstart','drag(event)');
+  
+  image.setAttribute('id',itemName+'&'+x+'&'+y);
+  
+  mainDiv.setAttribute('ondragover','allowDrop(event)');
+
+  mainDiv.appendChild(image);
+  //Add to inv
+  if(x!=undefined&&y!=undefined){
+  var ele = document.getElementById('box'+(y+','+x))
+  }else{
+    var slot = findEmptySlot();//find an empty slot
+    var x= slot.x;
+    var y = slot.y;
+    var ele = document.getElementById('box'+(y+','+x))
+  }
+  invObject[y][x] = mainDiv.cloneNode();
+  
+ ele.appendChild(mainDiv);//issue
+  
+}
+
+
+function findEmptySlot(){
+  for(var y = 0;y<4;y++){
+   for(var x = 0;x<9;x++){
+     
+     var slot = invObject[y][x];
+     if(slot == undefined){
+       return {x:x,y:y};
+     }
+   }
+  }
+}
+
+function getInv(x,y){//Returns item data @ inventory pos
+  let obj = document.getElementById('box'+inventory[y][x]).children[0];
+  if(obj != undefined){
+    return {
+      type:obj.children[0].dataset.block == 'true' ? 'block' : 'item',
+      name:obj.children[0].title,//used on :355
+      obj:obj.children[0],
+    }
+  
+  }
+}
+function invContains(item){//Checks if inventory contains the item (name)
+  //Excessively using for loops here *should* be fine, since it's not running in a loop, and also because it doesn't loop too many times.
+  for(let y = 0;y<4;y++){
+    for(let x = 0;x<9;x++){
+      //y,x
+      let slot = getInv(x,y);
+      if(slot != undefined){
+        if(slot.name==item){
+        //Item name matches inv slot
+        return getInv(x,y);//return the item
+        }
+      }
+    }
+  }
+}
+addToInv(1,'Stone Sword');//item test
+addToInv(2,'Light Block');
+addToInv(3,'Snowy Leaves');
+addToInv(4,'Grass Block');
+addToInv(5,'Oak Planks');
+
+
+function equipBlock(name){//Put all the functions together
+if(invContains(name)==undefined){//Doesn't already have that item
+  //Woops, I forgot I need to do a full inventory check. meh
+  addToInv(0,name);//First argument does nothing ATM.
+  //add to inventory
+}
+}
+//"Tree":
+// gameworker.js fires block break --> newgame.js
+// newgame.js passes data to --> inv.js (runs equipBlock(name))woo
+*/
+
+
+//Items
 var itemURL= [
 'bow.gif',
 'cookedchicken.gif',
@@ -279,102 +379,5 @@ var itemNames = [
   'Spruce Log',
   'Dark Oak Log',
   'Coal Ore',
-  'Snowy Leaves',
-  
-]//WOW !!! THATS A LOTTA DAMAGE
-//BRUH
-
-var endOfItems = 49;//that is last item, 49 = stone
-function addToInv(item,itemName,x,y){
-  var mainDiv = document.createElement('div');
-  if(itemURL[itemNames.indexOf(itemName)]!=undefined){
-  var image = document.createElement('img');
-  image.setAttribute('src','items/'+itemURL[itemNames.indexOf(itemName)]);
-  }else{
-    var blockX = ((itemNames.indexOf(itemName)-endOfItems)*16);
-    var image = document.createElement('div');
-    image.setAttribute('style','height:16px;width:16px;background-image:url("textures.png");background-size:16p 16px;background-position:'+-blockX+'px 0px;transform:scale(1.5)');
-    image.setAttribute('data-block','true');
-    image.setAttribute('data-uv',-blockX);
-  }
-  image.setAttribute('title',itemName);
-    image.setAttribute('class','item');
-  image.setAttribute('draggable','true');
-  image.setAttribute('ondragstart','drag(event)');
-  
-  image.setAttribute('id',itemName+'&'+x+'&'+y);
-  
-  mainDiv.setAttribute('ondragover','allowDrop(event)');
-
-  mainDiv.appendChild(image);
-  //Add to inv
-  if(x!=undefined&&y!=undefined){
-  var ele = document.getElementById('box'+(y+','+x))
-  }else{
-    var slot = findEmptySlot();//find an empty slot
-    var x= slot.x;
-    var y = slot.y;
-    var ele = document.getElementById('box'+(y+','+x))
-  }
-  invObject[y][x] = mainDiv.cloneNode();
-  
- ele.appendChild(mainDiv);//issue
-  
-}
-
-
-function findEmptySlot(){
-  for(var y = 0;y<4;y++){
-   for(var x = 0;x<9;x++){
-     
-     var slot = invObject[y][x];
-     if(slot == undefined){
-       return {x:x,y:y};
-     }
-   }
-  }
-}
-
-function getInv(x,y){//Returns item data @ inventory pos
-  let obj = document.getElementById('box'+inventory[y][x]).children[0];
-  if(obj != undefined){
-    return {
-      type:obj.children[0].dataset.block == 'true' ? 'block' : 'item',
-      name:obj.children[0].title,//used on :355
-      obj:obj.children[0],
-    }
-  
-  }
-}
-function invContains(item){//Checks if inventory contains the item (name)
-  //Excessively using for loops here *should* be fine, since it's not running in a loop, and also because it doesn't loop too many times.
-  for(let y = 0;y<4;y++){
-    for(let x = 0;x<9;x++){
-      //y,x
-      let slot = getInv(x,y);
-      if(slot != undefined){
-        if(slot.name==item){
-        //Item name matches inv slot
-        return getInv(x,y);//return the item
-        }
-      }
-    }
-  }
-}
-addToInv(1,'Stone Sword');//item test
-addToInv(2,'Light Block');
-addToInv(3,'Snowy Leaves');
-addToInv(4,'Grass Block');
-addToInv(5,'Oak Planks');
-
-
-function equipBlock(name){//Put all the functions together
-if(invContains(name)==undefined){//Doesn't already have that item
-  //Woops, I forgot I need to do a full inventory check. meh
-  addToInv(0,name);//First argument does nothing ATM.
-  //add to inventory
-}
-}
-//"Tree":
-// gameworker.js fires block break --> newgame.js
-// newgame.js passes data to --> inv.js (runs equipBlock(name))woo
+  'Snowy Leaves', 
+];

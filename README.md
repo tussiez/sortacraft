@@ -7,3 +7,4 @@ The latest stable(working) version of this game can be found @ https://tussiez.g
 - [TweenJS](https://github.com/tweenjs/tween.js/) by [trusktr (Joe Pea)](https://github.com/trusktr)
 - CLIp (still in development) by [Baconman321](https://repl.it/@baconman321)
 - [GPUJS](https://github.com/gpujs/gpu.js/) by [Robert Plummer](https://github.com/robertleeplummerjr)
+- [SortaCanvas](https://sortacanvas.sortagames.repl.co) by [tussiez](https://repl.it/@tussiez)

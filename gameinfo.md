@@ -16,17 +16,19 @@
 - Possibly add a "realistic" option to make the game look more realistic.
 - More realistic caves
 - Fog in caves
-- Make moving more smoother.
+- Make moving smoother.
+- Public game rooms (and possibly private, as well as the possibility of LAN)
 
 ## Checklist  
  - Fix shadowmap MEDIUM   
  - Add inventory "API" to gameworker.js EASY  
- - Get jumping to work (Inverse gravity) HARD?  
+ - ~~Get jumping to work (Inverse gravity) EASY?~~  
  - More options: FOV,sensitivity,etc EASY
  - Fine tune flying/sprinting EASY
  - Inventory and hotbar MEDIUM
  - Make water generate closer to the surface MEDIUM/HARD
  - Add more fog to caves.
+ - Add FOV smoothening (make walking smooth out from a walk to a run, make walk acceleration, e.t.c).
 
 
 ## Known Bugs  

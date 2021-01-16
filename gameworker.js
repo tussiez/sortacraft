@@ -6,7 +6,7 @@
 
 
 //main thread for Threejs
-import * as THREE from '/threejs.js'
+import * as THREE from 'https://threejs.org/build/three.module.js'
 import { CSM } from 'https://threejs.org/examples/jsm/csm/CSM.js'//
 
 const handlers = {
