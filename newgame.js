@@ -3,8 +3,13 @@ window.onbeforeunload = function () {
 };
 let gameWorker = new Worker('gameworker.js', { type: "module" });//enable modules
 //setup dom
+import TextureAtlas from '/textureatlas.js';
 import Inventory from '/inventory.js'
-Inventory.init();
+TextureAtlas.init();
+TextureAtlas.done = function(){
+Inventory.init(TextureAtlas.textures);
+window["Inventory"] = Inventory
+}
 window["gameWorker"] = gameWorker;
 import TWEEN from '/tween.js'
 let canMove = true;

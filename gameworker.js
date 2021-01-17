@@ -558,7 +558,7 @@ function main(dat) {
     parent: scene,
     camera: camera,
     fade: true,
-    lightIntensity: .5,
+    lightIntensity: 1,
     lightNear: 30,
     lightFar: 750,
   });
@@ -774,7 +774,7 @@ function updateDaytime() {
   if (intensity > .6) {
     intensity = .6;
   }
-  shadows.updateLightIntensity(intensity);
+  shadows.updateLightIntensity(intensity*2);
   //update shadow brightness
 
   //bg color
