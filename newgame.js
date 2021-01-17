@@ -6,9 +6,9 @@ let gameWorker = new Worker('gameworker.js', { type: "module" });//enable module
 import TextureAtlas from '/textureatlas.js';
 import Inventory from '/inventory.js'
 TextureAtlas.init();
-TextureAtlas.done = function(){
-Inventory.init(TextureAtlas.textures);
-window["Inventory"] = Inventory
+TextureAtlas.done = function () {
+  Inventory.init(TextureAtlas.textures);
+  window["Inventory"] = Inventory
 }
 window["gameWorker"] = gameWorker;
 import TWEEN from '/tween.js'
@@ -40,7 +40,7 @@ window["gravity"] = function (toggleState) {
 function prepCanvas() {
   canvas = document.createElement('canvas');
   canvas.style.display = 'none';
-  canvas.setAttribute('class','gameCanvas')
+  canvas.setAttribute('class', 'gameCanvas')
   canvas.height = window.innerHeight;
   canvas.width = window.innerWidth;
   document.body.appendChild(canvas);
@@ -101,7 +101,7 @@ gameWorker.onmessage = function (e) {
   }
   if (e.data[0] == 'equip_block') {
     //Pass to inventory
-
+    Inventory.addItem(e.data[1]);
   }
 }
 function showVoxelTitle(voxelNM) {
@@ -191,14 +191,14 @@ document.body.addEventListener('keyup', function (e) {
       document.body.requestPointerLock();
     }
   }
-  if(e.key == 'e'){
+  if (e.key == 'e') {
     let ele = document.getElementById('canvas');
-    if(ele.style.display == 'none'){
+    if (ele.style.display == 'none') {
       ele.style.display = 'block';
       canMove = false;
       canLock = false;
       document.exitPointerLock();
-    }else{
+    } else {
       ele.style.display = 'none';
       canMove = true;
       canLock = true;

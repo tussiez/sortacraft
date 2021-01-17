@@ -201,7 +201,7 @@ var camera,
     'Birch Log',
     'Spruce Log',
     'Dark Oak Log',
-    'Coal',
+    'Coal Ore',
     'Snowy Leaves'
   ],//what voxel drops
   lazyVoxelData = {

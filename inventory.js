@@ -15,18 +15,32 @@ let Inventory = {
     this.populateArray();
     this.calculatePositions();
     this.createBoxes();
+    this.createHover();
     this.setupListeners();
    // this.addItem('Stone Sword', 0, 0);
     this.render();
+  },
+  createHover: function(){
+    this.hoverText = new SortaCanvas.Text(0,0,'','14px Minecraft','black');
+    this.hoverText.pick = false;
+    this.hoverText.drawLast = true;
+    SortaCanvas.add(this.hoverText);
+  },
+  moveHover: function(name,x,y) {
+    this.hoverText.x = x;
+    this.hoverText.y = y;
+    this.hoverText.text = name;
   },
   setupListeners: function () {
     SortaCanvas.addEventListener('mousemovehit', function (d) {
       if (d.object.inv == true) {
         d.object.color = 'green';
       }
-      if (d.object.item != undefined) {
+      if (d.object.item != undefined && d.object.item != true) {
         Inventory.canvas.style.cursor = 'pointer';
+        Inventory.moveHover(d.object.item.name,d.pos.x,d.pos.y);
       } else {
+        Inventory.moveHover('',0,0);
         Inventory.canvas.style.cursor = 'default'
       }
       for (let x = 0; x < 9; x++) {
@@ -85,6 +99,9 @@ let Inventory = {
       Inventory.draggingItem.x += x;
       Inventory.draggingItem.y += y;
       Inventory.lastPos = d.pos;
+      Inventory.moveHover(Inventory.draggingItem.name,d.pos.x,d.pos.y);
+    }else{
+      //Inventory.moveHover('',0,0)
     }
   },
   mouseUp: function (d) {
@@ -126,6 +143,7 @@ let Inventory = {
         
         if (itemURL != 'items/undefined') {
           let obj = new SortaCanvas.Image(pos.x + 2.5, pos.y + 2.5, 25, 25, itemURL, '');
+          obj.name = name;
           obj.item = true;
           slot.item = obj;
           SortaCanvas.add(slot.item);
@@ -135,7 +153,8 @@ let Inventory = {
               //Is block
               let no = this.itemNames.indexOf(name)-49;
               let obj = new SortaCanvas.Image(pos.x + 2.5,pos.y + 2.5,25,25,'','');
-              obj.img = this.textures[no].img;
+              obj.img = this.textures[no].side;
+              obj.name = name;
               obj.item = true;
               slot.item = obj;
               SortaCanvas.add(slot.item)
