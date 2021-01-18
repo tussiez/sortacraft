@@ -14,24 +14,8 @@ body{
   background-size:64px 64px;
   background-repeat:repeat;
 }
-  #inventory{
-  width:326px;
-  height:308px;
-  border:4px inset white;
-  box-shadow:2px 2px 2px 2px gray;
-  background-color:ghostwhite;
-  font-family:Minecraft;
-  position: absolute;
-  top:calc(50% - 163px);
-  left:calc(50% - 154px);
-  z-index:9999
-}
-.hotbarBox{
-  display:inline-block;
-  border:1px solid white;
-  height:64px;
-  width:64px;
-  position:relative;
+#canvas {
+  image-rendering:pixelated;
 }
 html{
   height:100%;

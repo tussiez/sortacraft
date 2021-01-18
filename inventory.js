@@ -17,16 +17,28 @@ let Inventory = {
     this.createBoxes();
     this.createHover();
     this.setupListeners();
-   // this.addItem('Stone Sword', 0, 0);
+    // this.addItem('Stone Sword', 0, 0);
     this.render();
   },
-  createHover: function(){
-    this.hoverText = new SortaCanvas.Text(0,0,'','14px Minecraft','black');
+  createTextCount: function (x, y) {
+    let pos = this.slotPos[x][y]
+    let text = new SortaCanvas.Text(pos.x + 15, pos.y + 25, '', '14px Minecraft', 'black');
+    text.strokeStyle = 'white';
+    text.stroke = true;
+    text.drawLast = true;
+    text.pick = false;
+    SortaCanvas.add(text);
+    return text;
+  },
+  createHover: function () {
+    this.hoverText = new SortaCanvas.Text(0, 0, '', '14px Minecraft', 'black');
     this.hoverText.pick = false;
     this.hoverText.drawLast = true;
+    this.hoverText.strokeStyle = 'white';
+    this.hoverText.stroke = true;
     SortaCanvas.add(this.hoverText);
   },
-  moveHover: function(name,x,y) {
+  moveHover: function (name, x, y) {
     this.hoverText.x = x;
     this.hoverText.y = y;
     this.hoverText.text = name;
@@ -38,9 +50,9 @@ let Inventory = {
       }
       if (d.object.item != undefined && d.object.item != true) {
         Inventory.canvas.style.cursor = 'pointer';
-        Inventory.moveHover(d.object.item.name,d.pos.x,d.pos.y);
+        Inventory.moveHover(d.object.item.name, d.pos.x, d.pos.y);
       } else {
-        Inventory.moveHover('',0,0);
+        Inventory.moveHover('', 0, 0);
         Inventory.canvas.style.cursor = 'default'
       }
       for (let x = 0; x < 9; x++) {
@@ -99,70 +111,81 @@ let Inventory = {
       Inventory.draggingItem.x += x;
       Inventory.draggingItem.y += y;
       Inventory.lastPos = d.pos;
-      Inventory.moveHover(Inventory.draggingItem.name,d.pos.x,d.pos.y);
-    }else{
-      //Inventory.moveHover('',0,0)
+      Inventory.moveHover(Inventory.draggingItem.name, d.pos.x, d.pos.y);
     }
   },
   mouseUp: function (d) {
-    if (Inventory.dropSlot != undefined && Inventory.isDragging == true && Inventory.slots[Inventory.dropSlot.x][Inventory.dropSlot.y].item == undefined) {
-      Inventory.slots[Inventory.dropSlot.x][Inventory.dropSlot.y].item = Inventory.draggingItem;
+    if (Inventory.dropSlot != undefined && Inventory.isDragging == true && Inventory.dropSlot.item == undefined) {
+      let fromSlot = Inventory.slots[Inventory.fromSlot.x][Inventory.fromSlot.y];
+      let dropSlot = Inventory.slots[Inventory.dropSlot.x][Inventory.dropSlot.y];
+      Inventory.draggingItem.x = dropSlot.x + 2.5;
+      Inventory.draggingItem.y = dropSlot.y + 2.5;
+      dropSlot.item = Inventory.draggingItem;
       Inventory.slots[Inventory.fromSlot.x][Inventory.fromSlot.y].item = undefined;
-      let toSlot = Inventory.slots[Inventory.dropSlot.x][Inventory.dropSlot.y];
-      Inventory.draggingItem.x = toSlot.x + 2.5;
-      Inventory.draggingItem.y = toSlot.y + 2.5;
     } else {
-      if (Inventory.isDragging == true) {
-        let fromSlot = Inventory.slots[Inventory.fromSlot.x][Inventory.fromSlot.y];
-        Inventory.draggingItem.x = fromSlot.x + 2.5;
-        Inventory.draggingItem.y = fromSlot.y + 2.5;
+      //Return
+      if(Inventory.isDragging == true){
+      let fromSlot = Inventory.slots[Inventory.fromSlot.x][Inventory.fromSlot.y];
+      Inventory.draggingItem.x = fromSlot.x + 2.5
+      Inventory.draggingItem.y = fromSlot.y + 2.5
       }
     }
     Inventory.isDragging = false;
     Inventory.draggingItem = undefined;
   },
-  findEmpty: function () {
+  findEmpty: function (name) {
     for (let y = 0; y < 4; y++) {
       for (let x = 0; x < 9; x++) {
-        let slot = this.slots[x][y].item;
-        if (slot == undefined) {
+        let slot = this.slots[x][y];
+        if (slot.item == undefined) {
           return { x: x, y: y };
         }
       }
     }
   },
   addItem: function (name, x, y) {
-    let emptySlot = this.findEmpty();
-    if(emptySlot!=undefined){
-    let slot = x != undefined && y != undefined ? this.slots[x][y] : this.slots[emptySlot.x][emptySlot.y];
-    if (slot != undefined) {
-      if (slot.item == undefined) {
+    let emptySlot = this.findEmpty(name);
+    if (emptySlot != undefined) {
+      let slot = x != undefined && y != undefined ? this.slots[x][y] : this.slots[emptySlot.x][emptySlot.y];
+      if (slot != undefined) {
         //Slot is empty
         let pos = x != undefined && y != undefined ? this.slotPos[x][y] : this.slotPos[emptySlot.x][emptySlot.y]
         let itemURL = 'items/' + this.itemURL[this.itemNames.indexOf(name)];
-        
+
         if (itemURL != 'items/undefined') {
-          let obj = new SortaCanvas.Image(pos.x + 2.5, pos.y + 2.5, 25, 25, itemURL, '');
-          obj.name = name;
-          obj.item = true;
-          slot.item = obj;
-          SortaCanvas.add(slot.item);
-        } else{
-          if(this.itemURL[this.itemNames.indexOf(name)] == undefined){
-            if(this.itemNames.indexOf(name) != undefined){
+          if (slot.item != undefined) {
+            let obj = new SortaCanvas.Image(pos.x + 2.5, pos.y + 2.5, 25, 25, itemURL, '');
+            obj.name = name;
+            obj.item = true;
+            slot.item = obj;
+
+            SortaCanvas.add(slot.item);
+          }
+        } else {
+          if (this.itemURL[this.itemNames.indexOf(name)] == undefined) {
+            if (this.itemNames.indexOf(name) != undefined) {
               //Is block
-              let no = this.itemNames.indexOf(name)-49;
-              let obj = new SortaCanvas.Image(pos.x + 2.5,pos.y + 2.5,25,25,'','');
+              let no = this.itemNames.indexOf(name) - 49;
+              let obj = new SortaCanvas.Image(pos.x + 2.5, pos.y + 2.5, 25, 25, '', '');
               obj.img = this.textures[no].side;
               obj.name = name;
               obj.item = true;
+              /*
+              if (slot.item != undefined && slot.item.name == obj.name && slot.stack < 64) {
+                slot.stack++;
+                if (slot.stack > 1) {
+                  slot.text.text = String(slot.stack);
+                }
+              }
+              */
               slot.item = obj;
+
               SortaCanvas.add(slot.item)
             }
           }
         }
+
       }
-    }
     }
   },
   populateArray: function () {
@@ -191,6 +214,8 @@ let Inventory = {
         let pos = this.slotPos[x][y];
         let box = new SortaCanvas.Rectangle(pos.x, pos.y, 34, 34, 'white', '');
         box.inv = true;
+        box.stack = 0;
+        box.text = this.createTextCount(x, y);
         this.slots[x][y] = box;
         if (y == 3) {
           box.isHotbar = true;
