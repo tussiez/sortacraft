@@ -8,9 +8,9 @@ import Inventory from '/inventory.js'
 TextureAtlas.init();
 TextureAtlas.done = function () {
   Inventory.init(TextureAtlas.textures);
-  window["Inventory"] = Inventory
+  window["Inventory"] = Inventory;
+  gameWorker.postMessage({type:'textureAtlas',texture:TextureAtlas.textures})
 }
-window["gameWorker"] = gameWorker;
 import TWEEN from '/tween.js'
 let canMove = true;
 let fromTween = { op: 1, reset: false };

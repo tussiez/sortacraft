@@ -9,7 +9,7 @@ body{
   margin:0;
   padding:0;
   font-family:minecraft;
-  background-image:url(dirt.png);
+  background-image:url(resources/dirt.png);
   image-rendering:pixelated;
   background-size:64px 64px;
   background-repeat:repeat;
@@ -71,7 +71,7 @@ html{
 #overlay{
   height:100%;
   width:100%;
-  background-image:url(dirt.png);
+  background-image:url(resources/dirt.png);
   background-size:64px 64px;
   background-repeat:repeat;
   z-index:1000;

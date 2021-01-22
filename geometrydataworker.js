@@ -113,10 +113,12 @@ class VoxelWorld {
                   voxelX + dir[0],
                   voxelY + dir[1],
                   voxelZ + dir[2]);
+              const neighborTransparent = this.getTransparentVoxel(neighbor);
 
                   //handle voxels
 
-                  if(!neighbor||this.getCustomBlockType(neighbor,true)&&!notHalfSelf){
+                  if(!neighbor||
+                  isTransparent == true||neighborTransparent == true||this.getCustomBlockType(neighbor,true)&&!notHalfSelf){
                     addFace(corners,dir,uvRow);
                   }
             }

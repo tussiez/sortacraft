@@ -115,10 +115,10 @@ for(var i = 0;i<vars.length;i++){
 
 
     var progress = 0;
-    var caveSize = .35;
+    var caveSize = .25;
   //  var oreSize = .22;
   //  var oreBias = .01;
-    var caveBias = .10;
+    var caveBias = .15;
     var waterBias = .5;
     var waterSize = .55;
 

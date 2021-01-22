@@ -8,6 +8,11 @@
 //main thread for Threejs
 import * as THREE from 'https://threejs.org/build/three.module.js'
 import { CSM } from 'https://threejs.org/examples/jsm/csm/CSM.js'//
+import { EffectComposer } from 'https://threejs.org/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'https://threejs.org/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'https://threejs.org/examples/jsm/postprocessing/ShaderPass.js';
+
+import { FXAAShader } from 'https://threejs.org/examples/jsm/shaders/FXAAShader.js'
 
 const handlers = {
   main,
@@ -23,6 +28,7 @@ const handlers = {
   graphicsFaster,
   graphicsFancy,
   changeShadowBias,
+  textureAtlas,
   toggleGravity,
   //You put your function names here, they can be executed from the main thread.
   //Data is passed like this to the worker: gameworker.postMessage({type:'FUNCTIONAME'})
@@ -55,12 +61,17 @@ var camera,
   particleGroup,
   emitter,
   clock,
+  fxaaPass,
   lastSpacePress = 0,
   lastWPress = 0,
   chunkWorker,
+  textureSet,
+  effectComposer,
+  renderPass,
   cube,
   blockParticles = [],
   jumpY,
+  canRender = false,
   dToGround = 0,
   keys = [],
   Chunks = {},
@@ -102,6 +113,7 @@ var camera,
   positionNumComponents = 3,
   normalNumComponents = 3,
   lazyVoxelWorld,
+  playerAccel = 0,
   flying = false,
   currentTime = 0,
   jumping = false,
@@ -281,7 +293,7 @@ var camera,
       getFPS.lastFrame = renderer.info.render.frame;
       setTimeout(read, 1000);
       function read() {
-        getFPS.fps = renderer.info.render.frame - getFPS.lastFrame;
+        getFPS.fps = (renderer.info.render.frame - getFPS.lastFrame)/2;
         self.postMessage(['fps', getFPS.fps]);
         requestAnimationFrame(getFPS.framerate);
       }
@@ -295,6 +307,8 @@ worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
   fancymaterial = new THREE.MeshPhongMaterial({
     color: 'gray',
     map: worldTextureBitmap,//texture
+    transparent:true,
+    alphaTest:0.1,
   });//setup mat
   fancymaterial.shininess = 0;//No shininess
 
@@ -302,6 +316,8 @@ worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
   fastmaterial = new THREE.MeshBasicMaterial({
     color: 'gray',
     map: worldTextureBitmap,
+    transparent:true,
+    alphaTest:0.1,
   });
   //setup fast speedy mat
   material = fancymaterial;//start on fancy material
@@ -394,6 +410,9 @@ geometryDataWorker2.onmessage = function (e) {
 }
 function stringVec(vec) {
   return (vec.x + "," + vec.y + "," + vec.z)
+}
+function textureAtlas(d) {
+  textureSet = d.texture;
 }
 onmessage = function (e) {
 
@@ -568,7 +587,6 @@ function main(dat) {
       lt.intensity = brightness;
     }
   }
-  createParticles(0,16,0);
   pointerBlock = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ wireframe: true, color: "white" }));
   pointerBlock.scale.set(1.01, 1.01, 1.01);//to fix outlines not showing
   scene.add(pointerBlock)
@@ -583,34 +601,51 @@ function main(dat) {
 
 
   //  initParticles();//particle
+  effectComposer = new EffectComposer(renderer);//effect composer
+  renderPass = new RenderPass(scene, camera);
+  
+  fxaaPass = new ShaderPass(FXAAShader);
+
+  let pixRatio = renderer.getPixelRatio();
+
+  fxaaPass.material.uniforms['resolution'].value.x = 1 / (dat.width * pixRatio);
+
+  fxaaPass.material.uniforms['resolution'].value.y = 1 / (dat.height * pixRatio);
+  effectComposer.addPass(renderPass);//render pass
+
+  effectComposer.addPass(fxaaPass);
+  
+  graphicsFaster();
   render();
   getFPS.framerate();//start fps counter
 }
-function createParticles(x,y,z){
-  let pos = new THREE.Vector3(x,y,z)
+function createParticles(x, y, z, name) {
+  let pos = new THREE.Vector3(x, y, z)
   let particles = new THREE.Geometry();
+  let texId = textureSet[voxelNames.indexOf(name)].top;
+  let tex = new THREE.CanvasTexture(texId);
   let particleMaterial = new THREE.PointsMaterial({
-  color:new THREE.Color('green'),
-  size:.1
+    size: .1,
+    map: tex
   });
-  for(let p = 0;p<10;p++){
-    let particle = new THREE.Vector3(Math.random(),Math.random(),Math.random());
-   // particle.add(pos);//correct position
-    particle.velocity = Math.random()*0.1;
+  for (let p = 0; p < 10; p++) {
+    let particle = new THREE.Vector3(Math.random(), Math.random(), Math.random());
+    // particle.add(pos);//correct position
+    particle.velocity = Math.random() * 0.1;
     particles.vertices.push(particle);
   }
   let particleSystem = new THREE.Points(
     particles,
     particleMaterial,
   )
-  particleSystem.position.set(x,y,z);
+  particleSystem.position.set(x, y, z);
   particleSystem.sortParticles = true;
-    blockParticles.push(particleSystem);
+  blockParticles.push(particleSystem);
   scene.add(particleSystem);
-  setTimeout(function(){
-    blockParticles.splice(blockParticles.indexOf(particleSystem),1);
+  setTimeout(function () {
+    blockParticles.splice(blockParticles.indexOf(particleSystem), 1);
     scene.remove(particleSystem);
-  },5000);//Delete after 10 seconds
+  }, 5000);//Delete after 10 seconds
   return particleSystem;
 }
 function graphicsFancy() {//switch to fancy mode
@@ -621,14 +656,18 @@ function graphicsFancy() {//switch to fancy mode
   for (var i = 0; i < l; i++) {
     ChunksMesh[chunkIndex[i]].material = material;//switch(lag?)
   }
+  renderer.shadowMap.enabled = true;
 }
 function graphicsFaster() {//switch to faster graphics
   graphicsMode = 'fast';
+
   material = fastmaterial;
   var l = chunkIndex.length;
   for (var i = 0; i < l; i++) {
     ChunksMesh[chunkIndex[i]].material = material;//switch
   }
+  renderer.shadowMap.enabled = false;
+
 }
 function render() {
   requestAnimationFrame(render);
@@ -639,7 +678,7 @@ function render() {
   updateDaytime()//update sun
 
   playerMovement();
-  
+
   dropParticles();
 
 
@@ -663,13 +702,13 @@ function render() {
   //hideOldChunks();
 
 }
-function dropParticles(){
-  for(let i in blockParticles){
+function dropParticles() {
+  for (let i in blockParticles) {
     let group = blockParticles[i];
-    for(let p in group.geometry.vertices){
+    for (let p in group.geometry.vertices) {
       let particle = group.geometry.vertices[p];
-      if(particle.velocity < .2){
-        particle.velocity += Math.random()*0.05;
+      if (particle.velocity < .2) {
+        particle.velocity += Math.random() * 0.05;
       }
       //let colli = checkCollisions(particle);
       //if(true==true){
@@ -747,8 +786,11 @@ function vecFromString(str) {
 function updateDaytime() {
   sunAngle += clock.getDelta() / dayDuration * Math.PI * 2;
   sunLight.update(sunAngle);
-  sunSphere.object3d.lookAt(camera.position)
+  sunSphere.object3d.lookAt(camera.position);
+  sunSphere.object3d.position.set(0, 0, 0);
   sunSphere.update(sunAngle);
+  let newPos = sunSphere.object3d.position.add(camera.position);
+  sunSphere.object3d.position.set(newPos.x, newPos.y, newPos.z)
   let v = new THREE.Vector3(0, -1, Math.cos(sunAngle)).normalize();
 
   let intensity = Math.sin(sunAngle);
@@ -761,12 +803,11 @@ function updateDaytime() {
     density = .1;
   }
   //scene.fog.density = density;
-  
+
   //let colorRange = density.map(0.01, .1, 255, 0);
   //scene.fog.color.setRGB(colorRange, colorRange, colorRange);
   //scene.fog.color.setHex(0xffffff)
   //0 in RGB = black, 255 = white
-
 
   if (intensity < 0) {
     intensity = .2;
@@ -774,7 +815,7 @@ function updateDaytime() {
   if (intensity > .6) {
     intensity = .6;
   }
-  shadows.updateLightIntensity(intensity*2);
+  shadows.updateLightIntensity(intensity * 2);
   //update shadow brightness
 
   //bg color
@@ -799,6 +840,13 @@ function playerMovement() {//move plyr
     moved[4] = 0;
     moved[5] = 0;
     var preMovement = new THREE.Vector3().copy(camera.position);
+    if (keys['w'] || keys['a'] || keys['s'] || keys['d']) {
+      if (playerAccel < playerSpeed) {
+        playerAccel += 0.01
+      }
+    } else if (!keys['w'] && !keys['a'] && !keys['s'] && !keys['d']) {
+      playerAccel = .1;
+    }
     if (keys['Shift']) {
       if (flying == true) {
         //Go down,if flying
@@ -809,12 +857,15 @@ function playerMovement() {//move plyr
       }
     }
     if (keys['w']) {
-      controls.moveForward(playerSpeed);
+      controls.moveForward(playerAccel);
       moved[0] = 1;
       if (checkIntersections() == true) {
-        controls.moveForward(-playerSpeed)//pre check so you cant see inside
+
+        controls.moveForward(-playerAccel)//pre check so you cant see inside
       } else {
-        controls.moveForward(-playerCorrectiveSpeed);
+        if (playerAccel > .1) {
+          controls.moveForward(-Math.abs(playerAccel - .1));
+        }
       }
 
     }
@@ -848,12 +899,13 @@ function playerMovement() {//move plyr
 
     }
     if (jumping == true) {
-      if (jumpG > 0.02) {
+      // console.log(jumpG);
+      if (jumpG >= 0.02) {//Start jumping quickly, then go slower
         jumpG -= .02;
         camera.position.y += jumpG;
         if (checkIntersections() == true) {
           //Evil player jumped into ceiling :(
-          camera.position.y -= jumpG;
+          camera.position.y -= jumpG;//Undo jump
           jumping = false;//no jumpign for you
         }
       } else {
@@ -866,7 +918,7 @@ function playerMovement() {//move plyr
         if (canJump == true) {
 
           //Set jump speed
-          jumpG = .25;//Minecraft lets you jump only 1 block
+          jumpG = .29;//Minecraft lets you jump only 1 block
           jumping = true;
           canJump = false;
           keys[' '] = false;
@@ -887,14 +939,20 @@ function playerMovement() {//move plyr
 
 
 
-
+    let rendered = false;
     if (checkIntersections() === true) {
 
       bumping = true;
       goBack(moved);
 
       moveHand();
-      renderer.render(scene, camera)
+      if (canRender == true) {
+        if(rendered == false){
+        // renderer.render(scene, camera)
+        effectComposer.render();
+        rendered = true;
+        }
+      }
     } else {
       bumping = false;
       if (jumping == false) {
@@ -902,8 +960,11 @@ function playerMovement() {//move plyr
           if (!g) {
             g = 0;
           }
-          if (g < .8) {
-            g += 0.02;
+          if (g < .6) {
+            g += 0.01;
+          }
+          else {
+            /*Used for debugging purposes. */
           }
 
           camera.position.y -= g;
@@ -934,7 +995,12 @@ function playerMovement() {//move plyr
         }
       }
       moveHand();
-      renderer.render(scene, camera);
+      if (canRender == true) {
+        // renderer.render(scene, camera);
+        if(rendered == false){
+        effectComposer.render()
+        }
+      }
     }
 
     if (PlayerChunk != undefined && fallen == false) {
@@ -975,12 +1041,12 @@ function dropPlayerToGround() {
     camera.position.y += 1.5
   }
 }
-function checkCollisions(pos){
+function checkCollisions(pos) {
   //let pos2 = new THREE.Vector3(pos.x,pos.y,pos.z);
-  const intersect = intersectWorld.intersectRay(pos,pos);
-  if(intersect){
+  const intersect = intersectWorld.intersectRay(pos, pos);
+  if (intersect) {
     return true;
-  }else{
+  } else {
     return false;
   }
 }
@@ -1245,7 +1311,9 @@ function modifyChunk2(voxel1) {
             let blockX = (Math.floor(pos[0]))
             let blockY = (Math.floor(pos[1]))
             let blockZ = (Math.floor(pos[2]));
-            createParticles(blockX,blockY,blockZ)
+            let voxAtPos = intersectWorld.getVoxel(...pos);
+            let blockName = voxelId > 0 ? voxelNames[voxelId - 1] : voxelNames[voxAtPos - 1];
+            createParticles(blockX, blockY, blockZ, blockName);
             //End drop particles
 
             intersectWorld.setVoxel(intersectionVector.x, intersectionVector.y, intersectionVector.z, voxel1);//for intesection later at world relative
@@ -1451,7 +1519,7 @@ function blockPointer() {
 
 
 //DayNight(minify)
-var THREEx = THREEx || {}; THREEx.DayNight = {}, THREEx.DayNight.baseURL = "/", THREEx.DayNight.currentPhase = function (t) { return Math.sin(t) > Math.sin(0) ? "day" : Math.sin(t) > Math.sin(-Math.PI / 6) ? "twilight" : "night" }, THREEx.DayNight.SunLight = function () { var t = new THREE.DirectionalLight(16777215, 2); this.object3d = t, this.update = function (i) { t.position.x = 0, t.position.y = 9e4 * Math.sin(i), t.position.z = 9e4 * Math.cos(i); var a = THREEx.DayNight.currentPhase(i); "day" === a ? t.color.set("rgb(255," + (Math.floor(200 * Math.sin(i)) + 55) + "," + Math.floor(200 * Math.sin(i)) + ")") : "twilight" === a ? (t.intensity = 2, t.color.set("rgb(" + (255 - Math.floor(510 * Math.sin(i) * -1)) + "," + (55 - Math.floor(110 * Math.sin(i) * -1)) + ",0)")) : t.intensity = 0 } }, THREEx.DayNight.SunSphere = function () { var t = new THREE.PlaneGeometry(30, 30, 30), i = new THREE.MeshBasicMaterial({ color: 16711680,side:THREE.DoubleSide }), a = new THREE.Mesh(t, i); this.object3d = a, this.update = function (t) { a.position.x = 0, a.position.y = 400 * Math.sin(t), a.position.z = 400 * Math.cos(t); var i = THREEx.DayNight.currentPhase(t); "day" === i ? a.material.color.set("rgb(255," + (Math.floor(200 * Math.sin(t)) + 55) + "," + (Math.floor(200 * Math.sin(t)) + 5) + ")") : "twilight" === i && a.material.color.set("rgb(255,55,5)") } };
+var THREEx = THREEx || {}; THREEx.DayNight = {}, THREEx.DayNight.baseURL = "/", THREEx.DayNight.currentPhase = function (t) { return Math.sin(t) > Math.sin(0) ? "day" : Math.sin(t) > Math.sin(-Math.PI / 6) ? "twilight" : "night" }, THREEx.DayNight.SunLight = function () { var t = new THREE.DirectionalLight(16777215, 2); this.object3d = t, this.update = function (i) { t.position.x = 0, t.position.y = 9e4 * Math.sin(i), t.position.z = 9e4 * Math.cos(i); var a = THREEx.DayNight.currentPhase(i); "day" === a ? t.color.set("rgb(255," + (Math.floor(200 * Math.sin(i)) + 55) + "," + Math.floor(200 * Math.sin(i)) + ")") : "twilight" === a ? (t.intensity = 2, t.color.set("rgb(" + (255 - Math.floor(510 * Math.sin(i) * -1)) + "," + (55 - Math.floor(110 * Math.sin(i) * -1)) + ",0)")) : t.intensity = 0 } }, THREEx.DayNight.SunSphere = function () { var t = new THREE.PlaneGeometry(30, 30, 30), i = new THREE.MeshBasicMaterial({ color: 16711680, side: THREE.DoubleSide }), a = new THREE.Mesh(t, i); this.object3d = a, this.update = function (t) { a.position.x = 0, a.position.y = 400 * Math.sin(t), a.position.z = 400 * Math.cos(t); var i = THREEx.DayNight.currentPhase(t); "day" === i ? a.material.color.set("rgb(255," + (Math.floor(200 * Math.sin(t)) + 55) + "," + (Math.floor(200 * Math.sin(t)) + 5) + ")") : "twilight" === i && a.material.color.set("rgb(255,55,5)") } };
 //PointerLockControls(minify)
 var PointerLockControls = function (t) { var o = this; this.minPolarAngle = 0, this.maxPolarAngle = Math.PI; var n, r = new THREE.Euler(0, 0, 0, "YXZ"), e = Math.PI / 2, i = new THREE.Vector3; this.mousemove = function (n) { var i = n.x, a = n.y; r.setFromQuaternion(t.quaternion), r.y -= .002 * i, r.x -= .002 * a, r.x = Math.max(e - o.maxPolarAngle, Math.min(e - o.minPolarAngle, r.x)), t.quaternion.setFromEuler(r) }, this.getDirection = (n = new THREE.Vector3(0, 0, -1), function (o) { return o.copy(n).applyQuaternion(t.quaternion) }), this.moveForward = function (o) { i.setFromMatrixColumn(t.matrix, 0), i.crossVectors(t.up, i), t.position.addScaledVector(i, o) }, this.moveRight = function (o) { i.setFromMatrixColumn(t.matrix, 0), t.position.addScaledVector(i, o) } };
 //VoxelWorld code (minify)
@@ -1783,7 +1851,9 @@ function manageVoxelLoading() {
   } else {
     setTimeout(function () {
       if (lazyVoxelData.done === true) {
-        postMessage(['done'])
+        postMessage(['done']);
+        canRender = true;
+        graphicsFancy();
       }
     }, 1000)
   }
