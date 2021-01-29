@@ -1,3 +1,5 @@
+console.log("%cHold up! %c \n Don't hack, please :) \n What you see below are debug messages and errors. \n Some of them have meaning, some of them don't.",'font-size:50px;font-family:Arial','font-family:Verdana;font-weight:bold')
+
 window.onbeforeunload = function () {
   return "This is so someone doesn't accidentally exit out of the game";
 };

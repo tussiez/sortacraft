@@ -60,6 +60,7 @@ TODO:
     
     *Possibly allow strings on the left-hand side of a statement.
 
+    *NodeJS/module support.
 BUGS:
 
     None ATM (yay!)
@@ -566,7 +567,6 @@ let CLIp = {};
             let unclosedStrNum = 0;
             /*Right now strings can only be declared with double quotes, so no single quotes for now.*/
             let isStr = false;
-            /*To report if an error occures.*/
             command.split("");
             for(let i = 0;i<command.length;i++){
                 let x = command[i];
@@ -673,6 +673,214 @@ let CLIp = {};
             }
             res(command);
         });
+    };
+    /*For autocomplete (most games might want this to make sure the user can see the commands relevant to what they are typing).*/
+    CLIp.GetRelativeCommands = function(command,properSyntaxEnforced,trimNum){
+        if(typeof command === typeof void(0)){
+            throw new TypeError("Parameter \"command\" (argument 1) is not defined.");
+        }
+        if(typeof properSyntaxEnforced !== typeof void(0) && typeof properSyntaxEnforced !== typeof false){
+            throw new TypeError("Parameter \"properSyntaxEnforced\" (argument 2) is set but is not of type \"" + typeof true + "\".");
+        }
+        if(typeof trimNum !== typeof void(0) && typeof trimNum !== typeof 1){
+            throw new TypeError("Parameter \"trimNum\" (argument 3) is set but  not of type \"" + typeof 1 + "\".");
+        }
+        command = command.toString();
+        let parseAndGet = function(cmd){
+            /*This is where we store our results!*/
+            let resArr;
+            /*We are basically recreating the parsing process but this time we are trying to find relative commands.*/
+            let parentPropArr = [];
+            let store = new Array(0);
+            let setterFound = false;
+            cmd.split("");
+            for(let i = 0;i<cmd.length;i++){
+                let x = cmd[i];
+                if(x === "\""){
+                    return [0,new ParsetimeError("Strings are not allowed on Left-hand side of setter operator.")];
+                }
+                if(x === ":" && cmd[i - 1] === ":"){
+                    parentPropArr.push(store.join(""));
+                    store = new Array(0);
+                }
+                else if(x === ":"){
+                }
+                else if(x === ">" && cmd[i - 1] === "-"){
+                    setterFound = true;
+                    break;
+                }
+                else if(x === "-"){
+                }
+                else{
+                    store.push(x);
+                }
+            }
+            parentPropArr.push(store.join(""));
+            store = new Array(0);
+            let travelObj = function(obj,startingName){
+                if(typeof obj !== typeof new Object()){
+                    console.log(typeof obj);
+                    throw new TypeError("Parameter \"obj\" (argument 1) is not of type \"" + typeof new Object() + "\".");
+                }
+                return new Promise(function(res,rej){
+                    let objList = [];
+                    let treeCrawl = function(obj,scope){
+                        /*We are only searching for objects. Looks like they gave us a property/method.*/
+                        if(obj.value){
+                            res(objList);
+                            return;
+                        }
+                        /*For each property in the object.*/
+                        // console.log("Received an object to crawl. Object is: " + JSON.stringify(obj));
+                        for(let prop in obj){
+                            /*If it's another object push that one onto the list to crawl (unless it's a property/method object_.*/
+                            if(typeof obj[prop] === typeof new Object() && typeof obj[prop].value === typeof void(0)){
+                                /*We don't want metadata about the properties/methods/containers.*/
+                                if(prop === "type" || prop === "allowedValues" || prop === "propertyAccessability" || prop === "allowListeners" || prop === "listeners" || prop === "setValue" || prop === "value") continue;
+                                // console.log("Object contains another object! " + JSON.stringify(obj[prop]));
+                                treeCrawl(obj[prop],(scope + "::" + prop));
+                            }
+                            else{
+                                /*We don't want metadata about the properties/methods/containers.
+                                I don't know if we really need this here though...
+                                Edit: Yes we do!
+                                */
+                                if(prop === "type" || prop === "allowedValues" || prop === "propertyAccessability" || prop === "allowListeners" || prop === "listeners" || prop === "setValue" || prop === "value") continue;
+                                objList.push(scope + "::" + prop);
+                                res(objList);
+                            }
+                        }
+                    };
+                    treeCrawl(obj,startingName);
+                });
+            };
+            let objVal = objList;
+            parentPropArr.forEach(function(v,i){
+                if(i >= parentPropArr.length - 1){
+                    if(typeof objVal[v] === typeof void(0)){
+                        /*They probably haven't finished typing. Let's try to see what it matches using regex.*/
+                        /*If strict command mode is on then it has to be case-sensitive.*/
+                        if(modes.strictCommandMode){
+                            /*We use RegExp because we want to match all of the possible occurrences.*/
+                            /*Quick note: You have to backslash the regex expression it because it's in a string (I have no idea why though...).*/
+                            let regexMatch = new RegExp("\^" + v,"g");
+                            console.log(regexMatch);
+                            let matchResArr = [];
+                            for(let prop in objVal){
+                                /*No metadata plz ;D*/
+                                if(prop === "type" || prop === "allowedValues" || prop === "propertyAccessability" || prop === "allowListeners" || prop === "listeners" || prop === "setValue" || prop === "value") continue;
+                                let match = regexMatch.test(prop);
+                                if(match){
+                                    matchResArr.push(prop);
+                                }
+                            }
+                            let matchArr = [];
+                            matchResArr.forEach(function(v){
+                                console.log("traveling");
+                                /*Woahohohoho, that's a lot for the second argument of the travelObj function. Let's break it down (so I remember lol).
+                                Step 1: It creates a new array (the .map() creates a new array so as to not modify the original array).
+                                
+                                Step 2: It splices all but the last argument (because .splice() returns the spliced values, we want to work with that instead of just splicing the last value).
+                                
+                                Step 3: It joins the array with "::".
+                                
+                                Step 4: It adds "::" (for the value that is about to be added. It doesn't get added if the parent property array is only 1 in length because then it's a root object).
+                                
+                                Step 5: It adds v (which replaces the last value because the last value will be whatever the user is typing. Therefore, we want to make sure that it searches the actual value that was found with regex).
+                                */
+                                if(parentPropArr.length < 2){
+                                    travelObj(objVal[v],parentPropArr.map(function(val){return val;}).splice(0,parentPropArr.length - 1).join("::") + v).then(function(res){
+                                        res.forEach(function(v){
+                                            matchArr.push(v);
+                                        });
+                                    });
+                                }
+                                else{
+                                    travelObj(objVal[v],parentPropArr.map(function(val){return val;}).splice(0,parentPropArr.length - 1).join("::") + "::" + v).then(function(res){
+                                        res.forEach(function(v){
+                                            matchArr.push(v);
+                                        });
+                                    });
+                                }
+                            });
+                            resArr = matchArr;
+                        }
+                        else{
+                            /*We use RegExp because we want to match all of the possible occurrences (and make it case-insensitive).*/
+                            /*Quick note: You have to backslash the regex expression it because it's in a string (I have no idea why though...).*/
+                            let regexMatch = new RegExp("\^" + v,"gi");
+                            let matchResArr = [];
+                            for(let prop in objVal){
+                                /*No metadata plz ;D*/
+                                if(prop === "type" || prop === "allowedValues" || prop === "propertyAccessability" || prop === "allowListeners" || prop === "listeners" || prop === "setValue" || prop === "value") continue;
+                                let match = regexMatch.test(prop);
+                                if(match){
+                                    matchResArr.push(prop);
+                                }
+                            }
+                            let matchArr = [];
+                            matchResArr.forEach(function(v){
+                                console.log("traveling");
+                                /*Woahohohoho, that's a lot for the second argument of the travelObj function. Let's break it down (so I remember lol).
+                                Step 1: It creates a new array (the .map() creates a new array so as to not modify the original array).
+                                
+                                Step 2: It splices all but the last argument (because .splice() returns the spliced values, we want to work with that instead of just splicing the last value).
+                                
+                                Step 3: It joins the array with "::".
+                                
+                                Step 4: It adds "::" (for the value that is about to be added. It doesn't get added if the parent property array is only 1 in length because then it's a root object).
+                                
+                                Step 5: It adds v (which replaces the last value because the last value will be whatever the user is typing. Therefore, we want to make sure that it searches the actual value that was found with regex).
+                                */
+                                if(parentPropArr.length < 2){
+                                    travelObj(objVal[v],parentPropArr.map(function(val){return val;}).splice(0,parentPropArr.length - 1).join("::") + v).then(function(res){
+                                        res.forEach(function(v){
+                                            matchArr.push(v);
+                                        });
+                                    });
+                                }
+                                else{
+                                    travelObj(objVal[v],parentPropArr.map(function(val){return val;}).splice(0,parentPropArr.length - 1).join("::") + "::" + v).then(function(res){
+                                        res.forEach(function(v){
+                                            matchArr.push(v);
+                                        });
+                                    });
+                                }
+                            });
+                            resArr = matchArr;
+                        }
+                    }
+                    else{
+                        /*If it's a property/method (or something not found) then do nothing (we don't need to crawl those because they can't hold any objects).*/
+                        if(typeof objVal[v] !== typeof new Object()) return;
+                        console.log("traveling");
+                        travelObj(objVal[v],parentPropArr.join("::")).then(function(res){
+                            resArr = res;
+                            return res;
+                        });
+                    }
+                }
+                else{
+                    objVal = objVal[v];
+                }
+            });
+            return resArr;
+        };
+        if(properSyntaxEnforced){
+            return CLIp.CheckCommandLegality(command).then(function(cmd){
+                let res = parseAndGet(cmd);
+                if(Array.isArray(res)){
+                    return [1,res];
+                }
+                else{
+                    return [0,void(0)];
+                }
+            }).catch(function(err){
+                return [0,err];
+            });
+        }
+        else{
+        }
     };
     CLIp.ParseCLI = function(command){
         if(objList === null){
@@ -875,11 +1083,9 @@ let CLIp = {};
                             type = "Unknown";
                         }
                         if(type === "Property Container" || type === "Main Property Container" || type === "Official CLIp help commands"){
-                            // res("(" + type + ") " + "\"" + JSON.stringify(prop) + "\"");
                             res([type,JSON.stringify(prop)]);
                         }
                         else{
-                            // res("(" + type + ") " + "\"" + prop.value + "\"");
                             res([type,prop.value]);
                         }
                         
@@ -978,4 +1184,3 @@ let CLIp = {};
         });
     };
 })();
-//Nice!

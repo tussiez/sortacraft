@@ -303,12 +303,15 @@ var camera,
 worldTextureLoader.setOptions({ imageOrientation: 'flipY' });//flips when using bitmaps
 worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
   worldTextureBitmap = new THREE.CanvasTexture(bmap, undefined, undefined, undefined, THREE.NearestFilter, THREE.NearestFilter);//build texture from xhr req
-  //worldTextureBitmap = bmap;
+  //worldTextureBitmap = bmap
   fancymaterial = new THREE.MeshPhongMaterial({
     color: 'gray',
     map: worldTextureBitmap,//texture
     transparent:true,
     alphaTest:0.1,
+   // alphaMap: worldTextureBitmap,
+    depthTest: true,
+    depthWrite: true,
   });//setup mat
   fancymaterial.shininess = 0;//No shininess
 
@@ -318,6 +321,9 @@ worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
     map: worldTextureBitmap,
     transparent:true,
     alphaTest:0.1,
+  //  alphaMap: worldTextureBitmap,
+    depthTest: true,
+    depthWrite: true,
   });
   //setup fast speedy mat
   material = fancymaterial;//start on fancy material
@@ -699,7 +705,7 @@ function render() {
 
   checkCullChunks();//check chunks that can be culled and cull them
 
-  //hideOldChunks();
+  hideOldChunks();
 
 }
 function dropParticles() {
@@ -737,12 +743,12 @@ function hideOldChunks() {
   for (var i = 0; i < chunkIndex.length; i++) {
     var chunk = ChunksMesh[chunkIndex[i]];
     var pos = vecFromString(chunkIndex[i]);//get position
-    if (!AABBCollision(pos, camPosBox)) {
+    if (!AABBCollision(pos, camPosBox)&&scene.children.includes(chunk)) {
       chunkIndex.splice(i, 1);//remove from list
       scene.remove(chunk);
-      chunk.geometry.dispose();
-      chunk.material.dispose();
+      console.log('Hide chunk')
     }
+  
   }
 }
 function moveHand() {
@@ -832,7 +838,7 @@ function updateDaytime() {
 function playerMovement() {//move plyr
   getDistanceToGround();//fall speed
   PlayerChunk = chunkClamp(camera.position, true);
-  if (PlayerChunk != undefined && camera.position.y < 64 || PlayerChunk === undefined && camera.position.y > 64) {
+
     moved[0] = 0;
     moved[1] = 0;
     moved[2] = 0;
@@ -937,8 +943,10 @@ function playerMovement() {//move plyr
 
     }
 
-
-
+    let canFall = false;
+    if (PlayerChunk != undefined && camera.position.y < 64 || PlayerChunk === undefined && camera.position.y > 64) {
+          canFall = true;
+     }
     let rendered = false;
     if (checkIntersections() === true) {
 
@@ -955,7 +963,8 @@ function playerMovement() {//move plyr
       }
     } else {
       bumping = false;
-      if (jumping == false) {
+        if(canFall == true){
+          if (jumping == false) {
         if (flying == false) {//Not flying
           if (!g) {
             g = 0;
@@ -993,6 +1002,7 @@ function playerMovement() {//move plyr
 
           }
         }
+          }
       }
       moveHand();
       if (canRender == true) {
@@ -1008,7 +1018,6 @@ function playerMovement() {//move plyr
       dropPlayerToGround();
     }
   }
-}
 function goBack(arr) {
   if (arr[0]) {
     controls.moveForward(-.07)
@@ -1313,7 +1322,7 @@ function modifyChunk2(voxel1) {
             let blockZ = (Math.floor(pos[2]));
             let voxAtPos = intersectWorld.getVoxel(...pos);
             let blockName = voxelId > 0 ? voxelNames[voxelId - 1] : voxelNames[voxAtPos - 1];
-            createParticles(blockX, blockY, blockZ, blockName);
+            //createParticles(blockX, blockY, blockZ, blockName);
             //End drop particles
 
             intersectWorld.setVoxel(intersectionVector.x, intersectionVector.y, intersectionVector.z, voxel1);//for intesection later at world relative
@@ -1424,11 +1433,15 @@ function lazyLoadChunks() {
   for (var x = clampMin.x; x < clampMax.x; x += 16) {
     for (var z = clampMin.z; z < clampMax.z; z += 16) {
       var chunk = Chunks[x + ",0," + z];
+      var mesh = ChunksMesh[x+",0,"+z];
       if (chunkIndex.indexOf(x + ",0," + z) == -1 && chunk != undefined) {
         //    chunkIndex.push(x+",0,"+z);//stop infinitely doing thes same thing
         //  var {positions,normals,uvs,indices} = intersectWorld.generateGeometryDataForCell(x,0,z);
         //  loadChunk(x,0,z,chunk,[positions,normals,uvs,indices]);
-
+        //Chunk exists
+        if(mesh!=undefined&&!scene.children.includes(mesh)){
+          scene.add(mesh);
+        }
 
       }
       if (chunk == undefined && lazyVoxelData.done == true) {

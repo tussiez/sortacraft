@@ -22,14 +22,11 @@
 - Possibly upload your own textures (texture packs)!
 
 ## Checklist  
- - Fix shadowmap. MEDIUM   
  - More options: FOV,sensitivity,etc. EASY
  - Fine tune flying/sprinting. EASY
  - ~~Inventory~~ & hotbar. MEDIUM
  - Make water generate closer to the surface. MEDIUM/HARD
- - Add more fog to caves.
- - Add FOV smoothening (make walking smooth out from a walk to a run, make walk acceleration, e.t.c).
- - Movement acceleration.
+ - FOV animation.
  - Make superflat option and biome size changer.
  - Add item images to service worker cache (whew, I'm going to have to type a lot for that).
  - Fix slab collisions.
