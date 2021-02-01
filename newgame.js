@@ -1,4 +1,6 @@
-console.log("%cHold up! %c \n Don't hack, please :) \n What you see below are debug messages and errors. \n Some of them have meaning, some of them don't.",'font-size:50px;font-family:Arial','font-family:Verdana;font-weight:bold')
+console.log("%cHold up! %c \n Don't hack, please :) \n What you see below are debug messages and errors. \n Some of them have meaning, some of them don't.",'font-size:50px;font-family:Arial','font-family:Verdana;font-weight:bold');
+
+alert(`NOTICE: \n I'm testing physics, so the game will NOT work until I figure it out :>. Also, the game may crash your computer`)
 
 window.onbeforeunload = function () {
   return "This is so someone doesn't accidentally exit out of the game";
@@ -28,6 +30,9 @@ window["downloadWorld"] = function () {
 }
 window["setVoxel"] = function (v) {
   gameWorker.postMessage({ type: 'setVoxelTo', voxel: v })
+}
+window["phys"] = function(){
+  gameWorker.postMessage({type:'changeShadowBias'})
 }
 function updateTime() {
   requestAnimationFrame(updateTime);

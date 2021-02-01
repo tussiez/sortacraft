@@ -1,19 +1,14 @@
-/*I recommend you look into web assembly. I have heard it runs much faster than JavaScript, so it might help you speed up the process easier. Of course, it has some limitations right now, web assembly can't use native JavaScript functions (as I have heard), so it will be harder to implement, but the best part is that you don't necessarily have to "write" it, rather you can compile it into web assembly.
-
--@baconman321 */
-/*That's a good idea! I think I've seen the compilers before.*/
-
-
-
 //main thread for Threejs
-import * as THREE from 'https://threejs.org/build/three.module.js'
+import * as THREE from '/threejs.js'
 import { CSM } from 'https://threejs.org/examples/jsm/csm/CSM.js'//
 import { EffectComposer } from 'https://threejs.org/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'https://threejs.org/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'https://threejs.org/examples/jsm/postprocessing/ShaderPass.js';
 
 import { FXAAShader } from 'https://threejs.org/examples/jsm/shaders/FXAAShader.js'
-
+import SortaPhysics from 'https://sortaphysics.sortagames.repl.co/lib.js'
+import CANNON from 'https://sortaphysics.sortagames.repl.co/cannonModule.js'
+import PhysicsControls from '/PhysicsControls.js'
 const handlers = {
   main,
   mousemove,
@@ -81,6 +76,9 @@ var camera,
   ChunkLights = {},
   PlayerChunk,
   jumpG = .02,
+  voxelBody,
+  voxelBodies = {},
+  voxelCompound,
   playerSpeed = .3,
   playerCorrectiveSpeed = .23,
   geometryDataWorker = new Worker('geometrydataworker.js'),
@@ -254,6 +252,11 @@ var camera,
       if (voxelInfo != undefined) {
         lazyVoxelWorld.setVoxel(voxelInfo.x, voxelInfo.y, voxelInfo.z, voxelInfo.type);//set
         intersectWorld.setVoxel(voxelInfo.intersect.x + voxelInfo.x, voxelInfo.intersect.y + voxelInfo.y, voxelInfo.intersect.z + voxelInfo.z, voxelInfo.type);//intersect
+
+        //PHYSICS!
+       // setPhysVoxel(voxelInfo.intersect.x + voxelInfo.x, voxelInfo.intersect.y + voxelInfo.y, voxelInfo.intersect.z+voxelInfo.z, voxelInfo.type);
+       //naw
+
         geometryDataWorker.postMessage(['voxel', voxelInfo.intersect.x + voxelInfo.x, voxelInfo.intersect.y + voxelInfo.y, voxelInfo.intersect.z + voxelInfo.z, voxelInfo.type])
         geometryDataWorker2.postMessage(['voxel', voxelInfo.intersect.x + voxelInfo.x, voxelInfo.intersect.y + voxelInfo.y, voxelInfo.intersect.z + voxelInfo.z, voxelInfo.type])
         if (this.current < this.lazyArrayTotal) {
@@ -269,7 +272,6 @@ var camera,
       geometryDataWorker.postMessage(['geometrydata', posVec.x, posVec.y, posVec.z, 'regular', posVec]);//reg
       //postMessage(['debug', ((currentTime-this.startTime)/1000).toFixed(2),'newline']);
       //timer
-      //console.log((performance.now()-this.startTime)/1000);
     },
     realFinish: function () {
       var posVec = this.getVoxelData(0).intersect;
@@ -293,7 +295,7 @@ var camera,
       getFPS.lastFrame = renderer.info.render.frame;
       setTimeout(read, 1000);
       function read() {
-        getFPS.fps = (renderer.info.render.frame - getFPS.lastFrame)/2;
+        getFPS.fps = (renderer.info.render.frame - getFPS.lastFrame) / 2;
         self.postMessage(['fps', getFPS.fps]);
         requestAnimationFrame(getFPS.framerate);
       }
@@ -307,9 +309,9 @@ worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
   fancymaterial = new THREE.MeshPhongMaterial({
     color: 'gray',
     map: worldTextureBitmap,//texture
-    transparent:true,
-    alphaTest:0.1,
-   // alphaMap: worldTextureBitmap,
+    transparent: true,
+    alphaTest: 0.1,
+    // alphaMap: worldTextureBitmap,
     depthTest: true,
     depthWrite: true,
   });//setup mat
@@ -319,9 +321,9 @@ worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
   fastmaterial = new THREE.MeshBasicMaterial({
     color: 'gray',
     map: worldTextureBitmap,
-    transparent:true,
-    alphaTest:0.1,
-  //  alphaMap: worldTextureBitmap,
+    transparent: true,
+    alphaTest: 0.1,
+    //  alphaMap: worldTextureBitmap,
     depthTest: true,
     depthWrite: true,
   });
@@ -340,6 +342,7 @@ worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
         //update geometry based on chunk
         var chunk = ChunksMesh[e.data[6].x + ',' + e.data[6].y + "," + e.data[6].z];
         var geometry = chunk.geometry;
+        makePhysGeometry(e.data[1],e.data[2]);
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(e.data[1]), 3));
 
         geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(e.data[2]), 3));
@@ -348,6 +351,9 @@ worldTextureBitmap = worldTextureLoader.load('textures.png', function (bmap) {
 
         geometry.setIndex(e.data[4]);//update geometry
         geometry.computeBoundingSphere();
+
+        // PHYSICS STUFF
+
 
       }
     }
@@ -431,23 +437,9 @@ onmessage = function (e) {
   }
 
 };
+
 function changeShadowBias(dat) {
-  console.log('Changed shadowbias to ' + dat.bias);
-  shadows.remove();
-  shadows = new CSM({
-    maxFar: camera.far,
-    cascades: 4,
-    mode: 'practical',
-    shadowMapSize: 128,//low res shadows
-    shadowBias: dat.bias,
-    lightDirection: new THREE.Vector3(-1, -1, 1).normalize(),
-    parent: scene,
-    camera: camera,
-    lightIntensity: .001,
-  });
-  shadows.setupMaterial(fancymaterial);
-  shadows.setupMaterial(fastmaterial);
-  renderer.shadowMap.needsUpdate = true;
+console.log('outdated function')
 }
 function toggleGravity(d) {
   //It's passed as an object
@@ -544,7 +536,7 @@ function keyup(e) {
   if (e.key == 'w') {
     if (currentTime - lastWPress < doubleTapDelay && playerCorrectiveSpeed == .23) {
       playerCorrectiveSpeed = .15;
-      playerSpeed = .3;
+      playerSpeed = .35;
       //Sprinting
       camera.fov = 90;
       camera.updateProjectionMatrix();
@@ -563,13 +555,14 @@ function keyup(e) {
 function main(dat) {
   camera = new THREE.PerspectiveCamera(70, dat.width / dat.height, 0.1, 500);
   scene = new THREE.Scene();
+  SortaPhysics.init(CANNON);
   scene.fog = new THREE.FogExp2('rgb(255,255,255)', 0.01);
   renderer = new THREE.WebGLRenderer({ canvas: dat.canvas });
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setSize(dat.width, dat.height, false);//req.false
-  controls = new PointerLockControls(camera);
+  //controls = new PhysicsControls(camera);
   clock = new THREE.Clock();
   camera.position.set(1, 128, 1);//1 for inner chunk
   var ambient = new THREE.AmbientLight(0xffffff, 0.1);
@@ -583,7 +576,7 @@ function main(dat) {
     parent: scene,
     camera: camera,
     fade: true,
-    lightIntensity: 1,
+    lightIntensity: 2,
     lightNear: 30,
     lightFar: 750,
   });
@@ -595,7 +588,8 @@ function main(dat) {
   }
   pointerBlock = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ wireframe: true, color: "white" }));
   pointerBlock.scale.set(1.01, 1.01, 1.01);//to fix outlines not showing
-  scene.add(pointerBlock)
+  setupPhysicsControls();
+
 
   sunSphere = new THREEx.DayNight.SunSphere();
 
@@ -609,7 +603,7 @@ function main(dat) {
   //  initParticles();//particle
   effectComposer = new EffectComposer(renderer);//effect composer
   renderPass = new RenderPass(scene, camera);
-  
+
   fxaaPass = new ShaderPass(FXAAShader);
 
   let pixRatio = renderer.getPixelRatio();
@@ -620,10 +614,46 @@ function main(dat) {
   effectComposer.addPass(renderPass);//render pass
 
   effectComposer.addPass(fxaaPass);
-  
+
   graphicsFaster();
   render();
   getFPS.framerate();//start fps counter
+
+  /* DEBUG */
+  postMessage(['done']);
+  //canRender = true;
+}
+
+function setupPhysicsControls() {
+  let body = SortaPhysics.makeSphere(1, 1);
+  body.position.set(0, 128, 0);
+  let obj = new THREE.Object3D();//Filler object, change this later
+  SortaPhysics.addObject(obj);
+  /*
+  let plane = SortaPhysics.makePlane(0).rotate('x', -Math.PI / 2);
+  SortaPhysics.addObject(new THREE.Object3D());
+  plane.position.set(0, 32, 0);
+  */
+  controls = new PhysicsControls(camera, body);//Attach body to camera, for controls
+
+  // Create voxel body
+  voxelBody = new CANNON.Box(new CANNON.Vec3(.5,.5,.5));
+  voxelCompound = new CANNON.Body({mass:0})
+  SortaPhysics.world.add(voxelCompound);
+  SortaPhysics.bodies.push(voxelCompound);
+  SortaPhysics.objects.push(new THREE.Object3D());
+  canRender = true;
+
+}
+
+function setPhysVoxel(x,y,z,type){
+  // This function makes/removes physics bodies for voxels IG.
+  if(type != 0){
+  voxelCompound.addShape(voxelBody, new CANNON.Vec3(x,y,z))
+  //voxelBodies[x+','+y+','+z] = body;
+  } else {
+    // remove voxel
+  }
 }
 function createParticles(x, y, z, name) {
   let pos = new THREE.Vector3(x, y, z)
@@ -675,15 +705,19 @@ function graphicsFaster() {//switch to faster graphics
   renderer.shadowMap.enabled = false;
 
 }
-function render() {
+function render(time) {
   requestAnimationFrame(render);
   if (Math.floor(currentTime) % 10 == 0) {
     renderer.shadowMap.needsUpdate = true;
   }
+  if(canRender == true){
+  SortaPhysics.update(time);
+  }
+  controls.update(keys, time);
 
   updateDaytime()//update sun
 
-  playerMovement();
+  //playerMovement();
 
   dropParticles();
 
@@ -705,7 +739,9 @@ function render() {
 
   checkCullChunks();//check chunks that can be culled and cull them
 
-  hideOldChunks();
+  //hideOldChunks();
+  effectComposer.render();
+
 
 }
 function dropParticles() {
@@ -743,12 +779,11 @@ function hideOldChunks() {
   for (var i = 0; i < chunkIndex.length; i++) {
     var chunk = ChunksMesh[chunkIndex[i]];
     var pos = vecFromString(chunkIndex[i]);//get position
-    if (!AABBCollision(pos, camPosBox)&&scene.children.includes(chunk)) {
+    if (!AABBCollision(pos, camPosBox) && scene.children.includes(chunk)) {
       chunkIndex.splice(i, 1);//remove from list
       scene.remove(chunk);
-      console.log('Hide chunk')
     }
-  
+
   }
 }
 function moveHand() {
@@ -818,10 +853,10 @@ function updateDaytime() {
   if (intensity < 0) {
     intensity = .2;
   }
-  if (intensity > .6) {
-    intensity = .6;
+  if (intensity > 1) {
+    intensity = 1;
   }
-  shadows.updateLightIntensity(intensity * 2);
+  shadows.updateLightIntensity(intensity * 4);
   //update shadow brightness
 
   //bg color
@@ -839,132 +874,133 @@ function playerMovement() {//move plyr
   getDistanceToGround();//fall speed
   PlayerChunk = chunkClamp(camera.position, true);
 
-    moved[0] = 0;
-    moved[1] = 0;
-    moved[2] = 0;
-    moved[3] = 0;
-    moved[4] = 0;
-    moved[5] = 0;
-    var preMovement = new THREE.Vector3().copy(camera.position);
-    if (keys['w'] || keys['a'] || keys['s'] || keys['d']) {
-      if (playerAccel < playerSpeed) {
-        playerAccel += 0.01
-      }
-    } else if (!keys['w'] && !keys['a'] && !keys['s'] && !keys['d']) {
-      playerAccel = .1;
+  moved[0] = 0;
+  moved[1] = 0;
+  moved[2] = 0;
+  moved[3] = 0;
+  moved[4] = 0;
+  moved[5] = 0;
+  var preMovement = new THREE.Vector3().copy(camera.position);
+  if (keys['w'] || keys['a'] || keys['s'] || keys['d']) {
+    if (playerAccel < playerSpeed) {
+      playerAccel += 0.005
     }
-    if (keys['Shift']) {
-      if (flying == true) {
-        //Go down,if flying
-        camera.position.y -= .1;
-        if (checkIntersections() == true) {//Undo
-          camera.position.y += .1;
-        }
-      }
-    }
-    if (keys['w']) {
-      controls.moveForward(playerAccel);
-      moved[0] = 1;
-      if (checkIntersections() == true) {
-
-        controls.moveForward(-playerAccel)//pre check so you cant see inside
-      } else {
-        if (playerAccel > .1) {
-          controls.moveForward(-Math.abs(playerAccel - .1));
-        }
-      }
-
-    }
-    if (keys['a']) {
-      controls.moveRight(-.3);
-      moved[1] = 1;
-      if (checkIntersections() == true) {
-        controls.moveRight(.3)//pre check so you cant see inside
-      } else {
-        controls.moveRight(.23);
-      }
-    }
-
-    if (keys['s']) {
-      controls.moveForward(-.3);
-      moved[3] = 1;
-      if (checkIntersections() == true) {
-        controls.moveForward(.3)//pre check so you cant see inside
-      } else {
-        controls.moveForward(.23);
-      }
-    }
-    if (keys['d']) {
-      controls.moveRight(.3);
-      moved[4] = 1;
-      if (checkIntersections() == true) {
-        controls.moveRight(-.3)//pre check so you cant see inside
-      } else {
-        controls.moveRight(-.23);
-      }
-
-    }
-    if (jumping == true) {
-      // console.log(jumpG);
-      if (jumpG >= 0.02) {//Start jumping quickly, then go slower
-        jumpG -= .02;
-        camera.position.y += jumpG;
-        if (checkIntersections() == true) {
-          //Evil player jumped into ceiling :(
-          camera.position.y -= jumpG;//Undo jump
-          jumping = false;//no jumpign for you
-        }
-      } else {
-        jumping = false;
-      }
-
-    }
-    if (keys[' ']) {
-      if (flying == false) {
-        if (canJump == true) {
-
-          //Set jump speed
-          jumpG = .29;//Minecraft lets you jump only 1 block
-          jumping = true;
-          canJump = false;
-          keys[' '] = false;
-          //jumping=true;
-          moved[2] = 1;//preset
-
-          jumpY = camera.position.y;
-        }
-      } else {
+  } else if (!keys['w'] && !keys['a'] && !keys['s'] && !keys['d']) {
+    playerAccel = .1;
+  }
+  if (keys['Shift']) {
+    if (flying == true) {
+      //Go down,if flying
+      camera.position.y -= .1;
+      if (checkIntersections() == true) {//Undo
         camera.position.y += .1;
-        if (checkIntersections() == true) {
-          camera.position.y -= .1;
-        }
+      }
+    }
+  }
+  if (keys['w']) {
+    controls.moveForward(playerAccel / 2);
+    moved[0] = 1;
+    if (checkIntersections() == true) {
+
+      controls.moveForward(-playerAccel / 2)//pre check so you cant see inside
+    } else {
+      /*
+      if (playerAccel > .1) {
+        controls.moveForward(-Math.abs(playerAccel - .1));
+      }
+      */
+    }
+
+  }
+  if (keys['a']) {
+    controls.moveRight(-.3);
+    moved[1] = 1;
+    if (checkIntersections() == true) {
+      controls.moveRight(.3)//pre check so you cant see inside
+    } else {
+      controls.moveRight(.23);
+    }
+  }
+
+  if (keys['s']) {
+    controls.moveForward(-.3);
+    moved[3] = 1;
+    if (checkIntersections() == true) {
+      controls.moveForward(.3)//pre check so you cant see inside
+    } else {
+      controls.moveForward(.23);
+    }
+  }
+  if (keys['d']) {
+    controls.moveRight(.3);
+    moved[4] = 1;
+    if (checkIntersections() == true) {
+      controls.moveRight(-.3)//pre check so you cant see inside
+    } else {
+      controls.moveRight(-.23);
+    }
+
+  }
+  if (jumping == true) {
+    if (jumpG >= 0.02) {//Start jumping quickly, then go slower
+      jumpG -= .02;
+      camera.position.y += jumpG;
+      if (checkIntersections() == true) {
+        //Evil player jumped into ceiling :(
+        camera.position.y -= jumpG;//Undo jump
+        jumping = false;//no jumpign for you
       }
     } else {
-
+      jumping = false;
     }
 
-    let canFall = false;
-    if (PlayerChunk != undefined && camera.position.y < 64 || PlayerChunk === undefined && camera.position.y > 64) {
-          canFall = true;
-     }
-    let rendered = false;
-    if (checkIntersections() === true) {
+  }
+  if (keys[' ']) {
+    if (flying == false) {
+      if (canJump == true) {
 
-      bumping = true;
-      goBack(moved);
+        //Set jump speed
+        jumpG = .29;//Minecraft lets you jump only 1 block
+        jumping = true;
+        canJump = false;
+        keys[' '] = false;
+        //jumping=true;
+        moved[2] = 1;//preset
 
-      moveHand();
-      if (canRender == true) {
-        if(rendered == false){
+        jumpY = camera.position.y;
+      }
+    } else {
+      camera.position.y += .1;
+      if (checkIntersections() == true) {
+        camera.position.y -= .1;
+      }
+    }
+  } else {
+
+  }
+
+  let canFall = false;
+  if (PlayerChunk != undefined && camera.position.y < 64 || PlayerChunk === undefined && camera.position.y > 64) {
+    canFall = true;
+  }
+  let rendered = false;
+  if (checkIntersections() === true) {
+
+    bumping = true;
+    goBack(moved);
+
+    moveHand();
+    if (canRender == true) {
+      if (rendered == false) {
         // renderer.render(scene, camera)
         effectComposer.render();
         rendered = true;
-        }
       }
-    } else {
-      bumping = false;
-        if(canFall == true){
-          if (jumping == false) {
+    }
+  } else {
+    bumping = false;
+    if (canFall == true) {
+      if (jumping == false) {
         if (flying == false) {//Not flying
           if (!g) {
             g = 0;
@@ -1002,22 +1038,22 @@ function playerMovement() {//move plyr
 
           }
         }
-          }
-      }
-      moveHand();
-      if (canRender == true) {
-        // renderer.render(scene, camera);
-        if(rendered == false){
-        effectComposer.render()
-        }
       }
     }
-
-    if (PlayerChunk != undefined && fallen == false) {
-      fallen = true;
-      dropPlayerToGround();
+    moveHand();
+    if (canRender == true) {
+      // renderer.render(scene, camera);
+      if (rendered == false) {
+        effectComposer.render()
+      }
     }
   }
+
+  if (PlayerChunk != undefined && fallen == false) {
+    fallen = true;
+    dropPlayerToGround();
+  }
+}
 function goBack(arr) {
   if (arr[0]) {
     controls.moveForward(-.07)
@@ -1197,7 +1233,7 @@ function mousedown(eventData) {
   }
 }
 
-var renderDist = 32;//chunks*16
+var renderDist = 16;//chunks*16
 function roundToFixed(vec, amt) {
   return new THREE.Vector3(vec.x.toFixed(amt), vec.y.toFixed(amt), vec.z.toFixed(amt));
 }
@@ -1322,10 +1358,17 @@ function modifyChunk2(voxel1) {
             let blockZ = (Math.floor(pos[2]));
             let voxAtPos = intersectWorld.getVoxel(...pos);
             let blockName = voxelId > 0 ? voxelNames[voxelId - 1] : voxelNames[voxAtPos - 1];
-            //createParticles(blockX, blockY, blockZ, blockName);
+            createParticles(blockX, blockY, blockZ, blockName);
             //End drop particles
 
             intersectWorld.setVoxel(intersectionVector.x, intersectionVector.y, intersectionVector.z, voxel1);//for intesection later at world relative
+
+            // PHYSICS!
+            //setPhysVoxel(blockX,blockY,blockZ,voxel1);
+            //haha no
+            //its commented out
+
+
 
             geometryDataWorker.postMessage(['voxel', intersectionVector.x, intersectionVector.y, intersectionVector.z, voxel1]);//set for geometry data update
 
@@ -1433,13 +1476,13 @@ function lazyLoadChunks() {
   for (var x = clampMin.x; x < clampMax.x; x += 16) {
     for (var z = clampMin.z; z < clampMax.z; z += 16) {
       var chunk = Chunks[x + ",0," + z];
-      var mesh = ChunksMesh[x+",0,"+z];
+      var mesh = ChunksMesh[x + ",0," + z];
       if (chunkIndex.indexOf(x + ",0," + z) == -1 && chunk != undefined) {
         //    chunkIndex.push(x+",0,"+z);//stop infinitely doing thes same thing
         //  var {positions,normals,uvs,indices} = intersectWorld.generateGeometryDataForCell(x,0,z);
         //  loadChunk(x,0,z,chunk,[positions,normals,uvs,indices]);
         //Chunk exists
-        if(mesh!=undefined&&!scene.children.includes(mesh)){
+        if (mesh != undefined && !scene.children.includes(mesh)) {
           scene.add(mesh);
         }
 
@@ -1849,7 +1892,7 @@ function manageVoxelLoading() {
       lazyVoxelData.lazyArrayTotal = 0;
     }
     function lazyLoad() {
-      for (var e = 0; e < 300; e++) {
+      for (var e = 0; e < 30; e++) {
         if (lazyVoxelData.current < lazyVoxelData.lazyArrayTotal) {
 
           lazyVoxelData.lazyLoad();
@@ -1865,7 +1908,7 @@ function manageVoxelLoading() {
     setTimeout(function () {
       if (lazyVoxelData.done === true) {
         postMessage(['done']);
-        canRender = true;
+        //canRender = true;
         graphicsFancy();
       }
     }, 1000)

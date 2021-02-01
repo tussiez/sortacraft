@@ -32,6 +32,8 @@
  - Fix slab collisions.
  - Fix slab building
  - Make it so when you touch the ground during flying you stop flying.
+ - Add water
+ - Fix lighting
 
 ## Known Bugs/Issues  
  - Every once in a while, chunk sides don't update correctly (leaves space)  
